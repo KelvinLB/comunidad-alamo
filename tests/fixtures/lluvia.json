@@ -1,0 +1,221 @@
+[
+ {
+  "latitude": 20.913883,
+  "longitude": -97.65958,
+  "generationtime_ms": 0.054955482482910156,
+  "utc_offset_seconds": -21600,
+  "timezone": "America/Mexico_City",
+  "timezone_abbreviation": "GMT-6",
+  "elevation": 22.0,
+  "daily_units": {
+   "time": "iso8601",
+   "precipitation_sum": "mm",
+   "precipitation_probability_max": "%"
+  },
+  "daily": {
+   "time": [
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29"
+   ],
+   "precipitation_sum": [
+    2.9,
+    0.6,
+    4.4,
+    0.5,
+    0.6,
+    4.4,
+    15.1
+   ],
+   "precipitation_probability_max": [
+    96,
+    29,
+    88,
+    33,
+    29,
+    63,
+    63
+   ]
+  }
+ },
+ {
+  "latitude": 20.49209,
+  "longitude": -97.88519,
+  "generationtime_ms": 0.02753734588623047,
+  "utc_offset_seconds": -21600,
+  "timezone": "America/Mexico_City",
+  "timezone_abbreviation": "GMT-6",
+  "elevation": 203.0,
+  "location_id": 1,
+  "daily_units": {
+   "time": "iso8601",
+   "precipitation_sum": "mm",
+   "precipitation_probability_max": "%"
+  },
+  "daily": {
+   "time": [
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29"
+   ],
+   "precipitation_sum": [
+    1.9,
+    1.0,
+    7.7,
+    5.8,
+    0.9,
+    3.7,
+    13.9
+   ],
+   "precipitation_probability_max": [
+    63,
+    36,
+    100,
+    49,
+    47,
+    71,
+    67
+   ]
+  }
+ },
+ {
+  "latitude": 20.702986,
+  "longitude": -97.81818,
+  "generationtime_ms": 0.03731250762939453,
+  "utc_offset_seconds": -21600,
+  "timezone": "America/Mexico_City",
+  "timezone_abbreviation": "GMT-6",
+  "elevation": 329.0,
+  "location_id": 2,
+  "daily_units": {
+   "time": "iso8601",
+   "precipitation_sum": "mm",
+   "precipitation_probability_max": "%"
+  },
+  "daily": {
+   "time": [
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29"
+   ],
+   "precipitation_sum": [
+    0.8,
+    0.9,
+    3.6,
+    3.0,
+    2.1,
+    5.3,
+    19.9
+   ],
+   "precipitation_probability_max": [
+    79,
+    49,
+    96,
+    53,
+    29,
+    63,
+    73
+   ]
+  }
+ },
+ {
+  "latitude": 20.702986,
+  "longitude": -98.0,
+  "generationtime_ms": 0.024437904357910156,
+  "utc_offset_seconds": -21600,
+  "timezone": "America/Mexico_City",
+  "timezone_abbreviation": "GMT-6",
+  "elevation": 277.0,
+  "location_id": 3,
+  "daily_units": {
+   "time": "iso8601",
+   "precipitation_sum": "mm",
+   "precipitation_probability_max": "%"
+  },
+  "daily": {
+   "time": [
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29"
+   ],
+   "precipitation_sum": [
+    1.7,
+    1.4,
+    4.5,
+    2.3,
+    2.1,
+    4.9,
+    24.8
+   ],
+   "precipitation_probability_max": [
+    71,
+    49,
+    100,
+    42,
+    37,
+    75,
+    73
+   ]
+  }
+ },
+ {
+  "latitude": 20.49209,
+  "longitude": -98.06647,
+  "generationtime_ms": 0.02181529998779297,
+  "utc_offset_seconds": -21600,
+  "timezone": "America/Mexico_City",
+  "timezone_abbreviation": "GMT-6",
+  "elevation": 732.0,
+  "location_id": 4,
+  "daily_units": {
+   "time": "iso8601",
+   "precipitation_sum": "mm",
+   "precipitation_probability_max": "%"
+  },
+  "daily": {
+   "time": [
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29"
+   ],
+   "precipitation_sum": [
+    2.2,
+    0.8,
+    2.1,
+    6.0,
+    3.0,
+    5.8,
+    11.1
+   ],
+   "precipitation_probability_max": [
+    63,
+    36,
+    100,
+    49,
+    47,
+    71,
+    67
+   ]
+  }
+ }
+]

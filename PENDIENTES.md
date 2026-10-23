@@ -11,4 +11,12 @@ Lista de lo que no se pudo confirmar o que queda para después. Si algo de aquí
 
 ## Fuentes
 
+Todas se probaron el 23 de octubre de 2026 y sus respuestas reales están en `tests/fixtures/`.
+
+- **Punto del río en GloFAS: 20.92, -97.68** (celda 20.925, -97.675). Se comparó con las 8 celdas vecinas (±0.05°) en septiembre-octubre de 2025: la fila de latitud 20.925 es el cauce grande y el caudal crece aguas abajo (pico de 1,482 / 1,636 / 1,662 m³/s de oeste a este). Las celdas de 20.875 y 20.975 dan de 7 a 120 m³/s, son arroyos. Se queda el punto de la especificación.
+- **GloFAS se atrasa un poco.** En octubre de 2025 el pico simulado cae el 11 de octubre; el río se desbordó el 9 y 10. Ver la calibración.
+- **SMN · Conagua** responde desde México (archivo gzip con 9,852 filas; Álamo Temapache trae 4 días). Falta comprobar que responda desde los servidores de GitHub Actions (están en EE. UU.). Si no responde, el bot lo marca como caído y sigue.
+- **NHC.** Las claves de tipo de sistema (`HU`, `TS`, `TD`, `STS`, `PTC`, `PC`…) se tradujeron según la documentación del NHC; si aparece una desconocida se muestra como "Sistema tropical". La cuenca se lee del `id` (`al` = Atlántico, `ep` = Pacífico Este; el Pacífico Central se ignora).
+- **Lluvia en la sierra.** Para cada día se toma el punto de la cuenca alta con más lluvia, y sobre esa serie se busca el máximo de 72 h. Es un poco más conservador que calcular las 72 h de cada punto por separado.
+
 ## Para después
