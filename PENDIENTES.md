@@ -9,6 +9,13 @@ Lista de lo que no se pudo confirmar o que queda para después. Si algo de aquí
 - **Prioridad por población.** Sale del Censo 2020 según PueblosAmerica.com (no es fuente oficial). Cuando un nombre se repite, se asigna a la localidad con clave INEGI más baja. Desde el lugar 23 el orden difiere un poco del prototipo, porque se reconoció "Héroes del 47 (Otatal)" con su nombre del INEGI.
 - **Botones de comunidades.** Se muestran las 8 más pobladas (como dice la especificación). El prototipo tenía Buenos Aires y Las Cañas de Abajo en lugar de Temapache y La Concepción.
 
+## Umbrales de crecida (`public/umbrales.json`)
+
+- **El histórico de GloFAS solo tiene datos desde 1997** en este punto (1984-1996 vienen vacíos) y 2022 está incompleto (termina en julio). Se usaron los 25 años completos 1997-2021: crecida de 2 años = 1,124 m³/s, de 5 años = 1,687 m³/s y de 20 años = 2,205 m³/s.
+- Con 25 años, el cuantil 0.95 (20 años) es poco preciso: depende de los 2 o 3 años más altos (2019, 2020).
+- **Open-Meteo redondea el caudal a escalones**, por eso se repiten valores exactos (por ejemplo, 1,635.82 m³/s en septiembre de 2003 y en octubre de 2025). No es error, pero la precisión es de algunos por ciento.
+- En octubre de 2025 GloFAS da un pico de 1,636 m³/s, menor que la crecida de 5 años, aunque fue la peor inundación en décadas. Es probable que GloFAS subestime los picos de este río; ver la calibración.
+
 ## Fuentes
 
 Todas se probaron el 23 de octubre de 2026 y sus respuestas reales están en `tests/fixtures/`.
