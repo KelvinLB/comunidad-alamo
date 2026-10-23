@@ -3,8 +3,8 @@
    revisión guardada con el aviso "Sin conexión". Así nunca se hace pasar un dato viejo por nuevo.
    Si se cambia la lista BASE o la forma de guardar, suba la VERSION. */
 'use strict';
-const VERSION = 'alerta-v1';
-const BASE = ['./', 'app.js?v=2', 'geo.json', 'icono.svg', 'manifest.webmanifest', 'icono-192.png'];
+const VERSION = 'alerta-v2';
+const BASE = ['./', 'app.js?v=3', 'geo.json', 'icono.svg', 'manifest.webmanifest', 'icono-192.png'];
 const ESPERA_MS = 3500;  // con internet muy lento se abre lo guardado y se actualiza por detrás
 
 self.addEventListener('install', e => {

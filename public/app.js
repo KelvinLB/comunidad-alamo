@@ -75,6 +75,8 @@ const apagado = n => S.atrasado && n === 0;
 const etiqueta = n => apagado(n) ? 'Sin datos recientes' : LV[n].head;
 const todoDe = n => apagado(n) ? LV[1].todo : LV[n].todo;
 const respuesta = n => apagado(n) ? ANS_ATRASADO : ANS[n];
+// "Qué hacer hoy" solo sale si hay algo de qué cuidarse, o si no se puede confirmar que no hay peligro
+const conAlerta = lv => S.data ? lv >= 1 || apagado(lv) : S.fallo;
 
 /* ---------- Utilidades ---------- */
 const fmt = n => Math.round(n).toLocaleString('es-MX');
@@ -295,7 +297,6 @@ function renderFranja() {
     if (apagado(n)) { ed = 'Datos atrasados'; txt = ANS_ATRASADO.sub; } else { ed = EDICION[n]; txt = FRANJA[n]; }
   } else if (S.fallo) { ed = 'Sin datos'; txt = 'No se pudo cargar el aviso. Escuche la radio y siga a Protección Civil.'; }
   pinta(e, c, on);
-  S.franja = txt ? `${ed}. ${txt}.` : ed;
   setHTML(e, txt ? `${esc(ed)}<small>${esc(txt)}</small>` : esc(ed));
 }
 
@@ -359,14 +360,19 @@ function renderEdicion() {
   setText('when', D ? `Revisado ${ago(D.actualizado)} · cada 3 horas` : '');
   setText('prob', D ? String(Math.round(D.riesgo.probabilidad)) : '—');
   setText('reco-para', cab);
-  setHTML($('todo'), (D ? todoDe(lv) : LV[1].todo).map(t => `<li>${esc(t)}</li>`).join(''));
+  const alerta = conAlerta(lv);
+  $('sec-que').hidden = !alerta;
+  $('cols1').classList.toggle('dos', !alerta);
+  if (alerta) setHTML($('todo'), (D ? todoDe(lv) : LV[1].todo).map(t => `<li>${esc(t)}</li>`).join(''));
   document.title = `¿Se inunda ${cab}? · Hoy: ${A.a}`;
   renderCompartir();
+  renderFamilia();
 }
 
 /* ---------- Compartir por WhatsApp ---------- */
 // Liga a la página; con comunidad, la abre directo en ella. Va por coordenadas porque hay nombres repetidos.
-const ligaDe = l => location.href.split(/[?#]/)[0] + (l ? `?c=${l.lat},${l.lon}` : '');
+// ?c= la muestra sin guardarla (aviso compartido); ?mi= la deja como la comunidad de ese teléfono (familia)
+const ligaDe = (l, mi) => location.href.split(/[?#]/)[0] + (l ? `?${mi ? 'mi' : 'c'}=${l.lat},${l.lon}` : '');
 
 function mensaje() {
   const D = S.data, n = nivelDia(), l = S.vista === 'comunidad' ? S.sel : null;
@@ -376,7 +382,7 @@ function mensaje() {
   t.push(`*¿Se va a inundar ${cab}?*`, `${EMOJI[lv]} *${A.a}. ${A.sub}.*`, '');
   if (l && lv < n) t.push(LOCAL[lv], `${EMOJI[n]} En Álamo y junto al río: ${etiqueta(n).toLowerCase()}.`);
   else t.push(D.riesgo.resumen.replace('; léalos más abajo.', '; véalos en la página.'));
-  t.push('', '*Qué hacer hoy:*', ...todoDe(lv).slice(0, 2).map(x => '• ' + x));
+  if (conAlerta(lv)) t.push('', '*Qué hacer hoy:*', ...todoDe(lv).slice(0, 2).map(x => '• ' + x));
   t.push('', `Revisado el ${dtime(D.actualizado).replace(/\.$/, '')}.`, `Vea el aviso completo: ${ligaDe(l)}`);
   t.push('', '_Alerta Pantepec es un proyecto comunitario, no oficial. Siga los avisos de Protección Civil. Emergencias: 911._');
   return t.join('\n');
@@ -386,17 +392,131 @@ function mensaje() {
 function renderCompartir() {
   const a = $('compartir'), ok = S.data && !S.atrasado && S.vista !== 'elegir' && (S.vista !== 'comunidad' || S.sel);
   a.hidden = !ok;
+  $('imprimir').hidden = !ok;
   if (ok) a.href = 'https://wa.me/?text=' + encodeURIComponent(mensaje());
 }
 
 // Al elegir otra comunidad o ver el municipio, la liga compartida ya no aplica
 function quitarLiga() {
   S.pedida = null;
-  if (new URLSearchParams(location.search).has('c')) {
-    const u = new URL(location.href);
+  const u = new URL(location.href);
+  if (u.searchParams.has('c') || u.searchParams.has('mi')) {
     u.searchParams.delete('c');
+    u.searchParams.delete('mi');
     history.replaceState(null, '', u);
   }
+}
+
+/* ---------- Para la familia: dejarles la página lista a sus papás ---------- */
+function mensajeFamilia(l) {
+  const cab = sinParentesis(l.n);
+  return [`Hola. Le mando una página para saber si se va a inundar *${cab}* por el río Pantepec. Se revisa sola cada 3 horas y es gratis.`, '',
+    `1. Abra esta liga: ${ligaDe(l, true)}`,
+    `2. Ya le sale su comunidad, ${cab}. Su teléfono la recuerda.`,
+    '3. Para tenerla siempre a la mano, toque "Poner en mi teléfono". Si no sale, en el menú ⋮ toque "Agregar a la pantalla principal". En iPhone: en Safari, Compartir y luego "Agregar a inicio".', '',
+    '_Es un proyecto comunitario, no oficial. Emergencias: 911._'].join('\n');
+}
+
+function renderFamilia() {
+  const box = $('familia'), l = S.vista === 'comunidad' ? S.sel : null;
+  box.hidden = !l;
+  if (!l) return;
+  const cab = sinParentesis(l.n);
+  setText('fam-txt', `Mándeles por WhatsApp la página de ${cab}. Al abrirla, su teléfono queda con ${cab} ya elegida.`);
+  setText('fam-walbl', `Mandarles la página de ${cab}`);
+  $('fam-wa').href = 'https://wa.me/?text=' + encodeURIComponent(mensajeFamilia(l));
+}
+
+/* ---------- Aviso de peligro a pantalla completa (nivel 2 y 3 del municipio) ---------- */
+// Sale al abrir la página y cada vez que el nivel sube; no en cada recarga de 15 minutos.
+function renderPeligro() {
+  const D = S.data, box = $('peligro');
+  if (!D) return;
+  const n = D.riesgo.nivel;
+  if (n < 2) { S.peligroVisto = 1; if (!box.hidden) cerrarPeligro(); return; }
+  pinta(box, LV[n].c, LV[n].on);
+  setText('pel-ed', `${EDICION[n]} · Álamo Temapache`);
+  setText('pel-t', LV[n].head);
+  setText('pel-sub', n === 3 ? 'Junto al río Pantepec, en Álamo y sus comunidades.' : 'En las zonas junto al río Pantepec.');
+  setText('pel-d', LV[n].todo[0]);
+  const l = S.sel, com = $('pel-com');
+  com.hidden = !l;
+  if (l) setText('pel-com', `En su comunidad, ${sinParentesis(l.n)}: ${etiqueta(commLevel(l)).toLowerCase()}.`);
+  setText('pel-rev', S.atrasado ? `Información de ${ago(D.actualizado)}; puede haber cambiado.` : `Revisado ${ago(D.actualizado)}.`);
+  if (n <= (S.peligroVisto || 1)) return;
+  S.peligroVisto = n;
+  box.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('pel-ok').focus();
+}
+
+function cerrarPeligro() {
+  $('peligro').hidden = true;
+  document.body.style.overflow = '';
+  $('edicion').focus({preventScroll: true});
+}
+
+/* ---------- Hoja para imprimir ("periódico mural") ---------- */
+const HOJA_C = ['#1E7B3E', '#F5C518', '#E06A10', '#C8231F'], HOJA_ON = ['#FFFFFF', '#141210', '#141210', '#FFFFFF'];
+const QR_JS = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+const QR_SRI = 'sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==';
+let qrCargando = null;
+function cargarQR() {
+  if (window.qrcode) return Promise.resolve();
+  if (!qrCargando) qrCargando = new Promise((ok, mal) => {
+    const s = el('script', {src: QR_JS, integrity: QR_SRI, crossorigin: 'anonymous', referrerpolicy: 'no-referrer'});
+    s.onload = ok;
+    s.onerror = () => { qrCargando = null; mal(); };
+    document.head.append(s);
+  });
+  return qrCargando;
+}
+function qrSVG(url) {
+  if (!window.qrcode) return '';
+  const q = window.qrcode(0, 'M');
+  q.addData(url);
+  q.make();
+  return q.createSvgTag({cellSize: 4, margin: 0, scalable: true});
+}
+
+function armarHoja() {
+  const D = S.data, n = nivelDia(), l = S.vista === 'comunidad' ? S.sel : null;
+  if (!D) { $('hoja').innerHTML = ''; return; }
+  const lv = l ? commLevel(l) : n, cab = l ? sinParentesis(l.n) : 'Álamo', A = respuesta(lv);
+  const sello = apagado(lv) ? SELLO_SIN_DATOS : SELLO[lv], c = apagado(lv) ? '#5B6670' : HOJA_C[lv], on = apagado(lv) ? '#FFFFFF' : HOJA_ON[lv];
+  const hoy = new Date().toLocaleDateString('es-MX', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ});
+  const alerta = conAlerta(lv), liga = ligaDe(l), qr = qrSVG(liga);
+  const {U, past, fut} = serieRio(D), now = past[past.length - 1];
+  const parte = (D.lluvia || []).slice(0, 7).map((d, i) => {
+    const q = i === 0 && now ? now.caudal : (fut[i - 1] || fut[fut.length - 1] || {caudal: 0}).caudal;
+    return `<tr><td><b>${dayName(d.fecha, i)}</b></td><td>${rainCat(d.mm).w}</td><td>${U ? PALABRA_RIO[nivelRio(q, U)] : '—'}</td></tr>`;
+  }).join('');
+  const mun = l && lv < n ? `<p class="hj-mun"><b>En el resto del municipio:</b> ${esc(etiqueta(n).toLowerCase())} en Álamo y en las comunidades junto al río.</p>` : '';
+  $('hoja').innerHTML = `${D.ejemplo ? '<div class="hj-ed">⚠ Datos de ejemplo: esta hoja no es un aviso real</div>' : ''}
+    <div class="hj-top"><span>${hoy[0].toUpperCase() + hoy.slice(1)}</span><span>Álamo Temapache, Veracruz</span></div>
+    <div class="hj-cab">Alerta Pantepec</div>
+    <div class="hj-lema">El periódico del río · Proyecto comunitario, no oficial</div>
+    <div class="hj-ed" style="background:${HOJA_C[n]};color:${HOJA_ON[n]}">${esc(apagado(n) ? 'Datos atrasados' : EDICION[n])} · ${esc(apagado(n) ? ANS_ATRASADO.sub : FRANJA[n])}</div>
+    <div class="hj-ante">¿Se va a inundar ${esc(cab)}?</div>
+    <div class="hj-resp">
+      <div class="hj-sello" style="background:${c};color:${on}"><div><b>${sello[0]}</b>${sello[1]}</div></div>
+      <div><div class="hj-a">${esc(A.a)}</div><div class="hj-sub">${esc(A.sub)}</div></div>
+    </div>
+    <p class="hj-baj">${esc((l ? $('bajada').textContent : D.riesgo.resumen).replace('; léalos más abajo.', '; véalos en la página.'))}</p>
+    ${mun}
+    <div class="hj-cols${alerta ? '' : ' uno'}">
+      ${alerta ? `<div><h3>Qué hacer hoy</h3><ol>${todoDe(lv).map(t => `<li>${esc(t)}</li>`).join('')}</ol></div>` : ''}
+      <div><h3>El parte del río</h3><table><thead><tr><th>Día</th><th>Lluvia</th><th>El río</th></tr></thead><tbody>${parte}</tbody></table></div>
+    </div>
+    <div class="hj-911"><b>911</b><span><b style="font-size:inherit;color:inherit">¿Está en peligro? Llame al 911.</b> Haga caso a Protección Civil y al Ayuntamiento.</span></div>
+    <div class="hj-qr">${qr}<div>Este aviso cambia. Para ver el de cada día, apunte la cámara del teléfono a este cuadro${qr ? '' : ' (sin código: no había internet al imprimir)'} o entre a:<div class="url">${esc(liga)}</div></div></div>
+    <p class="hj-pie">Revisado el ${esc(dtime(D.actualizado).replace(/\.$/, ''))}. Datos: Copernicus GloFAS, Open-Meteo, SMN · Conagua, NHC · NOAA. No es un aviso oficial: siga los avisos de Protección Civil.</p>`;
+}
+
+async function imprimir() {
+  try { await cargarQR(); } catch (e) { /* sin internet: la hoja sale con la dirección escrita */ }
+  armarHoja();
+  print();
 }
 
 function renderAlerts(D) {
@@ -419,12 +539,16 @@ function renderTech(D) {
       el('div', {class: 'meter', role: 'img', 'aria-label': `${Math.round(f.valor * 100)} de 100`},
         el('span', {style: `width:${Math.max(3, f.valor * 100)}%;background:${LV[lv].c}`})));
   }));
-  $('sources').replaceChildren(...(D.fuentes || []).map(s => el('tr', null,
-    el('td', null, s.url ? el('a', {href: s.url, target: '_blank', rel: 'noopener'}, s.nombre) : s.nombre),
-    el('td', null, s.aporta),
-    el('td', null, el('span', {class: 'dot', style: `color:${s.ok ? 'var(--g)' : 'var(--r)'}`}, s.ok ? '✓ ' : '✗ '),
-      s.ok ? `${s.manual ? 'Captura manual · archivo revisado' : 'Funciona ·'} ${ago(s.fecha)}` : (s.fecha ? `Sin respuesta; se usa la lectura de ${ago(s.fecha)}` : 'Sin respuesta')))));
   renderChart(D);
+}
+
+// Fuentes a la vista: liga a cada institución, qué aporta y si respondió en la última revisión
+function renderFuentes(D) {
+  $('sources').replaceChildren(...(D.fuentes || []).map(s => el('li', null,
+    s.url ? el('a', {href: s.url, target: '_blank', rel: 'noopener'}, s.nombre + ' ↗') : el('b', null, s.nombre),
+    el('div', null, s.aporta),
+    el('div', {class: 'estado'}, el('span', {style: `color:${s.ok ? 'var(--g)' : 'var(--r)'}`}, s.ok ? '✓ ' : '✗ '),
+      s.ok ? `${s.manual ? 'Captura manual · archivo revisado' : 'Respondió'} ${ago(s.fecha)}` : (s.fecha ? `No respondió; se usa su lectura de ${ago(s.fecha)}` : 'No respondió')))));
 }
 
 function render() {
@@ -443,9 +567,11 @@ function render() {
   renderScene(D);
   renderParte(D);
   renderAlerts(D);
+  renderFuentes(D);
   renderTech(D);
   mapa.dibujar();
   $('osmbtn').hidden = !!D.ejemplo || !S.geo;
+  renderPeligro();
 }
 
 function sinDatos() {
@@ -515,8 +641,11 @@ function prepararGeo(geo) {
   const p = S.pedida;
   if (p) {
     const l = S.locs.find(l => Math.abs(l.lat - p.lat) < 1e-3 && Math.abs(l.lon - p.lon) < 1e-3);
-    if (l) S.sel = l;
-    else quitarLiga();
+    if (!l) quitarLiga();
+    else {
+      S.sel = l;
+      if (p.guardar) { guardar(l); quitarLiga(); }  // liga de la familia: queda como su comunidad
+    }
   }
 }
 
@@ -828,35 +957,6 @@ function initOSM() {
   };
 }
 
-/* ---------- Escuchar: lee lo que está en pantalla ---------- */
-function initEscuchar() {
-  if (!('speechSynthesis' in window) || !window.SpeechSynthesisUtterance) return;
-  const btn = $('listen'), lbl = $('listenlbl'), ss = speechSynthesis;
-  btn.hidden = false;
-  btn.addEventListener('click', () => {
-    if (ss.speaking) { ss.cancel(); lbl.textContent = 'Escuchar'; return; }
-    const D = S.data;
-    if (!D) return;
-    let t = S.atrasado ? `Atención: esta información es de ${ago(D.actualizado)}. Consulte la radio y a Protección Civil. ` : '';
-    if (S.vista === 'elegir') t += `${S.franja} ¿Dónde vive usted? Elija su comunidad y le decimos si se puede inundar hoy y qué hacer.`;
-    else {
-      const mun = $('municipio');
-      t += `${$('ante').textContent} ${$('ans').textContent}. ${$('sub').textContent}. ${$('bajada').textContent}`;
-      if (!mun.hidden && S.vista === 'comunidad') t += ` ${mun.textContent}`;
-      t += ` Qué hacer hoy: ${[...$('todo').children].map(li => li.textContent).join(' ')}`;
-    }
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = 'es-MX';
-    u.rate = 0.9;
-    const voces = ss.getVoices();
-    const v = voces.find(v => v.lang === 'es-MX' || v.lang === 'es_MX') || voces.find(v => v.lang && v.lang.startsWith('es'));
-    if (v) u.voice = v;
-    u.onend = u.onerror = () => { lbl.textContent = 'Escuchar'; };
-    lbl.textContent = 'Detener';
-    try { ss.speak(u); } catch (e) { lbl.textContent = 'Escuchar'; }
-  });
-}
-
 /* ---------- Poner la página en el teléfono (PWA) ---------- */
 // Guarda la página para abrir sin señal. data.json no se guarda ahí (ver sw.js).
 function initSinSenal() {
@@ -960,11 +1060,11 @@ function ejemplo(sc) {
     lluvia: P.rain.map((mm, i) => ({fecha: iso(i), mm, cuenca_mm: P.up[i], prob: P.pr[i]})),
     avisos: P.alerts.map(a => ({fuente: a.src, titulo: a.t, nivel: a.lv, fecha: t(a.h * 60), url: ''})),
     fuentes: [
-      {nombre: 'GloFAS v4 (Copernicus) vía Open-Meteo', aporta: 'Caudal simulado y pronóstico', ok: true, fecha: t(40)},
-      {nombre: 'Open-Meteo', aporta: 'Lluvia en Álamo y en la sierra', ok: true, fecha: t(40)},
-      {nombre: 'SMN · Conagua', aporta: 'Pronóstico oficial para Temapache', ok: true, fecha: t(41)},
-      {nombre: 'NHC · NOAA', aporta: 'Huracanes y tormentas cercanos', ok: true, fecha: t(41)},
-      {nombre: 'Protección Civil Veracruz', aporta: 'Alertas y refugios (captura manual)', ok: sc !== 'normal', fecha: sc !== 'normal' ? t(300) : null}],
+      {nombre: 'GloFAS v4 (Copernicus) vía Open-Meteo', aporta: 'Caudal simulado y pronóstico', url: 'https://www.globalfloods.eu/', ok: true, fecha: t(40)},
+      {nombre: 'Open-Meteo', aporta: 'Lluvia en Álamo y en la sierra', url: 'https://open-meteo.com/', ok: true, fecha: t(40)},
+      {nombre: 'SMN · Conagua', aporta: 'Pronóstico oficial para Temapache', url: 'https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios', ok: true, fecha: t(41)},
+      {nombre: 'NHC · NOAA', aporta: 'Huracanes y tormentas cercanos', url: 'https://www.nhc.noaa.gov/', ok: true, fecha: t(41)},
+      {nombre: 'Protección Civil Veracruz', aporta: 'Alertas y refugios (captura manual)', url: 'https://www.veracruz.gob.mx/proteccioncivil/', ok: sc !== 'normal', fecha: sc !== 'normal' ? t(300) : null}],
   };
 }
 
@@ -972,7 +1072,6 @@ function modoDemo(sc) {
   S.demo = ESCENARIOS.includes(sc) ? sc : 'normal';
   S.sinRed = false;
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sc === S.demo)));
-  try { speechSynthesis.cancel(); } catch (e) { /* sin voz */ }
   S.data = ejemplo(S.demo);
   render();
 }
@@ -1049,6 +1148,11 @@ document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click'
   modoDemo(b.dataset.sc);
 }));
 $('retry').onclick = () => cargar();
+$('pel-ok').onclick = cerrarPeligro;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('peligro').hidden) cerrarPeligro(); });
+$('imprimir').onclick = imprimir;
+addEventListener('beforeprint', armarHoja);  // también si imprimen con el menú del navegador
+$('irfuentes').onclick = e => { e.preventDefault(); $('fuentes').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); $('fuentes').focus({preventScroll: true}); };
 $('cambiar').onclick = () => { quitarLiga(); mostrar('elegir'); $('q').focus(); };
 $('general').onclick = () => { quitarLiga(); mostrar('municipio'); irArriba(); };
 $('municipio').addEventListener('click', e => { if (e.target.closest('[data-elegir]')) { mostrar('elegir'); $('q').focus(); } });
@@ -1075,11 +1179,11 @@ setInterval(tick, 60e3);
 
 // Si ya eligió su comunidad antes, la página abre directo en su edición
 S.guardada = leerGuardada();
-const liga = /^(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)$/.exec(new URLSearchParams(location.search).get('c') || '');
-if (liga) S.pedida = {lat: +liga[1], lon: +liga[2]};
+const qs = new URLSearchParams(location.search);
+const liga = /^(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)$/.exec(qs.get('mi') || qs.get('c') || '');
+if (liga) S.pedida = {lat: +liga[1], lon: +liga[2], guardar: qs.has('mi')};
 else if (completa(S.guardada)) S.sel = S.guardada;
 initLetra();
-initEscuchar();
 initBusqueda();
 initUbicacion();
 initOSM();

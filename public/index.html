@@ -84,12 +84,13 @@ button{font-family:inherit;color:inherit}
 .barra .para{display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}
 .barra .para b{font-family:var(--f-head);font-size:1.05rem}
 .tools{display:flex;gap:6px;padding:4px 0}
-.tools button{min-width:52px;min-height:50px;border:2px solid var(--ink);background:var(--paper);font-weight:600;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
-.tools button svg{width:20px;height:20px}
+.tools button,.tools a{text-decoration:none;color:inherit;min-width:52px;min-height:50px;border:2px solid var(--ink);background:var(--paper);font-weight:600;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
+.tools button svg,.tools a svg{width:20px;height:20px}
 .tools button:disabled{opacity:.35;cursor:default}
 
 /* ---------- Franja de la edición: aviso de todo el municipio, siempre visible ---------- */
 .edicion{--c:var(--na);--on:var(--on-na);margin-top:14px;padding:8px 14px;background:var(--c);color:var(--on);font-family:var(--f-head);font-weight:900;font-size:1.05rem;letter-spacing:.1em;text-transform:uppercase;text-align:center;line-height:1.25}
+.edicion:focus{outline:none}
 .edicion small{display:block;font-family:var(--f-body);font-weight:600;letter-spacing:.02em;text-transform:none;font-size:.85rem}
 
 /* ---------- Portada: elegir comunidad ---------- */
@@ -143,6 +144,8 @@ button{font-family:inherit;color:inherit}
 .wa{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;min-height:58px;padding:8px 16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);font-family:var(--f-head);font-weight:900;font-size:1.2rem;line-height:1.15;text-decoration:none;text-align:center}
 .wa svg{width:28px;height:28px;flex:none}
 .wa:hover{background:var(--paper);color:var(--ink)}
+.wa2{margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;width:100%;padding:8px 16px;border:3px solid var(--ink);background:transparent;font-family:var(--f-head);font-weight:900;font-size:1.1rem;line-height:1.15;cursor:pointer}
+.wa2 svg{width:26px;height:26px;flex:none}
 .firma{font-size:.85rem;margin-top:12px;padding-top:8px;border-top:1px solid var(--soft);display:flex;flex-wrap:wrap;gap:4px 14px}
 .firma b{font-weight:600}
 figure{margin:0}
@@ -222,9 +225,70 @@ details.tech h3{font-family:var(--f-body);font-weight:600;font-size:1rem}
 .factors li{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:4px 12px;align-items:center}
 .meter{height:10px;background:var(--soft);overflow:hidden;border:1px solid var(--ink)}
 .meter span{display:block;height:100%}
-.tablewrap{overflow-x:auto}
-.tablewrap td{vertical-align:top}
-.dot{font-weight:600}
+/* Fuentes: a la vista, para que cualquiera pueda ir a la información original */
+.fuentes{padding:16px 0;display:flex;flex-direction:column;gap:12px}
+.fuentes:focus{outline:none}
+.fuentes h2{font-weight:900;font-size:1.75rem}
+.flist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:0 24px}
+.flist li{padding:8px 0 10px;border-bottom:1px dotted var(--muted)}
+.flist a{display:inline-flex;align-items:center;min-height:44px;font-family:var(--f-head);font-weight:900;font-size:1.15rem;line-height:1.15}
+.flist .estado{font-size:.85rem;font-weight:600}
+
+/* Familia: déjesela lista a sus papás */
+.familia{padding:16px 0;display:flex;flex-direction:column;gap:12px}
+.familia h2{font-weight:900;font-size:1.75rem}
+.familia h3{font-weight:700;font-size:1.2rem;margin-top:4px}
+.fam2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px 32px}
+.fam2>div{display:flex;flex-direction:column;gap:10px;min-width:0}
+
+/* Aviso de peligro a pantalla completa (nivel 2 y 3) */
+.peligro{--c:var(--r);--on:var(--on-r);position:fixed;inset:0;z-index:50;background:var(--c);color:var(--on);overflow:auto;display:flex;-webkit-overflow-scrolling:touch}
+.pel-in{margin:auto;max-width:640px;width:100%;padding:24px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;text-align:center;align-items:center}
+.pel-ed{font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:.85rem;border-top:2px solid currentColor;border-bottom:2px solid currentColor;padding:4px 10px}
+.pel-sello{width:116px;height:116px;border-radius:50%;border:4px solid currentColor;display:grid;place-items:center;font-family:var(--f-head);font-weight:900;font-size:3.6rem;line-height:1}
+.peligro h2{font-weight:900;font-size:clamp(2.8rem,14vw,5.5rem);line-height:.95;text-transform:uppercase;letter-spacing:-.01em}
+.pel-sub{font-family:var(--f-head);font-weight:700;font-size:1.35rem;line-height:1.2}
+.peligro p{font-size:1.15rem;line-height:1.4;max-width:36ch}
+.pel-com{font-weight:600;border:2px solid currentColor;padding:8px 12px}
+.pel-rev{font-size:.9rem!important}
+.pel-911{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;background:#FFFFFF;color:#C8231F;border:3px solid #141210;font-family:var(--f-head);font-weight:900;font-size:1.6rem;text-decoration:none}
+.pel-ok{width:100%;min-height:58px;background:transparent;color:inherit;border:3px solid currentColor;font-family:var(--f-head);font-weight:900;font-size:1.2rem;cursor:pointer}
+.pel-ok:focus-visible,.pel-911:focus-visible{outline:4px solid currentColor;outline-offset:4px}
+
+/* Hoja para imprimir: solo existe al imprimir */
+.hoja{display:none}
+@media print{
+  @page{size:letter;margin:12mm}
+  html{font-size:12pt!important}
+  body{background:#FFFFFF!important;color:#000!important;padding:0!important}
+  body>*:not(.hoja){display:none!important}
+  .hoja{display:block;color:#000;font-family:var(--f-body);line-height:1.35;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .hj-top{display:flex;justify-content:space-between;gap:8pt;font-size:9pt;border-bottom:1pt solid #000;padding-bottom:3pt}
+  .hj-cab{text-align:center;font-family:var(--f-head);font-weight:900;font-size:40pt;line-height:1;margin-top:6pt}
+  .hj-lema{text-align:center;font-style:italic;font-size:10pt;border-bottom:3pt double #000;padding-bottom:5pt}
+  .hj-ed{margin-top:8pt;padding:4pt 8pt;text-align:center;font-family:var(--f-head);font-weight:900;font-size:12pt;letter-spacing:.08em;text-transform:uppercase;border:1.5pt solid #000}
+  .hj-ante{font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:11pt;margin-top:10pt}
+  .hj-resp{display:flex;align-items:center;gap:16pt;margin-top:2pt}
+  .hj-a{font-family:var(--f-head);font-weight:900;font-size:56pt;line-height:.95}
+  .hj-sub{font-family:var(--f-head);font-weight:900;font-size:20pt;line-height:1.1}
+  .hj-sello{width:76pt;height:76pt;border-radius:50%;border:3pt solid #000;display:grid;place-items:center;text-align:center;font-family:var(--f-head);font-weight:900;font-size:10pt;line-height:1.05;flex:none;text-transform:uppercase}
+  .hj-sello b{display:block;font-size:24pt}
+  .hj-baj{font-size:12.5pt;margin-top:6pt}
+  .hj-mun{border:1.5pt solid #000;padding:5pt 8pt;margin-top:6pt;font-size:11pt}
+  .hj-cols{display:grid;grid-template-columns:1fr 1fr;gap:16pt;margin-top:10pt}
+  .hj-cols.uno{grid-template-columns:1fr}
+  .hoja h3{font-family:var(--f-head);font-weight:900;font-size:14pt;border-top:2pt solid #000;padding-top:3pt;margin:0 0 4pt}
+  .hoja ol{margin:0;padding-left:16pt;font-size:11pt}
+  .hoja li{margin-bottom:3pt}
+  .hoja table{font-size:10.5pt}
+  .hoja th,.hoja td{padding:2.5pt 4pt;border-bottom:.75pt solid #999}
+  .hj-911{border:3pt solid #000;padding:6pt 10pt;display:flex;gap:12pt;align-items:center;margin-top:10pt;font-size:11pt}
+  .hj-911 b{font-family:var(--f-head);font-weight:900;font-size:32pt;color:#C8231F;line-height:1}
+  .hj-qr{display:flex;gap:14pt;align-items:center;margin-top:10pt;border:1.5pt dashed #000;padding:8pt;font-size:11pt}
+  .hj-qr svg{width:96pt;height:96pt;flex:none}
+  .hj-qr .url{font-weight:600;word-break:break-all}
+  .hj-pie{font-size:9pt;margin-top:8pt;border-top:1pt solid #000;padding-top:4pt}
+}
 .instalar{margin:22px 4px 18px;border:2px dashed var(--ink);padding:16px 14px 10px;position:relative;background:var(--paper2);display:flex;flex-direction:column;gap:10px}
 .instalar::before{content:"✂";position:absolute;top:-15px;left:12px;background:var(--paper);padding:0 4px;font-size:1.1rem}
 .instalar h2{font-weight:900;font-size:1.5rem}
@@ -249,7 +313,11 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
   .col{padding:16px 18px;border-bottom:0;border-left:1px solid var(--rule)}
   .col:first-child{border-left:0;padding-left:0}
   .col:last-child{padding-right:0}
+  .cols.dos{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cols.dos .col:nth-child(2){border-left:0;padding-left:0}
   .avisos{border-top:3px solid var(--rule)}
+  .flist{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fam2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .comun{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -280,14 +348,14 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
   <div class="barra" id="barra">
     <p class="para"><span id="para"><b>Cargando…</b></span><button type="button" class="linkbtn" id="cambiar" hidden></button></p>
     <div class="tools">
-      <button type="button" id="listen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="listenlbl">Escuchar</span></button>
+      <a href="#fuentes" id="irfuentes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></svg>Fuentes</a>
       <button type="button" id="font-down" aria-label="Letra más chica">A−</button>
       <button type="button" id="font-up" aria-label="Letra más grande">A+</button>
     </div>
   </div>
 
   <!-- Aviso de todo el municipio: se ve siempre, aunque no haya elegido comunidad -->
-  <div class="edicion" id="edicion" role="status">Cargando el aviso…</div>
+  <div class="edicion" id="edicion" role="status" tabindex="-1">Cargando el aviso…</div>
 
   <main>
     <!-- Paso 1: elegir comunidad -->
@@ -307,6 +375,7 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
         </div>
         <p class="small" id="locmsg" role="status" hidden></p>
         <p class="tel">¿Está en peligro ahora? <a href="tel:911">Llame al 911</a>.</p>
+        <p class="small">¿Es para sus papás o abuelos? Elija la comunidad de ellos y, más abajo, verá cómo dejarles la página lista en su teléfono.</p>
       </div>
       <div class="der">
         <p class="small" id="top8txt">O toque una de las comunidades más pobladas:</p>
@@ -330,7 +399,8 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
           <p class="municipio" id="municipio" hidden></p>
           <!-- Botón negro a propósito: el verde se reserva para "Sin peligro" -->
           <a class="wa" id="compartir" href="https://wa.me/" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.4-4.2A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 10.5h6M9 14h4"/></svg>Compartir por WhatsApp</a>
-          <div class="firma"><span><b>Por el sistema Alerta Pantepec</b></span><span id="when"></span><span>Fuentes: Copernicus, SMN, NHC</span></div>
+          <button type="button" class="wa2" id="imprimir" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3"/><rect x="7" y="14" width="10" height="7"/></svg>Imprimir hoja para pegar</button>
+          <div class="firma"><span><b>Por el sistema Alerta Pantepec</b></span><span id="when"></span><a href="#fuentes">Ver las fuentes</a></div>
         </div>
         <div>
           <figure>
@@ -341,8 +411,9 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
         </div>
       </article>
 
-      <div class="cols">
-        <section class="col" aria-labelledby="h-que">
+      <div class="cols" id="cols1">
+        <!-- Solo cuando hay algo de qué cuidarse (nivel 1 o más, o sin datos recientes) -->
+        <section class="col" id="sec-que" aria-labelledby="h-que">
           <div class="seccion"><span>Recomendaciones</span><span id="reco-para"></span></div>
           <h2 id="h-que">Qué hacer hoy</h2>
           <ol class="reco" id="todo"></ol>
@@ -385,7 +456,36 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
         <h2 id="h-av">Avisos de las autoridades</h2>
         <ul class="comun" id="alerts"></ul>
       </section>
+
+      <section class="familia" id="familia" aria-labelledby="h-fam" hidden>
+        <div class="seccion"><span>Para la familia</span><span>Hijos y nietos</span></div>
+        <h2 id="h-fam">Déjesela lista a sus papás o abuelos</h2>
+        <p>Si viven en una comunidad del municipio, déjeles esta página en su teléfono con su comunidad ya elegida. Es gratis y no pide datos.</p>
+        <div class="fam2">
+          <div>
+            <h3>Si está con ellos</h3>
+            <ol class="pasos">
+              <li><span>Abra esta página en el teléfono de ellos.</span></li>
+              <li><span>Escriba o toque su comunidad.</span></li>
+              <li><span>Más abajo, toque <b>"Poner en mi teléfono"</b> para que quede el ícono.</span></li>
+              <li><span>Si les cuesta leer, toque <b>A+</b> para agrandar la letra.</span></li>
+            </ol>
+          </div>
+          <div>
+            <h3>Si está lejos</h3>
+            <p id="fam-txt"></p>
+            <a class="wa" id="fam-wa" href="https://wa.me/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.4-4.2A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 10.5h6M9 14h4"/></svg><span id="fam-walbl">Mandarles la página</span></a>
+          </div>
+        </div>
+      </section>
     </div>
+
+    <section class="fuentes" id="fuentes" aria-labelledby="h-fue" tabindex="-1">
+      <div class="seccion"><span>Fuentes</span><span>De dónde sale la información</span></div>
+      <h2 id="h-fue">Consulte las fuentes</h2>
+      <p class="small">Esta página junta lo que publican estas instituciones. Toque una para ver su información directamente.</p>
+      <ul class="flist" id="sources"></ul>
+    </section>
 
     <!-- Instalar como ícono en el teléfono (PWA), sin tienda de aplicaciones -->
     <aside class="instalar" id="instalar" aria-labelledby="h-inst" hidden>
@@ -397,7 +497,7 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
     </aside>
 
     <details class="tech" id="tech">
-      <summary>Datos técnicos y fuentes</summary>
+      <summary>Datos técnicos</summary>
       <div class="in">
         <div>
           <h3>Caudal del río Pantepec en Álamo (m³/s)</h3>
@@ -408,7 +508,6 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
           <h3>Cómo se calculó la posibilidad</h3>
           <ul class="factors" id="factors"></ul>
         </div>
-        <div class="tablewrap"><table><thead><tr><th>Fuente</th><th>Qué aporta</th><th>Última lectura</th></tr></thead><tbody id="sources"></tbody></table></div>
         <div>
           <h3>Metodología</h3>
           <p class="small">1. El índice combina el caudal pronosticado del río (GloFAS, 7 días), la lluvia máxima en 72 horas en la sierra y en Álamo, y los avisos oficiales vigentes.<br>
@@ -431,6 +530,20 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
       mapa con calles © <a href="https://www.openstreetmap.org/copyright" rel="noopener">colaboradores de OpenStreetMap</a>.</p>
   </footer>
 </div>
-<script src="app.js?v=2" defer></script>
+<div class="peligro" id="peligro" role="alertdialog" aria-modal="true" aria-labelledby="pel-t" aria-describedby="pel-d" hidden>
+  <div class="pel-in">
+    <p class="pel-ed" id="pel-ed"></p>
+    <div class="pel-sello" aria-hidden="true">⚠</div>
+    <h2 id="pel-t"></h2>
+    <p class="pel-sub" id="pel-sub"></p>
+    <p id="pel-d"></p>
+    <p class="pel-com" id="pel-com" hidden></p>
+    <p class="pel-rev" id="pel-rev"></p>
+    <a class="pel-911" href="tel:911">Llamar al 911</a>
+    <button type="button" class="pel-ok" id="pel-ok">Ver el aviso completo</button>
+  </div>
+</div>
+<div class="hoja" id="hoja" aria-hidden="true"></div>
+<script src="app.js?v=3" defer></script>
 </body>
 </html>

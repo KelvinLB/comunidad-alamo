@@ -4,7 +4,8 @@
 // 2. el aviso de todo el municipio dice "SÍ · Peligro muy alto" y el mapa tiene las 460 comunidades;
 // 3. al buscar y elegir una comunidad lejos del río se despliega su edición;
 // 4. al volver a abrir la página, abre directo en esa comunidad;
-// 5. el botón de WhatsApp arma el mensaje y su liga abre esa comunidad sin guardarla;
+// 5. el botón de WhatsApp arma el mensaje y su liga abre esa comunidad sin guardarla; la de la familia sí la guarda;
+//    "Qué hacer hoy" solo sale con alerta; con peligro sale el aviso a pantalla completa; la hoja trae QR;
 // 6. se puede poner en el teléfono (PWA) y abre sin señal con el aviso "Sin conexión". Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
@@ -29,7 +30,12 @@ for (const ancho of [390, 360]) {
 
   await page.goto(base + '?demo=alerta', { waitUntil: 'networkidle' });
   await page.waitForTimeout(800);
-  // 1. Portada
+  // 1. Con peligro muy alto, primero sale el aviso a pantalla completa
+  if (await page.isHidden('#peligro') || !/Peligro muy alto/.test(await texto('pel-t'))) falla('no sale el aviso de peligro a pantalla completa');
+  await page.screenshot({ path: `capturas/peligro-${ancho}.png` });
+  await page.click('#pel-ok');
+  if (await page.isVisible('#peligro')) falla('el aviso de peligro no se cierra');
+  // Portada
   let v = await vista();
   if (!v.elegir || v.edicion) falla('la portada no pide elegir comunidad');
   if (!/alerta/i.test(await texto('edicion'))) falla(`la franja del municipio dice "${await texto('edicion')}"`);
@@ -62,13 +68,38 @@ for (const ancho of [390, 360]) {
   const ligaWa = (msj.match(/https?:\/\/\S+\?c=[-\d.,]+/) || [''])[0];
   if (!/Cañas de Abajo/.test(msj) || !/Puede ser/.test(msj) || !/no oficial/.test(msj) || !ligaWa) falla(`el mensaje de WhatsApp no está completo: ${msj.slice(0, 120)}`);
   if (await scroll() > 0) falla(`comunidad con scroll horizontal de ${await scroll()}px`);
+  if (await page.isHidden('#sec-que')) falla('con "Esté atento" no sale "Qué hacer hoy"');
+  // para la familia: la liga ?mi= deja la comunidad guardada
+  const fam = decodeURIComponent((await page.getAttribute('#fam-wa', 'href')).slice(20));
+  const ligaFam = (fam.match(/https?:\/\/\S+\?mi=[-\d.,]+/) || [''])[0];
+  if (!ligaFam || !/Cañas de Abajo/.test(fam)) falla(`el mensaje para la familia no está completo: ${fam.slice(0, 120)}`);
+  // hoja para imprimir, con código QR
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.click('#imprimir');
+  await page.waitForFunction(() => document.getElementById('hoja').innerHTML.length > 200, null, { timeout: 15000 }).catch(() => {});
+  const hoja = await page.evaluate(() => ({ txt: document.getElementById('hoja').textContent, qr: !!document.querySelector('#hoja .hj-qr svg') }));
+  if (!/Cañas de Abajo/.test(hoja.txt) || !/911/.test(hoja.txt)) falla('la hoja para imprimir no tiene la comunidad o el 911');
+  if (!hoja.qr) falla('la hoja para imprimir no tiene el código QR');
+  await page.emulateMedia({ media: 'print' });
+  await page.screenshot({ path: `capturas/hoja-${ancho}.png`, fullPage: true });
+  await page.emulateMedia({ media: 'screen' });
   await page.screenshot({ path: `capturas/comunidad-${ancho}.png`, fullPage: true });
+  // con "Sin peligro" no sale "Qué hacer hoy", ni en el mensaje de WhatsApp
+  await page.click('.seg button[data-sc="normal"]');
+  await page.waitForTimeout(400);
+  const msjNormal = decodeURIComponent((await page.getAttribute('#compartir', 'href')).slice(20));
+  if (await page.isVisible('#sec-que') || /Qué hacer hoy/.test(msjNormal)) falla('con "Sin peligro" sigue saliendo "Qué hacer hoy"');
+  await page.click('.seg button[data-sc="alerta"]');
+  await page.waitForTimeout(400);
+  if (await page.isHidden('#peligro')) falla('al subir a peligro muy alto no vuelve a salir el aviso a pantalla completa');
+  await page.click('#pel-ok');
 
   // 4. Al volver, abre directo en su comunidad
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(800);
   v = await vista();
   if (v.elegir || !v.edicion || !/Cañas/.test(await texto('ante'))) falla('al volver a abrir no recuerda la comunidad');
+  if (!/Cañas de Abajo: esté atento/.test(await texto('pel-com'))) falla(`el aviso de peligro no menciona su comunidad: "${await texto('pel-com')}"`);
 
   // 5. Quien recibe la liga ve esa comunidad, pero no se le guarda como suya
   const otra = await browser.newPage({ viewport: { width: ancho, height: 844 }, locale: 'es-MX' });
@@ -79,6 +110,15 @@ for (const ancho of [390, 360]) {
   const recibida = await otra.evaluate(() => ({ ante: document.getElementById('ante').textContent, guardada: localStorage.getItem('mi_comunidad') }));
   if (!/Cañas de Abajo/.test(recibida.ante) || recibida.guardada) falla(`la liga compartida abre "${recibida.ante}" (guardada: ${recibida.guardada})`);
   await otra.close();
+  // la liga de la familia sí la deja guardada
+  const papas = await browser.newPage({ viewport: { width: ancho, height: 844 }, locale: 'es-MX' });
+  papas.on('pageerror', e => errores.push(String(e)));
+  await papas.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await papas.goto(ligaFam.replace(/^https?:\/\/[^/]+\//, base) + '&demo=alerta', { waitUntil: 'networkidle' });
+  await papas.waitForTimeout(800);
+  const dePapas = await papas.evaluate(() => ({ ante: document.getElementById('ante').textContent, guardada: localStorage.getItem('mi_comunidad'), url: location.search }));
+  if (!/Cañas de Abajo/.test(dePapas.ante) || !/Cañas de Abajo/.test(dePapas.guardada || '') || /mi=/.test(dePapas.url)) falla(`la liga de la familia no guarda la comunidad: ${JSON.stringify(dePapas)}`);
+  await papas.close();
 
   const propios = errores.filter(e => !/fonts\.g|ERR_FAILED/.test(e));
   if (propios.length) falla(`errores en consola: ${propios.join(' | ')}`);

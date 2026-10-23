@@ -6,7 +6,9 @@ Página web que responde, con solo abrirla, si hay peligro de inundación por el
 - Se revisa **sola cada 3 horas**, consultando fuentes científicas y oficiales: el pronóstico del río (Copernicus GloFAS), la lluvia en Álamo y en la sierra (Open-Meteo), el pronóstico oficial (SMN · Conagua) y los huracanes (Centro Nacional de Huracanes).
 - Funciona en celulares sencillos y con internet lento. Pesa menos de 100 KB.
 - Se puede **poner como ícono en el teléfono** sin descargar nada de la tienda (es una "PWA"). Así abre rápido y, si no hay señal, muestra la última revisión guardada con el aviso "Sin conexión".
-- Trae un botón para **compartir el aviso por WhatsApp**.
+- Trae un botón para **compartir el aviso por WhatsApp** y otro para **imprimir una hoja** con código QR, para pegarla en la tienda, la agencia municipal o la iglesia.
+- Cuando hay **peligro** (nivel 2 o 3), al abrir la página sale primero un aviso de color a pantalla completa.
+- Tiene una guía para que hijos y nietos **le dejen la página lista a sus papás**, con su comunidad ya elegida.
 - Cuesta **$0 al mes**: GitHub hace las revisiones y Vercel publica la página.
 - **No es una página oficial** y no reemplaza los avisos de Protección Civil.
 
