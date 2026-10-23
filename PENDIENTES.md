@@ -26,6 +26,13 @@ Todas se probaron el 23 de octubre de 2026 y sus respuestas reales están en `te
 - **NHC.** Las claves de tipo de sistema (`HU`, `TS`, `TD`, `STS`, `PTC`, `PC`…) se tradujeron según la documentación del NHC; si aparece una desconocida se muestra como "Sistema tropical". La cuenca se lee del `id` (`al` = Atlántico, `ep` = Pacífico Este; el Pacífico Central se ignora).
 - **Lluvia en la sierra.** Para cada día se toma el punto de la cuenca alta con más lluvia, y sobre esa serie se busca el máximo de 72 h. Es un poco más conservador que calcular las 72 h de cada punto por separado.
 
+## Calibración con octubre de 2025 (`scripts/calibrar.py`)
+
+- **Meta cumplida con los pesos de la especificación:** nivel 3 desde el 4 de octubre de 2025 (la meta era a más tardar el 8).
+- **Limitación importante:** se usó lo que de verdad pasó como si fuera el pronóstico (pronóstico perfecto). En la vida real el pronóstico a 4-7 días falla, así que la alerta real llegaría más tarde o con menos fuerza. No hay avisos históricos, así que el factor de avisos quedó en 0. La lluvia histórica es ERA5 (malla de ~25 km), que suele quedarse corta en tormentas de montaña.
+- **Problema detectado:** el 10 y 11 de octubre, con el río desbordado, el índice baja a nivel 2 (62-67), porque ya no llovía y el caudal de GloFAS (1,636 m³/s) es menor que la crecida de 5 años. **Pendiente de decisión:** subir el peso del caudal (ver la propuesta en el resumen de la etapa 8).
+- **Falsas alarmas:** del 15 de octubre al 31 de diciembre de 2025, ningún día pasó de nivel 1. En las temporadas de lluvias (junio-noviembre) de 2019 a 2024, los días en nivel 2 o más fueron 8, 15, 7, 0, 4 y 15 de 183, siempre en rachas de varios días seguidos (por ejemplo, la tormenta Grace en agosto de 2021 y Alberto en junio de 2024). No se pudo comparar contra un registro de inundaciones reales.
+
 ## Página
 
 - **Imagen para WhatsApp.** `og:image` apunta a `og.png` con ruta relativa; WhatsApp necesita la dirección completa (`https://…/og.png`). Cambiarla en `public/index.html` cuando exista el dominio de Vercel.
