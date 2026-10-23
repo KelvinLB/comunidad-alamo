@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Propuesta: Alerta Pantepec estilo periódico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Estilo periódico: papel, tinta negra, filetes (líneas finas) y columnas.
+   El semáforo se conserva en sellos y franjas, siempre con su palabra. */
+:root{
+  --paper:#F6F1E6; --paper2:#EDE5D3; --ink:#141210; --muted:#4E4840; --rule:#141210; --soft:#CFC5B0;
+  --g:#1E7B3E; --y:#F5C518; --o:#E06A10; --r:#C8231F; --vec:#6B3FA0;
+  --on-g:#FFFFFF; --on-y:#141210; --on-o:#141210; --on-r:#FFFFFF;
+  --river:#2F78A8; --water:#4F7F95; --hill:#B9C9A6;
+  --f-head:"Playfair Display",Georgia,"Times New Roman",serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --fs:20px;
+  color-scheme:light;
+}
+/* Edición nocturna (modo oscuro): papel oscuro, tinta clara */
+@media (prefers-color-scheme:dark){:root{
+  --paper:#16140F; --paper2:#211E17; --ink:#F1EBDD; --muted:#B8AE9A; --rule:#F1EBDD; --soft:#4A4436;
+  --g:#1F8044; --o:#F07A28; --r:#D2302B; --vec:#8E62C7; --river:#5DA9D8; --water:#3F7088; --hill:#2A3B2B;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:var(--fs)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);line-height:1.55;padding:0 16px 48px}
+h1,h2,h3{font-family:var(--f-head);margin:0;line-height:1.05;text-wrap:balance}
+p{margin:0}
+a{color:inherit;text-decoration-thickness:1px;text-underline-offset:3px}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:4px solid var(--river);outline-offset:3px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sc{font-variant:small-caps;letter-spacing:.06em}
+.muted{color:var(--muted)}
+
+/* Franja de la maqueta (no va en la página real) */
+.mq{max-width:1120px;margin:0 auto;padding:12px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;font-size:.8rem;border-bottom:1px dashed var(--muted)}
+.mq .seg{display:flex;gap:6px;flex-wrap:wrap}
+.mq button{min-height:44px;padding:0 12px;border:1px solid var(--ink);background:transparent;font-size:.8rem;cursor:pointer}
+.mq button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+.diario{max-width:1120px;margin:0 auto}
+
+/* ---------- Cabezal ---------- */
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:10px 0 6px;font-size:.78rem;border-bottom:1px solid var(--rule)}
+.cabezal{text-align:center;padding:10px 0 6px}
+.cabezal .nombre{font-family:var(--f-head);font-weight:900;font-size:clamp(2rem,10.5vw,5.6rem);line-height:.95;letter-spacing:-.01em;white-space:nowrap}
+.cabezal .lema{font-style:italic;font-size:.95rem;margin-top:6px}
+.filete2{border-top:4px double var(--rule);border-bottom:1px solid var(--rule);height:7px;margin:6px 0 0}
+.barra{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:.8rem}
+.tools{display:flex;gap:6px}
+.tools button{min-width:52px;min-height:50px;border:2px solid var(--ink);background:var(--paper);font-weight:600;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 10px}
+.tools button svg{width:20px;height:20px}
+
+/* ---------- Franja de edición (color + palabra) ---------- */
+.edicion{margin-top:14px;padding:8px 14px;background:var(--c);color:var(--on);font-family:var(--f-head);font-weight:900;font-size:1.05rem;letter-spacing:.12em;text-transform:uppercase;text-align:center;display:flex;justify-content:center;align-items:center;gap:10px}
+@media (max-width:520px){.edicion small{display:none}.top span:nth-child(2){display:none}}
+.edicion small{font-family:var(--f-body);font-weight:600;letter-spacing:.02em;text-transform:none;font-size:.85rem}
+
+/* ---------- Nota principal ---------- */
+.principal{display:grid;grid-template-columns:1fr;gap:16px;padding:16px 0;border-bottom:3px solid var(--rule)}
+.antetitulo{font-weight:600;font-size:.95rem;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--rule);padding-bottom:4px;display:inline-block}
+.titular{display:flex;align-items:flex-start;gap:14px;margin-top:8px}
+.titular h1{font-weight:900;font-size:clamp(4rem,24vw,7rem);line-height:.92;letter-spacing:-.015em;flex:1}
+.titular h1 span{display:block;font-size:.4em;line-height:1.05;letter-spacing:0;margin-top:.15em}
+/* Sello del nivel: forma redonda + color + palabra */
+.sello{flex:none;width:96px;height:96px;border-radius:50%;background:var(--c);color:var(--on);border:3px solid var(--ink);box-shadow:0 0 0 4px var(--paper),0 0 0 6px var(--ink);display:grid;place-items:center;text-align:center;font-family:var(--f-head);font-weight:900;line-height:1;transform:rotate(-8deg);margin-top:6px}
+.sello b{display:block;font-size:1.6rem;line-height:1}
+.sello i{font-style:normal;font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;display:block;margin-top:3px;line-height:1.05}
+.bajada{font-size:1.22rem;line-height:1.45;margin-top:12px}
+.firma{font-size:.85rem;margin-top:12px;padding-top:8px;border-top:1px solid var(--soft);display:flex;flex-wrap:wrap;gap:4px 14px}
+.firma b{font-weight:600}
+.tucom{margin-top:14px;border:2px solid var(--ink);padding:10px 12px;background:var(--paper2);font-size:1rem}
+.tucom b{font-family:var(--f-head)}
+figure{margin:0}
+figure svg{display:block;width:100%;height:auto;border:1px solid var(--rule)}
+figcaption{font-style:italic;font-size:.85rem;margin-top:6px;padding-left:8px;border-left:3px solid var(--rule)}
+.prob{display:flex;align-items:baseline;gap:10px;margin-top:10px;padding:8px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.prob b{font-family:var(--f-head);font-weight:900;font-size:2.4rem;line-height:1}
+
+/* ---------- Columnas ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:0}
+.col{padding:16px 0;border-bottom:1px solid var(--rule);display:flex;flex-direction:column;gap:12px;min-width:0}
+.seccion{font-family:var(--f-body);font-weight:600;font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);padding:4px 0;display:flex;justify-content:space-between}
+.col h2{font-weight:900;font-size:1.75rem}
+.col h3{font-weight:700;font-size:1.2rem;line-height:1.2}
+
+/* Su comunidad */
+.buscar{display:flex;border:2px solid var(--ink);background:var(--paper)}
+.buscar input{flex:1;min-width:0;min-height:56px;border:0;background:transparent;font:inherit;font-size:1.05rem;padding:0 12px;color:var(--ink)}
+.buscar button{min-width:56px;border:0;border-left:2px solid var(--ink);background:var(--ink);color:var(--paper);font-weight:600;cursor:pointer}
+.ficha{border:3px solid var(--c);padding:12px;background:color-mix(in srgb,var(--c) 9%,var(--paper))}
+.ficha .nivel{display:inline-block;background:var(--c);color:var(--on);font-family:var(--f-head);font-weight:900;padding:2px 10px;font-size:1.05rem}
+.datos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:10px}
+.datos div{padding:6px 4px;text-align:center;border-left:1px solid var(--soft)}
+.datos div:first-child{border-left:0}
+.datos b{display:block;font-family:var(--f-head);font-size:1.2rem}
+.datos span{font-size:.72rem;line-height:1.2;display:block;color:var(--muted)}
+.mapa svg{border:1px solid var(--rule);display:block;width:100%;height:auto;background:#E4E7D6}
+
+/* Parte del río: tabla tipo "el tiempo" del periódico */
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{padding:7px 4px;border-bottom:1px solid var(--soft);text-align:left;vertical-align:middle}
+th{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;border-bottom:2px solid var(--rule);font-weight:600}
+td.d{font-weight:600;white-space:nowrap}
+td svg{width:30px;height:30px;vertical-align:middle}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.pill i{width:14px;height:14px;border-radius:50%;background:var(--c);border:2px solid var(--ink);flex:none}
+
+/* Recomendaciones */
+.reco{list-style:none;counter-reset:r;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.reco li{counter-increment:r;display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:8px;font-size:1.02rem;line-height:1.4}
+.reco li::before{content:counter(r);font-family:var(--f-head);font-weight:900;font-size:1.9rem;line-height:1;color:var(--ink)}
+
+/* Comunicados oficiales */
+.comun{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.comun li{padding-bottom:10px;border-bottom:1px dotted var(--muted)}
+.etq{display:inline-block;font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:1px 8px;background:var(--c);color:var(--on);margin-bottom:4px}
+
+/* Voz de los vecinos: estilo "cartas de los lectores" */
+.cartas{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.cartas li{border-left:4px solid var(--vec);padding:2px 0 2px 12px}
+.cartas q{font-style:italic;font-size:1.05rem;quotes:"«" "»"}
+.cartas .de{display:block;font-size:.82rem;margin-top:4px;color:var(--muted)}
+.rev{display:inline-block;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:var(--vec);color:#fff;padding:1px 6px;margin-left:4px}
+.aviso-vec{font-size:.82rem;border:1px solid var(--rule);padding:6px 8px}
+/* Cupón recortable para reportar */
+.cupon{border:2px dashed var(--ink);padding:14px;position:relative;background:var(--paper2)}
+.cupon::before{content:"✂";position:absolute;top:-15px;left:12px;background:var(--paper);padding:0 4px;font-size:1.1rem}
+.cupon h3{font-weight:900;font-size:1.35rem}
+.cupon button{margin-top:10px;width:100%;min-height:56px;border:2px solid var(--ink);background:var(--vec);color:#fff;font-family:var(--f-head);font-weight:900;font-size:1.2rem;cursor:pointer}
+
+/* Noticias de la región */
+.notas{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.notas li{padding:10px 0;border-bottom:1px solid var(--soft)}
+.notas li:first-child{padding-top:0}
+.notas .fuente{font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.notas .fuente .of{background:var(--ink);color:var(--paper);padding:0 6px;margin-right:4px}
+.notas h3 a{text-decoration:none}
+.notas h3 a:hover{text-decoration:underline}
+.notas p{font-size:.92rem;margin-top:2px}
+
+/* 911: recuadro como anuncio importante */
+.urgente{border:4px solid var(--ink);outline:2px solid var(--ink);outline-offset:3px;margin:18px 4px;padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;background:var(--paper)}
+.urgente a{font-family:var(--f-head);font-weight:900;font-size:3.2rem;line-height:1;color:#C8231F;text-decoration:none}
+.urgente p{font-size:1rem}
+.urgente b{font-family:var(--f-head)}
+
+footer{margin-top:10px;border-top:4px double var(--rule);padding-top:10px;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+
+/* ---------- Escritorio: portada a columnas ---------- */
+@media (min-width:780px){
+  .principal{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px}
+  .principal>div:last-child{border-left:1px solid var(--rule);padding-left:28px}
+  .cols{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .col{padding:16px 18px;border-bottom:0;border-left:1px solid var(--rule)}
+  .col:nth-child(3n+1){border-left:0;padding-left:0}
+  .col:nth-child(3n){padding-right:0}
+  .fila2{border-top:3px solid var(--rule)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="mq" aria-label="Controles de la maqueta">
+  <span><b>Maqueta</b> · datos de ejemplo · vea cómo cambia la portada:</span>
+  <div class="seg" role="group" aria-label="Situación de ejemplo">
+    <button type="button" data-n="0" aria-pressed="false">Día normal</button>
+    <button type="button" data-n="1" aria-pressed="false">Frente frío</button>
+    <button type="button" data-n="3" aria-pressed="true">Huracán</button>
+  </div>
+</div>
+
+<div class="diario">
+  <div class="top"><span id="fecha">Viernes 23 de octubre de 2026</span><span>Álamo Temapache, Veracruz</span><span>Gratuito · se revisa cada 3 horas</span></div>
+  <header class="cabezal">
+    <div class="nombre">Alerta Pantepec</div>
+    <div class="lema">El periódico del río · Proyecto comunitario, no oficial</div>
+  </header>
+  <div class="filete2"></div>
+  <div class="barra">
+    <span><b>Edición de las 11:17</b> · próxima revisión a las 14:17</span>
+    <div class="tools">
+      <button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Escuchar</button>
+      <button type="button" id="fd" aria-label="Letra más chica">A−</button>
+      <button type="button" id="fu" aria-label="Letra más grande">A+</button>
+    </div>
+  </div>
+
+  <div class="edicion" id="edicion"></div>
+
+  <!-- ===== Nota principal ===== -->
+  <article class="principal">
+    <div>
+      <div class="antetitulo">¿Se va a inundar Álamo?</div>
+      <div class="titular" aria-live="polite">
+        <h1 id="titular"></h1>
+        <div class="sello" id="sello" aria-hidden="true"></div>
+      </div>
+      <p class="bajada" id="bajada"></p>
+      <div class="firma"><span><b>Por el sistema Alerta Pantepec</b></span><span>Revisado hace 38 minutos</span><span>Fuentes: Copernicus, SMN, NHC</span></div>
+      <p class="tucom" id="tucom"></p>
+    </div>
+    <div>
+      <figure>
+        <svg viewBox="0 0 400 250" role="img" aria-label="Dibujo del río bajo el puente" id="escena"></svg>
+        <figcaption id="pie"></figcaption>
+      </figure>
+      <div class="prob"><b id="prob"></b><span>de cada 100: posibilidad de inundación esta semana</span></div>
+    </div>
+  </article>
+
+  <!-- ===== Fila 1 de columnas ===== -->
+  <div class="cols">
+    <section class="col" aria-labelledby="h-loc">
+      <div class="seccion"><span>Edición local</span><span>Su comunidad</span></div>
+      <h2 id="h-loc">¿Dónde vive usted?</h2>
+      <div class="buscar"><label for="q" class="vh">Buscar su comunidad</label><input id="q" placeholder="Escriba su comunidad…" value="Las Cañas de Abajo"><button type="button">Buscar</button></div>
+      <div class="ficha" id="ficha"></div>
+      <figure class="mapa">
+        <svg viewBox="0 0 400 230" role="img" aria-label="Mapa del municipio">
+          <rect width="400" height="230" fill="#E4E7D6"/>
+          <path d="M-10 120 C60 110 90 92 150 100 S250 122 300 110 S380 82 410 88" fill="none" stroke="#2F78A8" stroke-width="6" stroke-linecap="round"/>
+          <g stroke="#141210" stroke-width="1.2" id="puntos"></g>
+          <circle cx="188" cy="103" r="10" stroke="#141210" stroke-width="3" id="alamo"/>
+          <text x="188" y="84" text-anchor="middle" font-family="Playfair Display,serif" font-weight="900" font-size="15" fill="#141210" stroke="#E4E7D6" stroke-width="4" paint-order="stroke">ÁLAMO</text>
+          <g fill="#6B3FA0" stroke="#fff" stroke-width="2.5"><path d="M156 100 l10 -13 l10 13 l-10 13z"/><path d="M232 122 l10 -13 l10 13 l-10 13z"/></g>
+          <circle cx="300" cy="180" r="13" fill="none" stroke="#141210" stroke-width="3"/>
+          <text x="318" y="185" font-family="Source Serif 4,serif" font-weight="600" font-size="13" fill="#141210" stroke="#E4E7D6" stroke-width="4" paint-order="stroke">Las Cañas</text>
+        </svg>
+        <figcaption>Las 460 comunidades del municipio (INEGI). Círculos: riesgo de cada comunidad. Rombos morados: reportes de vecinos.</figcaption>
+      </figure>
+    </section>
+
+    <section class="col" aria-labelledby="h-rio">
+      <div class="seccion"><span>El tiempo</span><span>Próximos 7 días</span></div>
+      <h2 id="h-rio">El parte del río</h2>
+      <table>
+        <thead><tr><th>Día</th><th>Lluvia</th><th>El río</th></tr></thead>
+        <tbody id="parte"></tbody>
+      </table>
+      <p class="muted" style="font-size:.85rem">"Se sale" quiere decir que el agua puede pasar la orilla en las partes bajas.</p>
+    </section>
+
+    <section class="col" aria-labelledby="h-que">
+      <div class="seccion"><span>Recomendaciones</span><span>Para hoy</span></div>
+      <h2 id="h-que">Qué hacer hoy</h2>
+      <ol class="reco" id="reco"></ol>
+    </section>
+  </div>
+
+  <aside class="urgente" aria-label="Emergencias">
+    <a href="tel:911">911</a>
+    <p><b>¿Está en peligro? Llame al 911.</b> Haga caso a Protección Civil y al Ayuntamiento. Esta página no reemplaza los avisos de Protección Civil.</p>
+  </aside>
+
+  <!-- ===== Fila 2 de columnas ===== -->
+  <div class="cols fila2">
+    <section class="col" aria-labelledby="h-com">
+      <div class="seccion"><span>Comunicados</span><span>Oficiales</span></div>
+      <h2 id="h-com">Avisos de las autoridades</h2>
+      <ul class="comun" id="comun"></ul>
+    </section>
+
+    <section class="col" aria-labelledby="h-vec">
+      <div class="seccion"><span>Cartas</span><span>De los vecinos</span></div>
+      <h2 id="h-vec">Lo que reportan los vecinos</h2>
+      <p class="aviso-vec">Son testimonios revisados por un moderador, <b>no avisos oficiales</b>. Se borran a las 24 horas.</p>
+      <ul class="cartas">
+        <li><q>El agua ya llegó a la banqueta en la calle junto al río.</q><span class="de">— Vecino de una colonia de ejemplo, Álamo · hace 40 min <span class="rev">✓ Revisado</span></span></li>
+        <li><q>No se puede pasar el vado, el arroyo va crecido.</q><span class="de">— Vecina de una comunidad de ejemplo · hace 2 horas <span class="rev">✓ Revisado</span></span></li>
+      </ul>
+      <div class="cupon">
+        <h3>Envíe su reporte</h3>
+        <p style="font-size:.92rem">¿Ve agua en la calle, un camino cortado o el río muy alto? Cuéntenos por WhatsApp en 3 pasos. No pedimos su nombre.</p>
+        <button type="button">Reportar lo que veo</button>
+      </div>
+    </section>
+
+    <section class="col" aria-labelledby="h-not">
+      <div class="seccion"><span>Región</span><span>Noticias y fuentes</span></div>
+      <h2 id="h-not">Noticias de la región</h2>
+      <ul class="notas">
+        <li><div class="fuente"><span class="of">Oficial</span>Protección Civil Veracruz · hoy</div><h3><a href="#">Ejemplo: se mantiene la vigilancia en los ríos Pantepec y Tuxpan</a></h3><p>Resumen corto en palabras sencillas.</p></li>
+        <li><div class="fuente">Diario regional (ejemplo) · ayer</div><h3><a href="#">Ejemplo: vecinos de colonias bajas piden desazolve del río</a></h3></li>
+        <li><div class="fuente"><span class="of">Oficial</span>SMN · Conagua · ayer</div><h3><a href="#">Ejemplo: frente frío traerá lluvias fuertes al norte de Veracruz</a></h3></li>
+        <li><div class="fuente">Radio local (ejemplo) · hace 3 días</div><h3><a href="#">Ejemplo: avanza la obra del bordo en la orilla del Pantepec</a></h3></li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>
+    <p><b>Alerta Pantepec</b> es un proyecto comunitario, no oficial. No guarda su nombre ni su ubicación.</p>
+    <p>Datos: Copernicus GloFAS · Open-Meteo · SMN · Conagua · NHC · NOAA · INEGI · Natural Earth · OpenStreetMap.</p>
+    <p>▸ Datos técnicos y fuentes (sección plegable, igual que hoy)</p>
+  </footer>
+</div>
+
+<script>
+const LV = [
+  {c:'var(--g)', on:'var(--on-g)', palabra:'Sin peligro', ed:'Edición ordinaria', edsub:'Todo en calma',
+   h1:'No', sub:'Hoy no hay peligro', prob:9,
+   bajada:'El río está normal. No se espera lluvia fuerte esta semana.',
+   pie:'El río bajo el puente de Álamo: la regla marca el nivel de hoy, dentro de la franja verde.',
+   reco:['Viva su día normal. Revise esta página una vez al día en temporada de lluvias.','Tenga lista una mochila: papeles en bolsa de plástico, medicinas, lámpara, agua y cargador.','Sepa a dónde iría: la casa de un familiar en lo alto o el refugio temporal.'],
+   rain:[0,0,1,1,0,0,0], rio:[0,0,0,0,0,0,0], now:205, pk:205},
+  {c:'var(--y)', on:'var(--on-y)', palabra:'Esté atento', ed:'Aviso', edsub:'Esté pendiente',
+   h1:'Puede ser', sub:'Esté atento', prob:46,
+   bajada:'El río va a subir, pero se espera que siga dentro de su cauce. Va a llover fuerte en la sierra, de donde baja el agua. Esté pendiente.',
+   pie:'El río bajo el puente: la línea punteada marca hasta dónde se espera que suba en 2 días.',
+   reco:['Revise esta página y la radio varias veces al día, también en la noche.','Suba a lo alto sus papeles, aparatos y comida.','No cruce arroyos ni vados con agua corriendo, ni a pie ni en carro.','Platique con su familia a dónde irían si el río se sale.'],
+   rain:[1,2,2,1,1,0,0], rio:[0,1,1,1,0,0,0], now:200, pk:178},
+  null,
+  {c:'var(--r)', on:'var(--on-r)', palabra:'Muy alto', ed:'Edición de alerta', edsub:'Peligro muy alto',
+   h1:'Sí', sub:'Peligro muy alto', prob:84,
+   bajada:'El río puede salirse de su cauce y meterse a las calles. Va a llover muchísimo en la sierra, de donde baja el agua. Hay avisos de las autoridades. Si vive cerca del río, salga a un lugar alto.',
+   pie:'El río bajo el puente: hoy ya está alto y en 2 días puede pasar la franja roja de la regla.',
+   reco:['Si le piden salir, salga ya hacia el refugio o a un lugar alto.','No regrese por sus cosas si el agua ya está subiendo.','No camine ni maneje por calles con agua: aunque se vea poca, la corriente lo puede tumbar.','Llame al 911 si usted o alguien más está en peligro.'],
+   rain:[3,4,4,3,2,1,0], rio:[2,3,3,2,1,1,0], now:158, pk:102},
+];
+const COM = {0:[['Info','No hay huracanes ni tormentas cerca de Veracruz.','Servicio Meteorológico Nacional · hace 2 horas',0]],
+  1:[['Atento','Ejemplo: frente frío con lluvias muy fuertes en el norte de Veracruz y la sierra de Puebla.','Servicio Meteorológico Nacional · hace 3 horas',1],['Atento','Ejemplo: vigilan los ríos Pantepec, Vinazco y Tuxpan.','Protección Civil Veracruz · hace 5 horas',1]],
+  3:[['Emergencia','Ejemplo: alerta roja en Álamo Temapache, Tuxpan y Poza Rica. Refugios temporales abiertos.','Protección Civil Veracruz · hace 1 hora',3],['Emergencia','Ejemplo: huracán frente a la costa de Veracruz, lluvias extraordinarias.','Servicio Meteorológico Nacional · hace 1 hora',3],['Alerta','Ejemplo: aviso de tormenta tropical de Tuxpan a Cabo Rojo.','Centro Nacional de Huracanes · hace 2 horas',2]]};
+const COL = ['var(--g)','var(--y)','var(--o)','var(--r)'], ON = ['var(--on-g)','var(--on-y)','var(--on-o)','var(--on-r)'];
+const DIAS = ['Hoy','Mañana','Domingo','Lunes','Martes','Miércoles','Jueves'];
+const LLUVIA = ['Sin lluvia','Poca lluvia','Lluvia fuerte','Mucha lluvia','Lluvia peligrosa'];
+const RIO = ['Normal','Alto','Se sale','Inunda'];
+
+function icono(k){
+  if(k===0) return '<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="10" fill="#F2B705"/><g stroke="#F2B705" stroke-width="3.5" stroke-linecap="round"><path d="M28 6v6M28 44v6M6 28h6M44 28h6M12.4 12.4l4.2 4.2M39.4 39.4l4.2 4.2M12.4 43.6l4.2-4.2M39.4 16.6l4.2-4.2"/></g></svg>';
+  const n=[0,1,3,4,5][k]; let d='';
+  for(let i=0;i<n;i++){const x=n===1?28:14+i*(28/(n-1)); d+=`<path d="M${x} 40 l-3 7" stroke="#2F78A8" stroke-width="3.5" stroke-linecap="round"/>`;}
+  return `<svg viewBox="0 0 56 56" aria-hidden="true"><path d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="${k>=3?'#5E6B78':'#9AA9B6'}"/>${d}${k===4?'<path d="M30 34l-5 9h5l-3 8 8-11h-5l3-6z" fill="#F2B705"/>':''}</svg>`;
+}
+// Escena del puente en tono de grabado: papel, tinta y la regla de colores
+function escena(L, n){
+  const sky = n===0 ? '#DCE9EE' : n===1 ? '#CDD5D8' : '#9AA5AB';
+  let lluvia=''; if(n>=1){const k=n===1?14:40;for(let i=0;i<k;i++)lluvia+=`<path d="M${(i*37)%420-10} ${(i*53)%110} l-4 12"/>`;}
+  const gx=144,gw=26; let regla=[[170,232,'var(--g)'],[140,170,'var(--y)'],[108,140,'var(--o)'],[78,108,'var(--r)']].map(([a,b,c])=>`<rect x="${gx}" y="${a}" width="${gw}" height="${b-a}" style="fill:${c}"/>`).join('');
+  for(let y=80;y<232;y+=6) regla+=`<path d="M${gx} ${y}h${y%30===2?18:9}" stroke="#141210" stroke-width="1.4"/>`;
+  const hatch = Array.from({length:30},(_,i)=>`<path d="M${i*14-40} 250 l60 -80" />`).join('');
+  return `<defs><pattern id="tramado" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0v6" stroke="#4C3B28" stroke-width="1.2"/></pattern></defs>
+  <rect width="400" height="250" fill="${sky}"/>
+  ${n===0?'<circle cx="330" cy="40" r="18" fill="none" stroke="#141210" stroke-width="2"/><g stroke="#141210" stroke-width="2"><path d="M330 12v8M330 60v8M302 40h8M350 40h8"/></g>':'<g fill="#fff" stroke="#141210" stroke-width="1.5"><path d="M40 40a18 18 0 0 1 30-14a22 22 0 0 1 40 6a14 14 0 0 1 4 26H44a14 14 0 0 1-4-18z"/><path d="M250 46a18 18 0 0 1 30-14a22 22 0 0 1 40 6a14 14 0 0 1 4 26h-70a14 14 0 0 1-4-18z"/></g>'}
+  <path d="M0 120 C60 90 120 110 180 96 C240 82 300 104 400 88 V250 H0Z" fill="none" stroke="#141210" stroke-width="1.5" opacity=".5"/>
+  <g transform="translate(300 170)"><rect y="-30" width="40" height="30" fill="#F6F1E6" stroke="#141210" stroke-width="2"/><path d="M-5 -28L20 -48L45 -28Z" fill="#F6F1E6" stroke="#141210" stroke-width="2"/><rect x="15" y="-16" width="10" height="16" fill="#141210"/></g>
+  <rect x="150" y="70" width="14" height="170" fill="#F6F1E6" stroke="#141210" stroke-width="2"/>${regla}<rect x="${gx}" y="78" width="${gw}" height="154" fill="none" stroke="#141210" stroke-width="2"/>
+  <path d="M-40 ${L.now} ${Array.from({length:14},()=> 'q10 -5 20 0 t20 0').join(' ')} V250 H-40 Z" fill="#2F78A8" opacity=".55" stroke="#141210" stroke-width="1.5"/>
+  <path d="M0 150 L40 150 L105 232 L262 232 L292 170 L400 170 L400 250 L0 250 Z" fill="url(#tramado)" stroke="#141210" stroke-width="2.5"/>
+  <rect x="0" y="58" width="270" height="14" fill="#F6F1E6" stroke="#141210" stroke-width="2"/>
+  <path d="M0 58V44M30 58V44M60 58V44M90 58V44M120 58V44M150 58V44M180 58V44M210 58V44M240 58V44M270 58V44M0 46H270" stroke="#141210" stroke-width="2" fill="none"/>
+  <g stroke="#141210" stroke-width="1.6" stroke-linecap="round" opacity=".55">${lluvia}</g>
+  <path d="M${gx+gw+2} ${L.now} h18" stroke="#141210" stroke-width="3"/><text x="${gx+gw+24}" y="${L.now+6}" font-family="Playfair Display,serif" font-weight="900" font-size="18" fill="#141210" stroke="${sky}" stroke-width="4" paint-order="stroke">HOY</text>
+  ${L.pk < L.now-14 ? `<path d="M${gx-30} ${L.pk} H${gx+gw+80}" stroke="#141210" stroke-width="2.5" stroke-dasharray="7 5"/><text x="${gx-34}" y="${L.pk+5}" text-anchor="end" font-family="Playfair Display,serif" font-weight="900" font-size="15" fill="#141210" stroke="${sky}" stroke-width="4" paint-order="stroke">EN 2 DÍAS</text>`:''}`;
+}
+
+function pintar(n){
+  const L = LV[n], root = document.documentElement;
+  document.querySelectorAll('.mq button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === n)));
+  for (const id of ['edicion','sello']) { const e = document.getElementById(id); e.style.setProperty('--c', L.c); e.style.setProperty('--on', L.on); }
+  document.getElementById('edicion').innerHTML = `${L.ed} <small>· ${L.edsub}</small>`;
+  document.getElementById('titular').innerHTML = `${L.h1}<span>${L.sub}</span>`;
+  document.getElementById('sello').innerHTML = `<div><b>${['✓','!','⚠','⚠'][n]}</b><i>${L.palabra.replace(' ','<br>')}</i></div>`;
+  document.getElementById('bajada').textContent = L.bajada;
+  document.getElementById('prob').textContent = L.prob;
+  document.getElementById('pie').textContent = L.pie;
+  document.getElementById('escena').innerHTML = escena(L, n);
+  const nc = Math.max(0, n - 2), Lc = LV[nc] || LV[0];
+  document.getElementById('tucom').innerHTML = `<b>Su comunidad, Las Cañas de Abajo:</b> ${['sin peligro','esté atento','peligro','peligro muy alto'][nc]}.`;
+  const f = document.getElementById('ficha');
+  f.style.setProperty('--c', COL[nc]); f.style.setProperty('--on', ON[nc]);
+  f.innerHTML = `<h3>Las Cañas de Abajo</h3><div style="margin:6px 0"><span class="nivel">Hoy: ${['Sin peligro','Esté atento','Peligro','Peligro muy alto'][nc]}</span></div>
+    <p style="font-size:.95rem">Está lejos del río Pantepec. El peligro principal son los arroyos que crecen y los caminos que se cortan.</p>
+    <div class="datos"><div><b>11 km</b><span>del río</span></div><div><b>43 m</b><span>de altura</span></div><div><b>15 km</b><span>del centro de Álamo</span></div></div>
+    <p class="muted" style="font-size:.78rem;margin-top:6px">Riesgo estimado con la distancia al río y la altura. No toma en cuenta los arroyos.</p>`;
+  document.getElementById('parte').innerHTML = L.rain.map((r,i) => `<tr><td class="d">${DIAS[i]}</td><td>${icono(r)} <span class="vh">${LLUVIA[r]}</span><span style="font-size:.85rem">${LLUVIA[r]}</span></td><td><span class="pill" style="--c:${COL[L.rio[i]]}"><i></i>${RIO[L.rio[i]]}</span></td></tr>`).join('');
+  document.getElementById('reco').innerHTML = L.reco.map(t => `<li>${t}</li>`).join('');
+  document.getElementById('comun').innerHTML = COM[n].map(([t,txt,src,lv]) => `<li><span class="etq" style="--c:${COL[lv]};--on:${ON[lv]}">${t}</span><div style="font-weight:600;line-height:1.35">${txt}</div><div class="muted" style="font-size:.8rem">${src}</div></li>`).join('');
+  const pts=[[60,60,0],[110,180,0],[250,52,0],[330,165,0],[205,150,1],[300,80,1],[90,140,1],[140,120,2],[230,100,2],[175,70,0]];
+  document.getElementById('puntos').innerHTML = pts.map(([x,y,z]) => `<circle cx="${x}" cy="${y}" r="5" style="fill:${COL[Math.max(0,n-z)]}"/>`).join('');
+  document.getElementById('alamo').style.fill = COL[n];
+}
+document.querySelectorAll('.mq button').forEach(b => b.onclick = () => pintar(+b.dataset.n));
+let fs = 20; const aplicar = () => document.documentElement.style.setProperty('--fs', fs + 'px');
+document.getElementById('fu').onclick = () => { fs = Math.min(26, fs + 3); aplicar(); };
+document.getElementById('fd').onclick = () => { fs = Math.max(17, fs - 3); aplicar(); };
+pintar(3);
+</script>
+</body>
+</html>
