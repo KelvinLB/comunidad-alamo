@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Propuesta: noticias y reportes de vecinos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;600&display=swap">
+<style>
+/* Mismos tokens que public/index.html (propuesta B) */
+:root{
+  --bg:#E9F0F5; --surface:#FFFFFF; --ink:#0B1F2A; --muted:#47606E; --line:#0B1F2A;
+  --soft:#C9D7E0; --river:#2F78A8; --land:#DDE7D3; --sea:#CFE3EF;
+  --g:#1E7B3E; --y:#F5C518; --o:#E06A10; --r:#C8231F; --na:#5B6670;
+  --on-g:#FFFFFF; --on-y:#14110A; --on-o:#14110A; --on-r:#FFFFFF;
+  --vec:#6B3FA0; --on-vec:#FFFFFF;
+  --f-sign:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Barlow","Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0A161D; --surface:#11222C; --ink:#EAF2F6; --muted:#9DB3BF; --line:#EAF2F6;
+  --soft:#23404F; --river:#5DA9D8; --land:#1B2A22; --sea:#132B3B;
+  --g:#1F8044; --o:#F07A28; --r:#D2302B; --vec:#8E62C7; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:19px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.45;padding:16px 16px 60px}
+h1,h2,h3{margin:0;font-family:var(--f-sign);font-weight:800;line-height:1;text-transform:uppercase}
+h2{font-size:1.9rem}
+p{margin:0}
+a{color:var(--river)}
+button{font-family:inherit}
+:focus-visible{outline:4px solid var(--river);outline-offset:3px;border-radius:8px}
+.small{font-size:.85rem;color:var(--muted)}
+
+/* Marco de la propuesta (no va en la página real) */
+.doc{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.intro{background:var(--surface);border:3px dashed var(--river);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.intro h1{font-size:2.2rem}
+.intro ul{margin:0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:22px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.etq{font-family:var(--f-sign);font-weight:700;font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--river)}
+.phone{max-width:430px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.nota{border-left:5px solid var(--river);padding:6px 12px;font-size:.9rem;background:color-mix(in srgb,var(--river) 8%,transparent);border-radius:0 10px 10px 0}
+
+/* Componentes, con el estilo de la página */
+.panel{background:var(--surface);border:3px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:48px;padding:6px 14px;border-radius:999px;border:2px solid var(--ink);background:var(--bg);color:var(--ink);font-weight:600;font-size:.95rem;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* Noticias */
+.news{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.news li{border:2px solid var(--soft);border-radius:14px;padding:12px;display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;background:var(--bg)}
+.news .src{width:56px;height:56px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-sign);font-weight:800;font-size:1.25rem;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.news .src.of{background:var(--ink);color:var(--bg)}
+.news .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.82rem;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-sign);font-weight:800;font-size:.85rem;text-transform:uppercase;padding:2px 8px;border-radius:6px;letter-spacing:.02em}
+.badge.of{background:var(--ink);color:var(--bg)}
+.badge.me{border:2px solid var(--ink);color:var(--ink)}
+.badge.vec{background:var(--vec);color:var(--on-vec)}
+.badge.ok{background:var(--g);color:var(--on-g)}
+.badge.wait{border:2px dashed var(--muted);color:var(--muted)}
+.news h3{font-family:var(--f-body);font-weight:600;font-size:1.02rem;text-transform:none;line-height:1.3;margin:4px 0}
+.news p{font-size:.92rem}
+.news a.go{display:inline-flex;align-items:center;min-height:44px;font-weight:600}
+.more{min-height:50px;border-radius:12px;border:3px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:1rem;cursor:pointer}
+
+/* Reportes de vecinos */
+.repbtn{min-height:60px;border-radius:14px;border:3px solid var(--line);background:var(--vec);color:var(--on-vec);font-family:var(--f-sign);font-weight:800;font-size:1.45rem;text-transform:uppercase;letter-spacing:.02em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.repbtn svg{width:28px;height:28px}
+.reps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.reps li{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:start;padding:10px;border-radius:12px;background:var(--bg);border:2px solid var(--soft)}
+.reps .ic{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:var(--vec);color:var(--on-vec)}
+.reps .ic svg{width:30px;height:30px}
+.reps b{display:block;line-height:1.25}
+.warn{font-size:.85rem;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--surface)}
+
+/* Mapa miniatura */
+.mini{position:relative;height:250px;border:3px solid var(--line);border-radius:14px;overflow:hidden;background:var(--land)}
+.mini svg{width:100%;height:100%;display:block}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted)}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+
+/* Flujo de reporte (hoja que sube desde abajo) */
+.sheet{border:4px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+.sheet header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:2px solid var(--soft)}
+.sheet header b{font-family:var(--f-sign);font-weight:800;font-size:1.3rem;text-transform:uppercase}
+.steps{display:flex;gap:6px;padding:10px 16px 0}
+.steps i{flex:1;height:6px;border-radius:3px;background:var(--soft)}
+.steps i.on{background:var(--vec)}
+.sheet .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.sheet .q{font-family:var(--f-sign);font-weight:800;font-size:1.5rem;text-transform:uppercase}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opts button{min-height:92px;border:3px solid var(--soft);border-radius:14px;background:var(--bg);color:var(--ink);font-weight:600;font-size:.95rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;text-align:center;line-height:1.15}
+.opts button svg{width:34px;height:34px}
+.opts button[aria-pressed="true"]{border-color:var(--vec);background:color-mix(in srgb,var(--vec) 14%,var(--surface))}
+.opts.una{grid-template-columns:1fr}
+.opts.una button{min-height:58px;flex-direction:row;justify-content:flex-start;padding:8px 14px}
+.field{min-height:56px;border:3px solid var(--line);border-radius:12px;padding:12px 14px;font-size:1.05rem;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav{display:flex;gap:8px}
+.nav button{flex:1;min-height:54px;border-radius:12px;border:3px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:1rem;cursor:pointer}
+.nav button.pri{background:var(--vec);color:var(--on-vec)}
+.nav button.wa{background:#1E7B3E;color:#fff}
+.preview{white-space:pre-wrap;font-size:.9rem;padding:12px;border-radius:12px;background:#E3F6E5;color:#14110A;border:2px solid #1E7B3E}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:8px 8px 8px 0;border-top:1px solid var(--soft);vertical-align:top}
+th{border-top:0;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+.rec{background:color-mix(in srgb,var(--g) 14%,var(--surface))}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <section class="intro">
+    <h1>Propuesta: noticias y reportes de vecinos</h1>
+    <p>Así se verían las dos secciones nuevas dentro de la página. <b>Todo lo que aparece aquí son datos de ejemplo</b>; los medios, nombres y fechas no son reales.</p>
+    <ul>
+      <li><b>Lugar en la página:</b> "Reportes de vecinos" va justo después del mapa (los reportes también aparecen en él), y "Noticias y fuentes" después de "Avisos de las autoridades".</li>
+      <li><b>Regla de oro:</b> ni las noticias ni los reportes cambian la respuesta principal (NO / PUEDE SER / SÍ). Esa la siguen dando solo el río, la lluvia y los avisos oficiales.</li>
+      <li>El morado es nuevo y solo identifica lo que viene de vecinos, para que nunca se confunda con el semáforo.</li>
+    </ul>
+  </section>
+
+  <div class="grid">
+    <!-- ============ COLUMNA 1: REPORTES ============ -->
+    <div class="col">
+      <div class="etq">1 · Reportes de vecinos (va después del mapa)</div>
+      <div class="phone">
+        <section class="panel" aria-labelledby="h-rep">
+          <h2 id="h-rep">Lo que reportan los vecinos</h2>
+          <p>Reportes de las últimas 24 horas, revisados por un moderador de la comunidad antes de publicarse.</p>
+          <div class="warn">⚠ <b>Son testimonios, no avisos oficiales.</b> Si está en peligro, llame al 911.</div>
+
+          <div class="mini" aria-label="Mapa con reportes de vecinos">
+            <svg viewBox="0 0 400 250" role="img">
+              <rect width="400" height="250" style="fill:var(--land)"/>
+              <path d="M-10 150 C60 140 90 120 150 128 S250 150 300 138 S380 110 410 115" fill="none" style="stroke:var(--river)" stroke-width="7" stroke-linecap="round"/>
+              <g style="stroke:var(--ink)" stroke-width="1.2">
+                <circle cx="60" cy="80" r="4" style="fill:var(--y)"/><circle cx="110" cy="200" r="4" style="fill:var(--g)"/>
+                <circle cx="250" cy="70" r="4" style="fill:var(--g)"/><circle cx="330" cy="190" r="4" style="fill:var(--g)"/>
+                <circle cx="200" cy="175" r="4" style="fill:var(--y)"/><circle cx="300" cy="100" r="4" style="fill:var(--y)"/>
+              </g>
+              <circle cx="190" cy="132" r="11" style="fill:var(--o);stroke:var(--ink)" stroke-width="3"/>
+              <text x="190" y="112" text-anchor="middle" font-size="16" font-weight="700" font-family="Barlow" style="fill:var(--ink);stroke:var(--land)" stroke-width="4" paint-order="stroke">ÁLAMO</text>
+              <!-- reportes: rombos morados, otra forma que las comunidades -->
+              <g style="fill:var(--vec);stroke:#fff" stroke-width="2.5">
+                <path d="M160 128 l11 -14 l11 14 l-11 14z"/>
+                <path d="M230 150 l11 -14 l11 14 l-11 14z"/>
+                <path d="M96 106 l11 -14 l11 14 l-11 14z"/>
+              </g>
+              <g font-family="Barlow Condensed" font-weight="800" font-size="13" style="fill:#fff" text-anchor="middle"><text x="171" y="133">2</text><text x="241" y="155">1</text><text x="107" y="111">1</text></g>
+            </svg>
+          </div>
+          <div class="keys"><span><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 1l7 8-7 8-7-8z" style="fill:var(--vec)"/></svg>Reporte de vecino (el número dice cuántos)</span><span><svg width="16" height="16"><circle cx="8" cy="8" r="6" style="fill:var(--y);stroke:var(--ink)" stroke-width="2"/></svg>Comunidad (riesgo del día)</span></div>
+
+          <ul class="reps">
+            <li><div class="ic" id="ic-calle"></div><div><b>Agua en la calle</b><span class="small">Colonia de ejemplo, Álamo · hace 40 minutos</span><div><span class="badge ok">✓ Revisado</span> <span class="badge vec">Vecino</span></div><p class="small" style="margin-top:4px">"El agua ya llegó a la banqueta en la calle junto al río."</p></div></li>
+            <li><div class="ic" id="ic-camino"></div><div><b>Camino cortado</b><span class="small">Comunidad de ejemplo · hace 2 horas</span><div><span class="badge ok">✓ Revisado</span> <span class="badge vec">Vecino</span></div><p class="small" style="margin-top:4px">"No se puede pasar el vado, el arroyo va crecido."</p></div></li>
+            <li><div class="ic" id="ic-rio"></div><div><b>El río va alto</b><span class="small">Álamo, junto al puente · hace 3 horas</span><div><span class="badge ok">✓ Revisado</span> <span class="badge vec">Vecino</span></div></div></li>
+          </ul>
+          <button class="more" type="button">Ver los 6 reportes de hoy</button>
+          <button class="repbtn" type="button" id="abrir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 9l6-6 6 6"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>Reportar lo que veo</button>
+          <p class="small">No se pide su nombre. Su número de WhatsApp solo lo ve el moderador y no se publica.</p>
+        </section>
+      </div>
+    </div>
+
+    <!-- ============ COLUMNA 2: FLUJO DEL REPORTE ============ -->
+    <div class="col">
+      <div class="etq">2 · Al tocar "Reportar lo que veo" (pruébelo)</div>
+      <div class="phone">
+        <div class="sheet" aria-live="polite">
+          <header><b>Reportar lo que veo</b><span class="small" id="paso-txt">Paso 1 de 3</span></header>
+          <div class="steps"><i class="on"></i><i></i><i></i></div>
+          <div class="body" id="cuerpo"></div>
+        </div>
+      </div>
+      <div class="nota">El reporte se manda por <b>WhatsApp</b> al moderador con el mensaje ya escrito: la persona solo lo envía. Así no hace falta servidor, cuenta ni internet rápido.</div>
+    </div>
+
+    <!-- ============ COLUMNA 3: NOTICIAS ============ -->
+    <div class="col">
+      <div class="etq">3 · Noticias y fuentes (va después de los avisos)</div>
+      <div class="phone">
+        <section class="panel" aria-labelledby="h-not">
+          <h2 id="h-not">Noticias y fuentes</h2>
+          <p>Notas sobre el río y la lluvia en la región. Cada una lleva a su fuente original.</p>
+          <div class="chips" role="group" aria-label="Filtrar noticias">
+            <button type="button" aria-pressed="true" data-f="todas">Todas</button>
+            <button type="button" aria-pressed="false" data-f="of">Oficiales</button>
+            <button type="button" aria-pressed="false" data-f="me">Medios</button>
+          </div>
+          <ul class="news" id="news">
+            <li data-t="of"><div class="src of">PC</div><div><div class="meta"><span class="badge of">Oficial</span><span>Protección Civil Veracruz · hoy, 9:30</span></div><h3>Ejemplo: se mantiene la vigilancia en los ríos Pantepec y Tuxpan</h3><p>Resumen corto en palabras sencillas, de una o dos líneas.</p><a class="go" href="#">Ver la fuente ›</a></div></li>
+            <li data-t="me"><div class="src">DR</div><div><div class="meta"><span class="badge me">Medio</span><span>Diario regional (ejemplo) · ayer</span></div><h3>Ejemplo: vecinos de colonias bajas piden desazolve del río</h3><p>Resumen corto en palabras sencillas, de una o dos líneas.</p><a class="go" href="#">Ver la nota ›</a></div></li>
+            <li data-t="of"><div class="src of">SMN</div><div><div class="meta"><span class="badge of">Oficial</span><span>SMN · Conagua · ayer</span></div><h3>Ejemplo: frente frío traerá lluvias fuertes al norte de Veracruz</h3><a class="go" href="#">Ver la fuente ›</a></div></li>
+            <li data-t="me"><div class="src">RD</div><div><div class="meta"><span class="badge me">Medio</span><span>Radio local (ejemplo) · hace 3 días</span></div><h3>Ejemplo: avanza la obra del bordo en la orilla del Pantepec</h3><a class="go" href="#">Ver la nota ›</a></div></li>
+          </ul>
+          <button class="more" type="button">Ver más noticias</button>
+          <p class="small">Las noticias las elige una persona del proyecto. Una nota no cambia el nivel de peligro de la página.</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CÓMO FUNCIONA POR DENTRO ============ -->
+  <section class="panel">
+    <h2>Cómo funcionaría por dentro (sin costo y sin servidor)</h2>
+    <div class="grid" style="gap:16px">
+      <div class="flow">
+        <h3 style="font-size:1.3rem">Reportes de vecinos</h3>
+        <ol>
+          <li>El vecino llena los 3 pasos y toca <b>"Enviar por WhatsApp"</b>: se abre WhatsApp con el mensaje escrito, dirigido al número del moderador.</li>
+          <li>El moderador (alguien de confianza de la comunidad) lo revisa. Si es creíble, lo agrega a <code>reportes.json</code> desde GitHub, igual que los avisos manuales.</li>
+          <li>La página lo muestra en la lista y en el mapa. <b>Se borra solo a las 24 horas.</b></li>
+        </ol>
+      </div>
+      <div class="flow">
+        <h3 style="font-size:1.3rem">Noticias y fuentes</h3>
+        <ol>
+          <li>Se capturan a mano en <code>noticias.json</code> desde GitHub: medio, título, fecha, liga y si es oficial.</li>
+          <li>Opcional, más adelante: el bot puede <b>sugerir</b> notas leyendo Google Noticias ("Álamo Temapache río"), pero una persona decide cuáles se publican, para no colar notas falsas o de otro lugar.</li>
+          <li>Se muestran las 4 más recientes; las de más de 15 días se ocultan.</li>
+        </ol>
+      </div>
+    </div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Opción para recibir reportes</th><th>Costo</th><th>Ventaja</th><th>Riesgo</th></tr></thead>
+      <tbody>
+        <tr class="rec"><td><b>WhatsApp al moderador</b> (recomendada)</td><td>$0</td><td>Todos lo usan; funciona con internet lento; nadie publica sin revisión.</td><td>Depende de que el moderador responda rápido en una emergencia.</td></tr>
+        <tr><td>Formulario de Google</td><td>$0</td><td>Ordena los reportes en una hoja de cálculo.</td><td>Los datos quedan en Google; igual requiere a alguien que los publique.</td></tr>
+        <tr><td>Publicar al instante, sin revisión</td><td>Requiere servidor</td><td>Inmediato.</td><td>Reportes falsos o bromas pueden causar pánico. No recomendada.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small">Falta definir: quién será el moderador, su número de WhatsApp y su horario. Sin moderador, la sección de reportes no se publica.</p>
+  </section>
+</div>
+
+<script>
+// Íconos de tipo de reporte
+const s = (b) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`;
+const TIPOS = {
+  calle: ['Agua en la calle', s('<path d="M3 17c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M3 21c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0"/><path d="M6 13V7l6-4 6 4v6"/>')],
+  rio: ['El río va alto', s('<path d="M12 3v14"/><path d="M8 7h4M8 11h4"/><path d="M3 19c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0"/>')],
+  arroyo: ['Arroyo crecido', s('<path d="M4 4c4 3 0 6 4 9s0 6 4 7M12 4c4 3 0 6 4 9s0 6 4 7"/>')],
+  camino: ['Camino cortado', s('<circle cx="12" cy="12" r="9"/><path d="M5.6 18.4L18.4 5.6"/>')],
+  casa: ['Entró agua a casas', s('<path d="M3 11l9-7 9 7v9H3z"/><path d="M3 17c2 1.3 4 1.3 6 0s4-1.3 6 0 4 1.3 6 0"/>')],
+  luz: ['Sin luz', s('<path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"/><path d="M3 3l18 18"/>')],
+};
+document.getElementById('ic-calle').innerHTML = TIPOS.calle[1];
+document.getElementById('ic-camino').innerHTML = TIPOS.camino[1];
+document.getElementById('ic-rio').innerHTML = TIPOS.rio[1];
+
+// Flujo de 3 pasos
+const R = {tipo: null, grave: null};
+let paso = 1;
+const cuerpo = document.getElementById('cuerpo');
+function pintar() {
+  document.getElementById('paso-txt').textContent = `Paso ${Math.min(paso, 3)} de 3`;
+  document.querySelectorAll('.steps i').forEach((i, k) => i.classList.toggle('on', k < paso));
+  if (paso === 1) {
+    cuerpo.innerHTML = `<div class="q">¿Qué está pasando?</div><div class="opts">${Object.entries(TIPOS).map(([k, [t, ic]]) => `<button type="button" data-k="${k}" aria-pressed="${R.tipo === k}">${ic}${t}</button>`).join('')}</div>
+      <div class="nav"><button type="button" class="pri" id="sig" ${R.tipo ? '' : 'disabled style="opacity:.4"'}>Siguiente</button></div>`;
+    cuerpo.querySelectorAll('.opts button').forEach(b => b.onclick = () => { R.tipo = b.dataset.k; pintar(); });
+  } else if (paso === 2) {
+    cuerpo.innerHTML = `<div class="q">¿Dónde?</div>
+      <div class="field"><span><b>Las Cañas de Abajo</b><br><span class="small">Su comunidad guardada</span></span><span class="small">Cambiar</span></div>
+      <div class="field"><span class="small">Calle o referencia (opcional): "junto a la escuela"</span></div>
+      <div class="q" style="margin-top:6px">¿Qué tan grave?</div>
+      <div class="opts una">
+        <button type="button" data-g="1" aria-pressed="${R.grave === '1'}">🟡 Empieza a subir</button>
+        <button type="button" data-g="2" aria-pressed="${R.grave === '2'}">🟠 Ya hay agua donde no debería</button>
+        <button type="button" data-g="3" aria-pressed="${R.grave === '3'}">🔴 Hay personas en peligro → llame al 911</button>
+      </div>
+      <div class="nav"><button type="button" id="atr">Atrás</button><button type="button" class="pri" id="sig" ${R.grave ? '' : 'disabled style="opacity:.4"'}>Siguiente</button></div>`;
+    cuerpo.querySelectorAll('.opts button').forEach(b => b.onclick = () => { R.grave = b.dataset.g; pintar(); });
+  } else {
+    const g = {1: 'Empieza a subir', 2: 'Ya hay agua donde no debería', 3: 'HAY PERSONAS EN PELIGRO'}[R.grave];
+    cuerpo.innerHTML = `<div class="q">Revise y envíe</div>
+      ${R.grave === '3' ? '<div class="warn" style="border-color:var(--r)"><b>Si hay personas en peligro, llame primero al <a href="tel:911">911</a>.</b> Este reporte no llega a los servicios de emergencia.</div>' : ''}
+      <div class="small">Este es el mensaje que se abrirá en WhatsApp:</div>
+      <div class="preview">Reporte Alerta Pantepec
+Qué pasa: ${TIPOS[R.tipo][0]}
+Dónde: Las Cañas de Abajo
+Gravedad: ${g}
+(Puede agregar una foto antes de enviar)</div>
+      <div class="nav"><button type="button" id="atr">Atrás</button><button type="button" class="wa" id="sig">Enviar por WhatsApp</button></div>
+      <p class="small">No se pide su nombre. Su número solo lo ve el moderador.</p>`;
+  }
+  const sig = document.getElementById('sig'), atr = document.getElementById('atr');
+  if (sig) sig.onclick = () => {
+    if (paso === 3) { cuerpo.innerHTML = '<div class="q">¡Gracias!</div><p>En la página real aquí se abriría WhatsApp con el mensaje. El moderador lo revisa y, si es creíble, aparece en la lista y el mapa.</p><div class="nav"><button type="button" class="pri" id="otra">Hacer otro reporte</button></div>'; document.getElementById('otra').onclick = () => { R.tipo = R.grave = null; paso = 1; pintar(); }; return; }
+    paso++; pintar();
+  };
+  if (atr) atr.onclick = () => { paso--; pintar(); };
+}
+pintar();
+document.getElementById('abrir').onclick = () => { R.tipo = R.grave = null; paso = 1; pintar(); document.querySelector('.sheet').scrollIntoView({behavior: 'smooth', block: 'center'}); };
+
+// Filtro de noticias
+document.querySelectorAll('.chips button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.chips button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  document.querySelectorAll('#news li').forEach(li => li.hidden = b.dataset.f !== 'todas' && li.dataset.t !== b.dataset.f);
+});
+</script>
+</body>
+</html>
