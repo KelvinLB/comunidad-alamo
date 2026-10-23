@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>¿Se inunda Álamo?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Respuesta diaria: ¿hay peligro de inundación del río Pantepec en Álamo Temapache?">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: estilo letrero de Protección Civil. Arriba la respuesta SÍ/NO y la escena del puente con la regla; luego "¿Dónde vive?", el mapa, la semana en reglitas, qué hacer, avisos y 911. Una columna, pensada para celular. */
+:root{
+  --bg:#E9F0F5; --surface:#FFFFFF; --ink:#0B1F2A; --muted:#47606E; --line:#0B1F2A;
+  --soft:#C9D7E0; --river:#2F78A8; --land:#DDE7D3; --hill:#B9C9A6; --sea:#CFE3EF; --water:#4F7F95;
+  --g:#1E7B3E; --y:#F5C518; --o:#E06A10; --r:#C8231F;
+  --on-g:#FFFFFF; --on-y:#14110A; --on-o:#FFFFFF; --on-r:#FFFFFF;
+  --f-sign:"Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body:"Barlow", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --fs:19px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A161D; --surface:#11222C; --ink:#EAF2F6; --muted:#9DB3BF; --line:#EAF2F6;
+  --soft:#23404F; --river:#5DA9D8; --land:#1B2A22; --hill:#2A3B2B; --sea:#132B3B; --water:#3F7088;
+  --g:#2E9E55; --y:#F5C518; --o:#F07A28; --r:#E5413C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A161D; --surface:#11222C; --ink:#EAF2F6; --muted:#9DB3BF; --line:#EAF2F6;
+  --soft:#23404F; --river:#5DA9D8; --land:#1B2A22; --hill:#2A3B2B; --sea:#132B3B; --water:#3F7088;
+  --g:#2E9E55; --y:#F5C518; --o:#F07A28; --r:#E5413C; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:var(--fs)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1rem;line-height:1.45;
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-block:12px 48px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{margin:0;font-family:var(--f-sign);font-weight:800;line-height:1;text-wrap:balance}
+h2{font-size:1.9rem;text-transform:uppercase;letter-spacing:.01em}
+p{margin:0}
+a{color:var(--river)}
+button{font-family:inherit}
+:focus-visible{outline:4px solid var(--river);outline-offset:3px;border-radius:8px}
+.small{font-size:.85rem;color:var(--muted)}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.bar .where{font-family:var(--f-sign);font-weight:700;font-size:1.35rem;text-transform:uppercase;letter-spacing:.02em;line-height:1.05}
+.bar .where span{display:block;font-family:var(--f-body);font-weight:500;font-size:.9rem;text-transform:none;letter-spacing:0;color:var(--muted)}
+.tools{display:flex;gap:6px}
+.tools button{min-width:52px;min-height:50px;border:3px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;font-weight:700;font-size:1.05rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
+.tools button svg{width:22px;height:22px}
+.tools button:disabled{opacity:.35}
+
+.demo{border:3px dashed var(--river);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.demo p{font-size:.88rem}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:46px;border:2px solid var(--soft);background:var(--bg);color:var(--ink);border-radius:10px;font-weight:700;font-size:.92rem;cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+
+/* Respuesta + escena */
+.hero{--c:var(--g);--on:var(--on-g);border:4px solid var(--line);border-radius:18px;overflow:hidden;background:var(--surface)}
+.answer{background:var(--c);color:var(--on);padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px}
+.answer .q{font-family:var(--f-sign);font-weight:700;font-size:1.3rem;text-transform:uppercase;letter-spacing:.03em;opacity:.95}
+.answer .a{font-family:var(--f-sign);font-weight:800;font-size:clamp(3.6rem,19vw,7rem);line-height:.88;text-transform:uppercase;letter-spacing:-.01em}
+.answer .sub{font-family:var(--f-sign);font-weight:700;font-size:clamp(1.6rem,7vw,2.2rem);line-height:1.05;text-transform:uppercase}
+.answer .msg{font-size:1.15rem;line-height:1.35;margin-top:6px;max-width:40ch}
+.answer .mine{margin-top:8px;font-size:1rem;font-weight:600;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--on) 18%,transparent);align-self:flex-start}
+.scene{display:block;width:100%;height:auto;border-top:4px solid var(--line)}
+.scene .water{transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+@keyframes waves{to{transform:translateX(-40px)}}
+.scene .waves{animation:waves 2.4s linear infinite}
+@keyframes rain{to{transform:translate(-8px,26px)}}
+.scene .rain{animation:rain .55s linear infinite}
+@media (prefers-reduced-motion:reduce){.scene .water{transition:none}.scene .waves,.scene .rain{animation:none}}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:10px 16px;font-size:.88rem;color:var(--muted);border-top:2px solid var(--soft)}
+.meta b{color:var(--ink)}
+
+.panel{background:var(--surface);border:3px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:50px;padding:6px 14px;border-radius:999px;border:2px solid var(--ink);background:var(--bg);color:var(--ink);font-weight:600;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.chips button i{width:14px;height:14px;border-radius:50%;background:var(--c);border:2px solid var(--ink)}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* Semana en reglitas */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.wd .dn{font-family:var(--f-sign);font-weight:700;font-size:1.05rem;text-transform:uppercase;line-height:1}
+.wd svg.ri{width:40px;height:40px}
+.tube{position:relative;width:100%;max-width:44px;height:120px;border:3px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.tube .fill{position:absolute;left:0;right:0;bottom:0;background:var(--c)}
+.tube .mark{position:absolute;left:0;right:0;border-top:2px dashed var(--ink);opacity:.55}
+.wd .ww{font-family:var(--f-sign);font-size:.9rem;font-weight:700;line-height:1.05;overflow-wrap:anywhere}
+@media (max-width:420px){.week{gap:3px}.wd .dn{font-size:.85rem}.wd .ww{font-size:.74rem}.tube{height:100px;border-width:2px}}
+
+/* Qué hacer */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.steps li{display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border-radius:12px;background:var(--bg);font-size:1.08rem;line-height:1.3}
+.steps .ti{width:58px;height:58px;border-radius:12px;background:var(--c);color:var(--on);display:grid;place-items:center}
+.steps .ti svg{width:32px;height:32px}
+
+.alerts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.alerts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start}
+.alerts .tag{font-family:var(--f-sign);font-weight:800;text-transform:uppercase;font-size:.95rem;padding:3px 10px;border-radius:6px;background:var(--c);color:var(--on)}
+.alerts .t{font-weight:600;line-height:1.3}
+
+.call{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;background:var(--r);color:#FFFFFF;border:4px solid var(--line);border-radius:16px;padding:14px 16px}
+.call .num{font-family:var(--f-sign);font-weight:800;font-size:3.6rem;line-height:1}
+.call p{font-size:1rem}
+
+details.tech{background:var(--surface);border:3px solid var(--line);border-radius:16px;padding:0 16px}
+details.tech summary{cursor:pointer;min-height:56px;display:flex;align-items:center;font-weight:700;list-style:none}
+details.tech summary::before{content:"＋";margin-right:10px}
+details.tech[open] summary::before{content:"－"}
+details.tech .in{display:flex;flex-direction:column;gap:14px;padding-bottom:16px;font-size:.9rem}
+.factors{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.factors li{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:4px 12px;align-items:center}
+.meter{height:10px;border-radius:5px;background:var(--soft);overflow:hidden}
+.meter span{display:block;height:100%}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 10px 7px 0;border-top:1px solid var(--soft);vertical-align:top}
+th{border-top:0;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+footer{font-size:.82rem;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.search{position:relative}
+.search > svg{position:absolute;left:14px;top:50%;width:24px;height:24px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search input{width:100%;min-height:58px;padding:10px 14px 10px 48px;font:inherit;font-size:1.1rem;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:14px}
+.search input:focus{outline:none;border-color:var(--river)}
+.results{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 6px);list-style:none;margin:0;padding:6px;background:var(--surface);border:2px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgb(0 0 0 / .18);max-height:330px;overflow:auto}
+.results button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:1.05rem;cursor:pointer;min-height:52px}
+.results button:hover,.results button:focus-visible{background:var(--bg)}
+.results small{display:block;color:var(--muted);font-size:.82rem}
+.results .none{padding:12px;color:var(--muted)}
+.mapbox{position:relative;height:clamp(340px,62vh,520px);border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--land);touch-action:none;user-select:none;-webkit-user-select:none}
+.mapbox > svg{display:block;width:100%;height:100%;cursor:grab}
+.mapbox > svg:active{cursor:grabbing}
+.mapbox text{font-family:var(--f-body)}
+.osmmap{position:absolute;inset:0;z-index:2}
+.mapctl{position:absolute;z-index:3;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.mapctl button{width:50px;height:50px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-size:1.6rem;font-weight:700;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 6px rgb(0 0 0 / .15)}
+.mapctl svg{width:24px;height:24px}
+.keys{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;color:var(--muted)}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.keys i{display:inline-block;width:16px;height:16px;border-radius:50%}
+.linkbtn{background:none;border:0;padding:0;color:var(--river);font:inherit;text-decoration:underline;cursor:pointer}
+.ccard{--c:var(--g);border-radius:16px;border:3px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface));padding:16px;display:flex;flex-direction:column;gap:10px}
+.ccard h3{font-size:1.45rem}
+.ccard .lvl{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--c);color:var(--on);font-weight:700;font-size:1.05rem}
+.ccard .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ccard .facts div{background:var(--surface);border-radius:12px;padding:8px 10px;text-align:center;border:1px solid var(--line)}
+.ccard .facts b{display:block;font-size:1.15rem;white-space:nowrap}
+.ccard .facts span{font-size:.74rem;color:var(--muted);line-height:1.2;display:block}
+.ccard .note{font-size:.8rem;color:var(--muted)}
+.status .mine{font-size:1rem;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--on) 16%,transparent)}
+
+.ccard h3{font-size:1.9rem;text-transform:uppercase}
+.ccard{border-width:4px}
+.ccard .lvl{font-family:var(--f-sign);font-size:1.25rem;text-transform:uppercase;letter-spacing:.02em;border-radius:8px}
+.mapbox{border:3px solid var(--line)}
+.search input{border:3px solid var(--line)}
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <div class="where">Álamo Temapache<span id="date"></span></div>
+    <div class="tools">
+      <button type="button" id="listen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="listenlbl">Escuchar</span></button>
+      <button type="button" id="font-down" aria-label="Letra más chica">A−</button>
+      <button type="button" id="font-up" aria-label="Letra más grande">A+</button>
+    </div>
+  </div>
+
+  <div class="demo" id="demo" hidden>
+    <p><b>Propuesta B · datos de ejemplo.</b> Toque una situación para ver cómo cambia la página:</p>
+    <div class="seg" role="group" aria-label="Escenario de ejemplo">
+      <button type="button" id="sc-normal" data-sc="normal" aria-pressed="true">Día normal</button>
+      <button type="button" id="sc-vigilancia" data-sc="vigilancia" aria-pressed="false">Frente frío</button>
+      <button type="button" id="sc-alerta" data-sc="alerta" aria-pressed="false">Huracán</button>
+    </div>
+  </div>
+
+  <section class="hero" id="hero" aria-live="polite">
+    <div class="answer">
+      <div class="q">¿Se va a inundar Álamo?</div>
+      <div class="a" id="ans">—</div>
+      <div class="sub" id="sub"></div>
+      <p class="msg" id="msg"></p>
+      <p class="mine" id="mine" hidden></p>
+    </div>
+    <svg class="scene" id="scene" viewBox="0 0 400 250" role="img" aria-label="Dibujo del río bajo el puente con la regla de colores"></svg>
+    <div class="meta"><span>Posibilidad de inundación: <b id="chance">—</b></span><span id="when"></span></div>
+  </section>
+
+  <section class="panel" id="comunidad">
+    <h2>¿Dónde vive usted?</h2>
+    <p>Toque su comunidad o escriba su nombre.</p>
+    <div class="chips" id="chips"></div>
+    <div class="search">
+      <label for="q" class="vh">Buscar su comunidad</label>
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+      <input id="q" type="search" placeholder="Otra comunidad…" autocomplete="off" enterkeyhint="search">
+      <ul id="results" class="results" hidden></ul>
+    </div>
+    <div class="ccard" id="ccard" hidden></div>
+    <div class="mapbox" id="mapbox">
+      <svg id="msvg" role="img" aria-label="Mapa del municipio con sus comunidades y el río"></svg>
+      <div id="osmmap" class="osmmap" hidden></div>
+      <div class="mapctl">
+        <button type="button" id="zin" aria-label="Acercar">+</button>
+        <button type="button" id="zout" aria-label="Alejar">−</button>
+        <button type="button" id="zreset" aria-label="Ver todo el municipio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      </div>
+    </div>
+    <div class="keys">
+      <span><i style="background:var(--g)"></i>Sin peligro</span>
+      <span><i style="background:var(--y)"></i>Atento</span>
+      <span><i style="background:var(--o)"></i>Peligro</span>
+      <span><i style="background:var(--r)"></i>Muy alto</span>
+    </div>
+    <p class="small">Las 460 comunidades del municipio según el INEGI. <button type="button" class="linkbtn" id="osmbtn" hidden>Ver mapa con calles</button></p>
+  </section>
+
+  <section class="panel">
+    <h2>El río esta semana</h2>
+    <p>Cada tubo es la regla del puente: entre más lleno, más alto el río. La línea punteada es la orilla; si el agua la pasa, el río se sale.</p>
+    <div class="week" id="week"></div>
+  </section>
+
+  <section class="panel" id="todopanel">
+    <h2 id="todoh">Qué hacer hoy</h2>
+    <ol class="steps" id="todo"></ol>
+  </section>
+
+  <section class="call">
+    <div class="num">911</div>
+    <p><b>¿Está en peligro? Llame al 911.</b> Haga caso a Protección Civil y al Ayuntamiento: esta página no reemplaza sus avisos.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Avisos de las autoridades</h2>
+    <ul class="alerts" id="alerts"></ul>
+  </section>
+
+  <details class="tech">
+    <summary>Datos técnicos y fuentes</summary>
+    <div class="in">
+      <ul class="factors" id="factors"></ul>
+      <div class="tablewrap"><table><thead><tr><th>Fuente</th><th>Qué aporta</th><th>Última lectura</th></tr></thead><tbody id="sources"></tbody></table></div>
+      <p class="small">Índice estimado con el caudal pronosticado (GloFAS, Copernicus), la lluvia en Álamo y en la sierra, y los avisos vigentes. No es un pronóstico oficial.</p>
+    </div>
+  </details>
+
+  <footer>Proyecto comunitario. Datos: Copernicus GloFAS, Open-Meteo, SMN, NHC, INEGI.</footer>
+</div>
+
+<script>
+(function(){
+const TZ='America/Mexico_City';
+let current=null;
+const IC={
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 20.5h20L12 3z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg>',
+  run:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4.5" r="2" fill="currentColor"/><path d="M8 21l3-6 3 2v5M6 12l3-4h5l2 4 3 1M11 15l1-5"/></svg>',
+  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></svg>',
+  bag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="14" rx="3"/><path d="M9 7V5a3 3 0 0 1 6 0v2M4 13h16"/></svg>',
+  map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>',
+  nocross:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M5.3 18.7L18.7 5.3"/><path d="M6 14c2 1.5 4 1.5 6 0s4-1.5 6 0"/></svg>',
+  box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18M6 10v10h12V10M12 3l-6 4h12l-6-4z"/><path d="M12 13v5M10 15l2-2 2 2"/></svg>',
+  plug:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"/></svg>',
+  ear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V12a8 8 0 0 1 16 0v6M4 18a2 2 0 0 0 2 2h1v-6H6a2 2 0 0 0-2 2zM20 18a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2z"/></svg>'
+};
+
+const LV=[
+  {head:'Sin peligro',light:'Sin peligro',c:'var(--g)',on:'var(--on-g)',icon:'ok',
+   todo:[['eye','Viva su día normal. Revise esta página una vez al día en temporada de lluvias.'],['bag','Tenga lista una mochila: papeles en bolsa de plástico, medicinas, lámpara, agua y cargador.'],['map','Sepa a dónde iría: la casa de un familiar en lo alto o el refugio temporal.']]},
+  {head:'Esté atento',light:'Atento',c:'var(--y)',on:'var(--on-y)',icon:'eye',
+   todo:[['eye','Revise esta página y la radio varias veces al día, también en la noche.'],['box','Suba a lo alto sus papeles, aparatos y comida.'],['nocross','No cruce arroyos ni vados con agua corriendo, ni a pie ni en carro.'],['phone','Platique con su familia a dónde irían si el río se sale.']]},
+  {head:'Peligro',light:'Peligro',c:'var(--o)',on:'var(--on-o)',icon:'warn',
+   todo:[['bag','Ponga la mochila junto a la puerta y cargue el celular.'],['run','Si vive cerca del río o en zona baja, váyase antes de que oscurezca a casa de familiares o al refugio.'],['plug','Si el agua empieza a entrar, apague la luz y cierre el gas.'],['ear','Haga caso de inmediato si Protección Civil pide salir.']]},
+  {head:'Peligro muy alto',light:'Muy alto',c:'var(--r)',on:'var(--on-r)',icon:'run',
+   todo:[['run','Si le piden salir, salga ya hacia el refugio o a un lugar alto.'],['bag','No regrese por sus cosas si el agua ya está subiendo.'],['nocross','No camine ni maneje por calles con agua: aunque se vea poca, la corriente lo puede tumbar.'],['phone','Llame al 911 si usted o alguien más está en peligro.']]}
+];
+
+/* ---------- Datos de ejemplo (solo para el prototipo) ---------- */
+function exampleData(sc){
+  const now=new Date(), day=864e5, iso=d=>new Date(now.getTime()+d*day).toISOString().slice(0,10);
+  const P={
+    normal:{prob:9,lvl:0,base:70,peak:95,rain:[2,0,4,11,6,1,0],up:[3,1,6,14,9,2,1],pr:[20,10,30,45,35,15,10],
+      msg:'El río está normal. No se espera lluvia fuerte esta semana.',
+      alerts:[{src:'Servicio Meteorológico Nacional',t:'No hay huracanes ni tormentas cerca de Veracruz.',lv:0,h:2}]},
+    vigilancia:{prob:46,lvl:1,base:240,peak:780,rain:[12,30,40,18,6,2,0],up:[20,45,60,25,8,3,1],pr:[70,90,95,75,40,20,10],
+      msg:'Viene un frente frío con lluvia fuerte en la sierra. El río va a subir mañana y pasado. Esté pendiente.',
+      alerts:[{src:'Servicio Meteorológico Nacional',t:'Frente frío: lluvias muy fuertes en el norte de Veracruz y la sierra de Puebla.',lv:1,h:3},{src:'Protección Civil Veracruz',t:'Vigilan los ríos Pantepec, Vinazco y Tuxpan.',lv:1,h:5}]},
+    alerta:{prob:84,lvl:3,base:600,peak:2350,rain:[95,180,140,60,20,5,2],up:[140,260,210,90,30,8,3],pr:[100,100,100,90,60,30,20],
+      msg:'Un huracán trae lluvia muy fuerte. El río puede salirse de su cauce mañana. Si vive cerca del río, salga a un lugar alto.',
+      alerts:[{src:'Protección Civil Veracruz',t:'Alerta roja en Álamo Temapache, Tuxpan y Poza Rica. Refugios temporales abiertos.',lv:3,h:1},{src:'Servicio Meteorológico Nacional',t:'Huracán frente a la costa de Veracruz: lluvias extraordinarias en el norte del estado.',lv:3,h:1},{src:'Centro Nacional de Huracanes',t:'Aviso de tormenta tropical de Tuxpan a Cabo Rojo.',lv:2,h:2}]}
+  }[sc];
+  const umbrales={rp2:900,rp5:1500,rp20:2600}, serie=[];
+  for(let i=-14;i<=9;i++){
+    let q;
+    if(i<=0)q=P.base*(0.75+0.25*Math.sin((i+14)/3))+(i>-3?P.base*0.15*(i+3):0);
+    else q=P.base+(P.peak-P.base)*Math.exp(-Math.pow((i-2.5)/1.6,2));
+    q=Math.max(15,Math.round(q)); const sp=i>0?Math.round(q*(0.12+0.05*i)):0;
+    serie.push({fecha:iso(i),caudal:q,min:i>0?Math.max(5,q-sp):null,max:i>0?q+sp*1.6:null,pron:i>0});
+  }
+  const sum3=a=>a.slice(0,3).reduce((x,y)=>x+y,0), peakQ=Math.max(...serie.filter(s=>s.pron).map(s=>s.caudal));
+  const t=m=>new Date(now.getTime()-m*60e3).toISOString();
+  return {
+    ejemplo:true, actualizado:t(38),
+    riesgo:{nivel:P.lvl,probabilidad:P.prob,resumen:P.msg,factores:[
+      {nombre:'Caudal pronosticado',detalle:`Pico de ${fmt(peakQ)} m³/s; crecida de 2 años: ${fmt(umbrales.rp2)} m³/s`,valor:Math.min(1,peakQ/umbrales.rp20)},
+      {nombre:'Lluvia en la sierra (72 h)',detalle:`${fmt(sum3(P.up))} mm`,valor:Math.min(1,sum3(P.up)/300)},
+      {nombre:'Lluvia en Álamo (72 h)',detalle:`${fmt(sum3(P.rain))} mm`,valor:Math.min(1,sum3(P.rain)/250)},
+      {nombre:'Avisos oficiales',detalle:`${P.alerts.length} aviso(s) vigente(s)`,valor:Math.max(...P.alerts.map(a=>a.lv))/3}]},
+    rio:{umbrales,serie},
+    lluvia:P.rain.map((mm,i)=>({fecha:iso(i),mm,cuenca_mm:P.up[i],prob:P.pr[i]})),
+    avisos:P.alerts.map(a=>({fuente:a.src,titulo:a.t,nivel:a.lv,fecha:t(a.h*60)})),
+    fuentes:[
+      {nombre:'GloFAS v4 (Copernicus) vía Open-Meteo',aporta:'Caudal simulado y pronóstico',ok:true,fecha:t(40)},
+      {nombre:'Open-Meteo (ECMWF, GFS, ICON)',aporta:'Lluvia en Álamo y en la sierra',ok:true,fecha:t(40)},
+      {nombre:'SMN · Conagua',aporta:'Pronóstico oficial para Temapache',ok:true,fecha:t(41)},
+      {nombre:'NHC · NOAA',aporta:'Huracanes y tormentas cercanos',ok:true,fecha:t(41)},
+      {nombre:'Protección Civil Veracruz',aporta:'Alertas y refugios (captura manual)',ok:sc!=='normal',fecha:t(300)}]
+  };
+}
+
+/* ---------- Utilidades ---------- */
+function fmt(n){return Math.round(n).toLocaleString('es-MX')}
+function el(tag,attrs,...kids){const e=document.createElement(tag);for(const k in (attrs||{})){if(k==='style')e.style.cssText=attrs[k];else if(k==='class')e.className=attrs[k];else if(k==='html')e.innerHTML=attrs[k];else e.setAttribute(k,attrs[k]);}for(const c of kids){if(c==null)continue;e.append(c instanceof Node?c:document.createTextNode(c));}return e;}
+function ago(iso){const m=Math.round((Date.now()-new Date(iso))/6e4);if(m<1)return'hace un momento';if(m<60)return`hace ${m} minutos`;const h=Math.round(m/60);if(h<48)return`hace ${h} ${h===1?'hora':'horas'}`;return`hace ${Math.round(h/24)} días`;}
+function dayName(iso,i){if(i===0)return'Hoy';if(i===1)return'Mañana';const s=new Date(iso+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',timeZone:TZ});return s[0].toUpperCase()+s.slice(1);}
+function dtime(iso){return new Date(iso).toLocaleString('es-MX',{day:'numeric',month:'long',hour:'numeric',minute:'2-digit',timeZone:TZ});}
+const lerp=(x,pts)=>{if(x<=pts[0][0])return pts[0][1];for(let i=1;i<pts.length;i++){const[a,b]=pts[i-1],[c,d]=pts[i];if(x<=c)return b+(d-b)*(x-a)/(c-a);}return pts.at(-1)[1];};
+
+function fixVars(svg){return svg.replace(/<[^>]+>/g,tag=>{const st=[];tag=tag.replace(/\s(fill|stroke)="((?:var|color-mix)\([^"]*\))"/g,(m,p,v)=>{st.push(p+':'+v);return'';});if(!st.length)return tag;if(/\sstyle="/.test(tag))return tag.replace(/\sstyle="/,' style="'+st.join(';')+';');return tag.replace(/(\s*\/?>)$/,' style="'+st.join(';')+'"$1');});}
+/* ---------- Lluvia en palabras ---------- */
+function rainCat(mm){
+  if(mm<5)return{w:'Sin lluvia',lv:0,k:0};
+  if(mm<20)return{w:'Poca lluvia',lv:0,k:1};
+  if(mm<50)return{w:'Lluvia fuerte',lv:1,k:2};
+  if(mm<100)return{w:'Mucha lluvia',lv:2,k:3};
+  return{w:'Lluvia peligrosa',lv:3,k:4};
+}
+function rainIcon(k){
+  if(k===0)return'<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="10" fill="#F2B705"/><g stroke="#F2B705" stroke-width="3.5" stroke-linecap="round"><path d="M28 6v6M28 44v6M6 28h6M44 28h6M12.4 12.4l4.2 4.2M39.4 39.4l4.2 4.2M12.4 43.6l4.2-4.2M39.4 16.6l4.2-4.2"/></g></svg>';
+  const dark=k>=3, cloud=dark?'#5E6B78':'#9AA9B6', n=[0,1,3,4,5][k];
+  let drops='';for(let i=0;i<n;i++){const x=14+i*(28/Math.max(1,n-1||1));drops+=`<path d="M${n===1?28:x} 40 l-3 7" stroke="var(--river)" stroke-width="3.5" stroke-linecap="round"/>`;}
+  const bolt=k===4?'<path d="M30 34l-5 9h5l-3 8 8-11h-5l3-6z" fill="#F2B705"/>':'';
+  return `<svg viewBox="0 0 56 56" aria-hidden="true"><path d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="${cloud}"/>${drops}${bolt}</svg>`;
+}
+
+/* ---------- Mapa de comunidades ---------- */
+const GEO={"locs":[["Álamo",20.9171,-97.6755,19,1],["Aguacate de Vinazco",20.8524,-97.8822,54,0],["Aguacate Paso del Perro",20.8435,-97.801,100,0],["Agua Nacida",20.9137,-97.7067,19,17],["Alajuela",21.0235,-97.6071,125,0],["El Alazán",21.0867,-97.7293,80,4],["El Dólar I",21.1065,-97.7318,97,0],["General Álvaro Obregón (El Retiro)",20.9389,-97.6136,36,0],["Aquiles Serdán (El Nueve)",20.8408,-97.6867,46,33],["El Arbolito",20.8228,-97.5936,71,0],["Artículo Veintisiete Constitucional",21.0133,-97.7899,108,0],["Arroyo Hondo (Kilómetro 26)",21.0473,-97.6062,168,0],["Arroyo Seco",21.0504,-97.802,98,0],["La Barranca",20.9541,-97.8197,42,0],["Bejucal Jiménez",21.1265,-97.6346,143,0],["Belén",20.9234,-97.5578,11,0],["Brasilar",21.1028,-97.6512,120,0],["Buena Vista Número Dos",21.1376,-97.6887,100,0],["Buena Vista Molino",20.9273,-97.611,10,0],["Buenos Aires (San Isidro)",20.84,-97.6034,59,18],["El Cabellal",20.9003,-97.5857,12,0],["La Camelia (Palo Blanco)",20.8973,-97.773,41,6],["Las Cañas de Abajo",20.8188,-97.5769,43,22],["La Ceiba",21.0756,-97.8156,231,0],["El Cerrito (La Concepción)",20.8733,-97.6759,41,38],["Cerro de Horcones",21.0809,-97.8129,236,0],["Cerro del Plumaje",20.9876,-97.7765,80,0],["Cerro Dulce",20.8457,-97.6121,95,21],["Cerro Viejo",21.0265,-97.7203,54,0],["Cinco de Febrero",20.8768,-97.7198,65,0],["El Ciruelo",20.9561,-97.7736,40,0],["Citlaltépetl",20.8638,-97.6069,53,0],["La Concepción",20.863,-97.6789,44,8],["La Constitución (Coyolar)",20.9239,-97.8544,48,0],["Copalar Zaragoza",21.0322,-97.572,103,0],["La Pedrera (Cuicuinaco)",20.9152,-97.8723,61,0],["Chapopote Núñez",20.9331,-97.6861,14,3],["El Chijolar",21.0434,-97.8309,80,0],["La Defensa",20.9787,-97.8041,61,0],["Doctor Ferrer",21.0933,-97.5224,50,0],["Doctor Montes de Oca (San Isidro)",20.9346,-97.5552,9,12],["Emiliano Zapata",20.8637,-97.7201,71,10],["Escobal",21.1106,-97.6307,116,0],["La Esmeralda",21.1268,-97.6068,109,0],["La Esperanza Nueva",20.8359,-97.5873,58,0],["Estación Chapapote (Puerta Siete)",20.9477,-97.723,15,0],["Estero del Ídolo",20.8909,-97.6586,21,2],["El Fortín",20.9808,-97.6483,34,0],["El Gallo",21.0133,-97.826,65,0],["La Granadilla",20.8346,-97.5692,39,0],["La Guadalupe",20.9228,-97.8351,51,0],["San Fernando",20.8987,-97.8723,60,0],["Hermenegildo Galeana",20.9691,-97.7087,42,0],["Héroes del Cuarenta y Siete (Otatal)",20.8361,-97.7552,84,0],["Temapache",21.0654,-97.6414,240,7],["Hidalgo Amajac",20.9043,-97.6278,19,13],["Horcones",21.0706,-97.745,65,23],["El Ixtle",21.0981,-97.7918,134,0],["Nuevo Jardín",20.9002,-97.6556,15,0],["Jardín Viejo",20.9122,-97.6516,19,0],["Josefa Ortiz de Domínguez (Tabasquito)",20.8381,-97.78,115,0],["Kilómetro Treinta y Tres (Paso Real)",20.9021,-97.5935,21,32],["Laguna Lomas de Vinazco",20.8783,-97.9154,207,0],["La Lima Tamatoco",21.049,-97.8401,79,0],["Loma Alta",21.0072,-97.6004,111,0],["Lomas de Vinazco",20.8619,-97.8827,102,25],["Llano Grande",21.0246,-97.6957,61,0],["El Mante",21.0491,-97.5627,58,0],["Manuel Almanza (Rancho Nuevo)",20.8882,-97.8363,79,0],["General Manuel Ávila Camacho (La Gloria)",21.0425,-97.6645,87,0],["Instituto Tecnológico Superior de Álamo",21.0498,-97.6649,101,0],["Mesón Molino",20.9495,-97.6295,13,0],["Milcahuales",21.1548,-97.6989,83,0],["Monte Chiquito",20.963,-97.7999,46,0],["Monte Verde",21.117,-97.71,259,0],["La Mulata",20.8114,-97.8236,74,0],["La Noria",20.9371,-97.7963,48,30],["Ojital Molino",20.9208,-97.6338,22,0],["Ojital Ciruelo",20.9518,-97.7382,26,19],["Ojital la Guadalupe",20.8891,-97.8614,66,0],["Ojital Santa María",20.9559,-97.8327,55,31],["Otatal",21.0539,-97.7298,57,0],["La Palma",20.965,-97.8327,54,0],["Palma Real",21.066,-97.6904,96,0],["Palo Blanco",20.9147,-97.7554,42,20],["Paso del Perro (La Pimienta)",20.8449,-97.7918,74,28],["Nuevo Paso Real",20.8771,-97.5889,51,0],["El Peñón",21.012,-97.898,124,0],["La Piedra Encontrada (Florida)",20.8583,-97.5414,51,0],["Piedra Larga",20.9975,-97.9003,60,0],["Potrero del Llano",21.073,-97.7335,66,5],["La Providencia",20.8416,-97.693,45,0],["Rancho Nuevo",20.9017,-97.5716,8,0],["Raudal Nuevo",20.881,-97.5833,60,27],["Raya Obscura",20.9336,-97.5297,8,0],["La Reforma",20.8672,-97.656,56,24],["El Rodeo (Agua Nacida)",20.9179,-97.7418,28,0],["Rodríguez Clara",20.8878,-97.7316,61,0],["San Antonio",20.9212,-97.7223,19,0],["San José",20.9835,-97.663,43,0],["San Miguel",20.9496,-97.5471,11,37],["Ojital Santa María",20.9535,-97.7525,41,0],["Santa Martha",20.862,-97.523,27,0],["Santa Rosalía (Camalote)",20.9146,-97.5107,10,0],["Sierra de San Miguel",20.8783,-97.5324,43,0],["Sierra Doctor Montes de Oca (La Sierrita)",20.8907,-97.5424,17,0],["Vegas de la Soledad y Soledad Dos",20.9447,-97.8345,48,11],["Solís de Allende",21.1553,-97.6415,71,0],["Sombrerete Grande",20.8898,-97.8087,48,0],["El Xúchitl",20.9117,-97.5677,7,0],["Tablones",20.876,-97.8021,62,0],["Tamatoco",21.0453,-97.8623,91,0],["Tepetzintlilla",21.1883,-97.6974,197,36],["Tierra Amarilla",21.121,-97.6856,198,0],["Tierra Blanca Booxter",20.9938,-97.7177,80,9],["El Tigre",20.8644,-97.8082,80,0],["Tincontlán",20.8221,-97.6909,57,15],["Tohaco (Piedras Negras)",21.0126,-97.6561,46,0],["La Tortuga",20.9114,-97.6947,18,0],["Tumbadero del Águila",20.961,-97.6441,21,0],["La Unión",20.8958,-97.665,15,14],["Úrsulo Galván Uno (El Limonar)",20.8915,-97.7876,45,16],["Vara Alta",20.9962,-97.6757,44,34],["Venustiano Carranza",20.8251,-97.7288,69,0],["La Ensenada (San Juan)",20.8589,-97.5789,78,0],["Villa Hermosa",20.9562,-97.5849,41,0],["Vista del Mar",21.0403,-97.5921,193,0],["Zacatal",20.9336,-97.5222,10,0],["Zanja del Bote",20.8603,-97.6198,37,0],["Zapotal Solís (San José Solís)",21.1636,-97.6705,158,0],["Zapotitlán",21.1131,-97.8147,198,0],["Xoyotitla",21.0689,-97.665,107,39],["Vicente Guerrero",21.0594,-97.8656,101,0],["Augusto Gómez Villanueva",21.1377,-97.678,80,0],["Carolino Anaya",21.0969,-97.6426,94,0],["Ignacio Zaragoza",21.057,-97.8654,101,0],["Independencia",21.0296,-97.8661,99,0],["El Salto Viejo",21.028,-97.9175,116,0],["Cerrito de Chijolar",20.889,-97.5126,13,0],["Guillermo Vélez",21.0638,-97.6266,166,0],["Las Flores Cinco Poblados",20.9327,-97.7792,22,0],["El Manantial",20.8747,-97.8794,84,0],["General Lázaro Cárdenas",20.8832,-97.8911,98,0],["Adolfo López Mateos",20.8228,-97.7537,132,0],["Agua Zarca",20.8163,-97.728,129,0],["Javier Rojo Gómez",20.8283,-97.8202,71,0],["La Mata",20.8158,-97.8375,82,0],["Úrsulo Galván II",20.826,-97.8245,82,0],["La Victoria",20.9724,-97.6359,39,0],["José María Pino Suárez",20.8194,-97.5988,59,0],["General A. Tejeda y su A. Graciano Sánchez",20.9572,-97.7067,21,0],["Los Placeres",21.0006,-97.6852,41,0],["El Catorce (Hidalgo Amajac)",20.8776,-97.6297,30,0],["El Potrero",21.0436,-97.7275,57,0],["El Aguacate (Jardín Viejo)",20.9093,-97.659,19,0],["Aguilera",21.0605,-97.5729,75,0],["La Quebradora",21.0988,-97.7462,81,0],["La Alborada",21.0535,-97.6292,180,0],["Alfredo V. Bonfil",21.0968,-97.5977,167,0],["El Alto",21.0685,-97.6706,147,0],["Ampliación Fortín",20.9545,-97.6415,23,0],["Ampliación Reforma",20.9277,-97.6155,21,0],["La Misión",20.985,-97.8848,60,0],["Arroyo Hondo",21.0649,-97.5988,61,0],["La Barranca",20.9949,-97.9025,60,0],["La Barranca (La Victoria)",20.9482,-97.7876,23,0],["BellaVista",21.0053,-97.6122,85,0],["El Cabello",20.9436,-97.5911,15,0],["El Caracol",20.8365,-97.5568,45,0],["El Cerete",21.0758,-97.8448,127,0],["Cerritos Frijolillo",20.8906,-97.5233,15,0],["Cerro Chino (Ex-Hacienda Sicuao)",20.8211,-97.6492,90,0],["Cerro Verde",21.12,-97.738,101,0],["El Coyolar",20.844,-97.5731,55,0],["Julieta Che",21.1318,-97.7471,106,0],["Los Cuates",21.0335,-97.7375,67,0],["La Chuparrosa",20.9926,-97.8169,61,0],["Don Santos",21.0403,-97.5956,211,0],["Ejido Álamo Tortuga (Santa Elena)",20.9529,-97.6493,35,0],["Ejido Buena Vista",21.082,-97.6686,143,0],["El Embarcadero",21.065,-97.6904,93,0],["El Eme",21.0721,-97.6124,76,0],["El Espíritu",21.017,-97.601,111,0],["La Espuela",20.9806,-97.8111,46,0],["Estación Llano Grande",21.0166,-97.6897,46,0],["La Fortuna",20.9064,-97.7387,39,0],["El Guayabo",20.9649,-97.7056,35,0],["El Higueral",20.8369,-97.889,75,0],["Laguna Verde",20.8283,-97.6507,119,0],["La Paz",20.8814,-97.7557,151,0],["Lucio Blanco",21.0184,-97.6926,42,0],["Macario Cortés Soledad (Ampliación Citlaltépetl)",20.9404,-97.6117,22,0],["Don Héctor",21.0633,-97.6925,97,0],["Los Manantiales",21.048,-97.626,180,0],["Los Mangos (Las Águilas)",21.0767,-97.5666,75,0],["El Deseo",21.0953,-97.7328,82,0],["La Mirada I",21.162,-97.7009,102,0],["El Mirador",20.8968,-97.7023,38,0],["Montecillos",20.9954,-97.8207,61,0],["Los Naranjos",21.0227,-97.8099,79,0],["Oro Blanco",21.1599,-97.6963,101,0],["Palo Blanco II (Chontla)",20.9285,-97.7665,23,0],["Buenavista la Peña",21.0792,-97.6633,115,0],["Piedras Negras",21.0206,-97.6493,61,0],["Raúl Betancourt (Finca la Guadalupe)",20.8816,-97.857,79,0],["La Pitahaya",21.0678,-97.8533,100,0],["El Pocito (Dos Lomitas)",20.9562,-97.8541,57,0],["El Pirata (Las Pozas)",21.0899,-97.5724,94,0],["Las Vegas",21.0376,-97.7203,47,0],["Puerta Siete",20.9421,-97.7025,22,29],["El Zorro",21.1653,-97.6331,94,0],["Loma Larga (Rancho Nuevo)",20.9924,-97.6133,51,0],["El Retiro (Ejido Álvaro Obregón)",20.9254,-97.5905,13,0],["San Benito",21.1373,-97.6984,117,0],["Don Fermín (Copalar Zaragoza)",21.0247,-97.5803,109,0],["San Manuel",21.0284,-97.5739,116,0],["Santa Lucía",20.9879,-97.8273,65,0],["Finca la Vuelta",20.9612,-97.8096,40,0],["Santa Martha",21.0532,-97.6956,77,0],["Sombrerete Chico",20.8913,-97.8005,42,0],["Cerritos Soledad",20.8973,-97.5086,5,0],["El Tanque",21.0256,-97.8483,82,0],["Tenango",21.0764,-97.8478,117,0],["El Salto Nuevo",21.0209,-97.9061,70,0],["Tierra Blanca Booxter",21.0132,-97.76,79,0],["El Triunfo",21.0528,-97.5472,58,0],["Tumbadero",20.9403,-97.5766,11,26],["Tumbadero Núñez",20.8258,-97.806,84,0],["La Unión Chiquita",20.8252,-97.6537,99,0],["Kilómetro el Veintisiete (Oro Verde)",21.0446,-97.6177,221,0],["El Volador",20.8414,-97.5409,45,0],["La Yerbabuena",21.1474,-97.7137,195,0],["La Fortuna",21.0325,-97.8302,71,0],["Espíritu Santo (Zapote Hueco)",21.061,-97.6136,102,0],["Loma Bonita",20.8395,-97.7937,104,0],["Paso de Álamo (La Pita)",20.8568,-97.8683,70,0],["Tablones",20.8394,-97.789,85,0],["Las Lajas",20.8572,-97.8086,60,0],["La Pita",20.8645,-97.8605,89,0],["Horcones (Tumbadero)",20.8342,-97.8137,92,0],["El Mango",20.8233,-97.8076,62,0],["Rancho Alegre (El Tarral)",20.8222,-97.6421,108,0],["Santa Rosa",20.982,-97.8563,82,0],["Monte Lobo (La Palma)",20.9678,-97.8312,80,0],["La Palma",20.9951,-97.8507,82,0],["El Aral",21.0421,-97.8932,155,0],["El Salto",21.0246,-97.9148,77,0],["Los Vera",21.0646,-97.6621,91,0],["El Buen Trato",21.0645,-97.6583,98,0],["El Ávalo",20.9128,-97.6186,14,0],["Ex-Hacienda el Alazán",21.1103,-97.7333,94,0],["El Dólar II",21.1058,-97.7333,92,0],["La Sección",21.0968,-97.7324,85,0],["El Limonar",21.1072,-97.732,97,0],["La Galera",21.0986,-97.7323,88,0],["La Sociedad",21.1075,-97.7371,91,0],["Sotero Vera",21.1205,-97.7191,145,0],["Yerba Buena",21.1238,-97.7452,101,0],["El Kiosco",21.0953,-97.7317,87,0],["La Rosita",21.0992,-97.7239,107,0],["La Chingada",21.1532,-97.6406,66,0],["Los Laureles",21.1539,-97.655,70,0],["Hacienda el Potrero (El Recuerdo)",21.0483,-97.7064,59,0],["Ex-Hacienda Cerro Viejo",21.0165,-97.7236,62,0],["El Naranjal",21.0451,-97.7198,50,0],["La Pasadita",21.0935,-97.7322,79,0],["Las Rosas",21.0678,-97.7568,100,0],["Santa Teresa",21.0519,-97.7453,80,0],["Santa Elena",21.0629,-97.7212,62,0],["Unidad Socialista",20.8966,-97.6989,37,0],["Rancho Alegre (La Espuma)",20.8564,-97.6892,61,0],["Santa Martha",21.0403,-97.7277,59,0],["La Espuela",21.0719,-97.6247,114,0],["Copalar Zaragoza",21.0266,-97.5804,139,0],["La Concepción",21.0424,-97.5659,107,0],["Santa Elvira",21.0437,-97.5641,96,0],["Don Bernardo",21.0411,-97.5667,110,0],["El Balcón",21.1023,-97.6223,150,0],["Santa Inés (Alajuela)",21.0312,-97.6149,112,0],["Poza Azul",21.076,-97.5696,71,0],["Los Arcos",21.1683,-97.7014,109,0],["La Mirada III",21.1738,-97.6957,139,0],["El Encanto",21.0886,-97.6602,197,0],["Álamo Tortuga",20.9767,-97.7101,63,0],["El Alto",20.8606,-97.7906,200,0],["La Luz",20.9571,-97.683,76,0],["Cerrito",20.8785,-97.7916,185,0],["Santa Rosa",21.1826,-97.7066,140,0],["La Reforma",21.1722,-97.705,104,0],["Don Teófilo",21.1149,-97.7136,247,0],["Doctor Salvador Allende",20.9811,-97.8286,78,0],["San Carlos",20.9798,-97.8308,81,0],["El Guayabo",20.9593,-97.705,21,0],["San Gabriel",20.91,-97.8593,67,0],["El Gualul",20.9039,-97.8602,84,0],["Finca el Recreo",20.9595,-97.8093,29,0],["La Joya",20.8592,-97.5497,69,0],["La Esmeralda",20.8223,-97.5891,59,0],["La Vega",20.9279,-97.5672,11,0],["Los Tecolotes",21.1019,-97.6985,275,0],["El Giro",21.1515,-97.6873,81,0],["El Catorce (Buenavista Molino)",20.8831,-97.627,21,0],["Esperanza",20.8399,-97.5469,57,0],["Ejido Chapopote (La Donación)",20.9399,-97.6625,41,0],["La Granadilla",20.9344,-97.6455,29,0],["La Potranca",21.0925,-97.5987,99,0],["La Sauceda de San Judas Tadeo",21.0534,-97.6311,205,0],["El Cerrito",21.0067,-97.895,74,0],["Cuitlaloco",21.094,-97.6984,291,0],["Los Chumas",21.0456,-97.6316,180,0],["Tohaco Viejo",21.0121,-97.6366,158,0],["Rancho Nanchital",20.9114,-97.8293,102,0],["La Concepción",20.9193,-97.8501,61,0],["El Limonar",20.8814,-97.7813,123,0],["Alto Lucero",20.8848,-97.7657,91,0],["Santa Catarina",20.8732,-97.8599,76,0],["Las Mujeres (La Guadalupe)",20.8995,-97.8618,73,0],["Sósimo del Ángel",20.9194,-97.8453,66,0],["Los Limones",21.1249,-97.7409,107,0],["Aurelio Saucedo",21.1469,-97.7227,204,0],["Benjamín Martínez",21.0875,-97.7085,162,0],["Dos Potrillos",21.1276,-97.7428,113,0],["El Cubilete",21.0355,-97.5757,116,0],["Federico García",21.0954,-97.6476,121,0],["Foy de Álamo [Gasolinera]",20.9556,-97.7118,19,0],["Pecuaria del Sector Naval [Granja]",21.0367,-97.5929,191,0],["Gumersindo Soto Gómez",20.9921,-97.7473,51,0],["Hegeyajomi",21.1234,-97.6393,129,0],["Hugo Segura",21.1062,-97.725,143,0],["Jesús Ibarra R.",20.9956,-97.7705,76,0],["Jorge Vicencio Pulido",21.0878,-97.6504,173,0],["La Mulata II",20.8222,-97.8222,66,0],["La Mulata",20.9253,-97.5808,15,0],["Nolberto Salvador",21.0948,-97.6705,200,0],["Los Oliverios",21.0467,-97.5569,60,0],["Oscar Marín",21.0712,-97.6068,70,0],["Parcela los Otates",21.1616,-97.7064,92,0],["Pedro Gutiérrez",21.119,-97.6248,211,0],["Los Pinos",20.8458,-97.5539,92,0],["El Pistlar",20.9714,-97.8515,57,0],["La Pita II (Paso de Álamo)",20.8592,-97.8648,78,0],["Rancho Alegre (Los Manantiales)",20.9986,-97.7411,61,0],["Arroyo Hondo",21.0947,-97.6364,83,0],["Rancho Buenavista",20.9999,-97.7662,101,0],["Rancho Chalahuite",21.0494,-97.5568,59,0],["Don Jorge",21.0829,-97.6064,133,0],["El Alazán",21.0938,-97.7333,79,0],["El Búfalo",21.048,-97.6201,181,0],["El Cortijo",21.0796,-97.6468,188,0],["El Encanto",20.9869,-97.8542,81,0],["El Peregrino",20.9844,-97.8542,80,0],["El Yaqui",21.0875,-97.7246,86,0],["Rancho Hondonada",21.0155,-97.8838,87,0],["La Esperanza",21.0464,-97.7309,54,0],["La Herradura",21.0506,-97.6245,171,0],["La Ilusión",21.035,-97.7185,52,0],["Manuel Silva",21.0261,-97.5764,113,0],["Noé Orta Monterrubio",21.0433,-97.5658,91,0],["Rancho Nuevo",20.933,-97.6669,41,0],["Paso de Arena",21.0634,-97.6795,132,0],["Poza Carranza",21.0438,-97.7119,59,0],["Rancho Total",21.0278,-97.7369,66,0],["San Fernando",20.9548,-97.6777,80,0],["San Gabriel",21.0646,-97.5843,68,0],["San Rafael",21.0,-97.7517,62,0],["Santa Bety",21.0501,-97.5554,58,0],["Santa Cruz",20.8986,-97.7111,40,0],["Rancho Xocohuite",21.0526,-97.6706,80,0],["El Rayo",20.8561,-97.75,136,0],["Tierra Blanca",21.0001,-97.7556,74,0],["Copalar",21.0399,-97.5697,108,0],["Saúl González",20.9151,-97.8552,66,0],["El Treinta y Cinco (Estero del Ídolo)",20.8823,-97.6413,28,0],["Vicente Cobos",21.0421,-97.5692,93,0],["Xochicoatépetl",20.9781,-97.8322,82,0],["La Barranca",20.9964,-97.9035,60,0],["Colonia el Esfuerzo (Pueblo Nuevo)",20.8984,-97.6881,36,0],["La Granja",21.1683,-97.7089,93,0],["La Quinta [Huerta]",21.0757,-97.7372,61,0],["Potrero del Llano",21.0694,-97.7369,60,0],["El Cuatro (Cuatro Hermanos)",21.084,-97.7387,75,0],["El Palmar",21.08,-97.738,68,0],["Ejido Villa Hermosa",20.9915,-97.6172,60,0],["San Román",21.045,-97.7414,76,0],["Sinaí",20.9332,-97.6579,39,0],["Carlos Carabeo Flores (La Isla)",20.9291,-97.6673,22,0],["El Cerro",20.8855,-97.7673,81,0],["Palmar",21.047,-97.6458,182,0],["La Floresta",21.0968,-97.7103,239,0],["Gabriel Montaño",21.0738,-97.7781,121,0],["Gonzalo Cabrera Martínez",21.1131,-97.6994,288,0],["La Granja",20.8377,-97.8094,88,0],["Las Guicelas",21.0783,-97.6008,66,0],["Los Gutiérrez",21.0836,-97.7458,79,0],["La Habana",20.9616,-97.7753,39,0],["El Higuerón",21.1723,-97.7185,104,0],["Humberto González",21.0137,-97.7333,69,0],["Ignacio Sandoval (Pueblo Nuevo)",20.8736,-97.7062,75,0],["Isaías González Díaz",21.0391,-97.8148,103,0],["Monte Caldera Dos",21.0385,-97.7599,101,0],["Los Moros",21.0153,-97.7308,68,0],["El Nueve (La Concepción)",20.8449,-97.6844,45,0],["Las Palmas",21.0327,-97.7501,75,0],["La Parcelita",21.0072,-97.7282,75,0],["Rafael Nuñez Juncal",21.0903,-97.7161,181,0],["Llano Grande",21.0413,-97.6828,64,0],["San Cayetano",21.0386,-97.7275,58,0],["Santa Emilia",20.965,-97.7915,53,0],["La Batería",21.0171,-97.8614,81,0],["Los Caporales",21.0572,-97.7954,116,0],["Alberto González Bravo",20.9965,-97.728,70,0],["Cerro de Agua Nacida",20.8991,-97.7502,59,0],["El Cuinito",21.0759,-97.6319,161,0],["Delfino Carreaga Hidalgo",21.0887,-97.6438,134,0],["Los Insurgentes",20.9592,-97.7729,48,0],["Las Flores Álamo",20.9315,-97.827,58,0],["La Mirada",21.1794,-97.6897,205,0],["El Orijuelo (Don Engracio Ham)",21.0671,-97.726,64,0],["Paulino Vázquez M.",21.0036,-97.7352,79,0],["Los Pinos",21.1537,-97.6525,70,0],["Raúl Juncal Faisal",20.9944,-97.7243,65,0],["Los Ramírez",21.034,-97.7193,52,0],["La Rosita",21.1068,-97.7362,89,0],["San Antonio",20.8284,-97.692,50,0],["Saúl Román Godines",20.9882,-97.7258,61,0],["La Barranca",21.1538,-97.6204,57,0],["La Ceiba (José Pulido)",21.0667,-97.5635,60,0],["El Chaparral",21.0898,-97.6161,110,0],["La Cruz",21.0445,-97.5697,82,0],["El Mante",21.0606,-97.5684,79,0],["El Naranjal Arroyo Hondo",21.0905,-97.6294,81,0],["El Serpentín",21.0267,-97.6444,70,0],["Yolanda Román",21.0996,-97.6087,169,0],["Alejandro Hernández Sánchez",21.0323,-97.7399,73,0],["Beto Arellano",21.0273,-97.743,67,0],["Bruno Reyes",21.0082,-97.6801,43,0],["El Mangar",20.8239,-97.5903,61,0],["Isabel Román Álvarez",20.9946,-97.7399,61,0],["Loma Bonita",20.9387,-97.6774,31,0],["El Cristo",21.0521,-97.7202,61,0],["Santa Clara",21.0882,-97.7548,71,0],["El Milagro",21.0281,-97.7958,98,0],["Bienes Nacionales",20.9398,-97.6751,40,35],["Campo Colorado",20.934,-97.6949,16,0],["El Coyote",20.8846,-97.69,61,0],["Jardines de las Lomas",20.9399,-97.677,41,0],["La Gavia",20.9881,-97.8739,62,0],["La Joya",20.8997,-97.6906,35,0],["La Tequilera",20.8923,-97.6732,20,0],["San Esteban",20.8983,-97.6927,37,0],["San Guillermo",20.9012,-97.7037,24,0],["Santa Clara",20.896,-97.7283,49,0],["El Paraíso (Ampliación de la Unión)",20.8817,-97.6633,22,0],["Alazan",21.0932,-97.7277,96,0],["La Palma",20.9993,-97.8497,81,0],["El Calvario",20.8728,-97.8601,64,0],["Finca Doña Mina",20.8992,-97.7008,40,0],["Los Balfrenes",21.0006,-97.819,63,0],["Las Palomas",21.0329,-97.7954,95,0],["La Aurora",20.8828,-97.6609,25,0]],"river":[[-98.3011,20.4475],[-98.2913,20.456],[-98.2773,20.4721],[-98.2691,20.4874],[-98.2551,20.5041],[-98.2351,20.5222],[-98.2122,20.5336],[-98.1912,20.5375],[-98.1745,20.5482],[-98.1596,20.5648],[-98.1447,20.5815],[-98.1364,20.5934],[-98.1261,20.6048],[-98.1139,20.6158],[-98.0922,20.6275],[-98.0817,20.6398],[-98.074,20.6542],[-98.069,20.6707],[-98.057,20.6835],[-98.045,20.6962],[-98.035,20.7181],[-98.0217,20.7376],[-98.0055,20.7465],[-97.9894,20.7468],[-97.9742,20.7558],[-97.9599,20.7735],[-97.9456,20.7875],[-97.9315,20.7979],[-97.922,20.8144],[-97.9125,20.8309],[-97.8929,20.8491],[-97.8733,20.8673],[-97.8644,20.8852],[-97.8661,20.903],[-97.8564,20.919],[-97.8354,20.9331],[-97.8168,20.9488],[-97.8013,20.9572],[-97.7865,20.9566],[-97.7749,20.9506],[-97.7664,20.939],[-97.7519,20.9316],[-97.7314,20.9283],[-97.7109,20.9271],[-97.6903,20.9279],[-97.6698,20.9288],[-97.651,20.9264],[-97.6323,20.924],[-97.6162,20.9259],[-97.6032,20.9176],[-97.5917,20.9129],[-97.5783,20.922],[-97.5715,20.9387],[-97.5598,20.9519],[-97.5367,20.9538],[-97.521,20.9445],[-97.5054,20.9351],[-97.4819,20.9375],[-97.4704,20.9253],[-97.4617,20.9125],[-97.4439,20.9135],[-97.4239,20.9219],[-97.4102,20.9407],[-97.397,20.9543],[-97.3754,20.9595],[-97.3585,20.9688],[-97.3462,20.9821],[-97.3328,20.9929],[-97.3109,21.0057]],"cazones":[[-97.2181,20.7428],[-97.2378,20.7466],[-97.2528,20.7417],[-97.2566,20.727],[-97.269,20.7199],[-97.2813,20.7128],[-97.2973,20.7078],[-97.3148,20.7063],[-97.3307,20.6956],[-97.348,20.6899],[-97.3666,20.6892],[-97.3751,20.6818],[-97.3736,20.6677],[-97.3797,20.6542],[-97.3934,20.6415],[-97.4001,20.6274],[-97.4087,20.6155],[-97.4264,20.6072],[-97.4398,20.591],[-97.4489,20.5669],[-97.4631,20.551],[-97.4774,20.5351],[-97.4816,20.5204],[-97.4905,20.5057],[-97.5076,20.4949],[-97.533,20.488],[-97.5524,20.4867],[-97.5659,20.491],[-97.5809,20.4843],[-97.5975,20.4665],[-97.6146,20.4549],[-97.6322,20.4494],[-97.6386,20.434],[-97.6432,20.4172],[-97.6471,20.42],[-97.6533,20.4236],[-97.6645,20.438],[-97.6754,20.4519],[-97.6934,20.4658],[-97.7033,20.463],[-97.7121,20.4517],[-97.727,20.4402],[-97.7409,20.4384],[-97.7562,20.4397],[-97.7697,20.4387],[-97.775,20.4402],[-97.7905,20.4385],[-97.8097,20.434],[-97.8248,20.4276],[-97.8407,20.4184],[-97.8574,20.4063],[-97.8728,20.4002],[-97.8876,20.406],[-97.9015,20.4063],[-97.9075,20.4008],[-97.9195,20.3896]],"coast":[[-96.9109,20.3928],[-96.9256,20.4103],[-96.9403,20.4492],[-96.9599,20.4648],[-97.0003,20.4857],[-97.0344,20.5146],[-97.1505,20.647],[-97.1983,20.739],[-97.1881,20.7518],[-97.1832,20.756],[-97.1778,20.7595],[-97.187,20.7768],[-97.1972,20.8102],[-97.2681,20.9279],[-97.338,21.055],[-97.3975,21.2051],[-97.4049,21.2419],[-97.4125,21.2552],[-97.4283,21.2604],[-97.4295,21.2717],[-97.4561,21.3923],[-97.4317,21.3423],[-97.4186,21.2734],[-97.4112,21.2734],[-97.4042,21.3189],[-97.3982,21.3416],[-97.3873,21.3594],[-97.3758,21.3733]],"towns":[["Huehuetla, Hgo.",20.4603,-98.0784],["Metlaltoyuca (Fco. Z. Mena)",20.7337,-97.8521],["Pantepec, Pue.",20.5218,-97.9385],["Venustiano Carranza",20.5049,-97.6694],["Benito Juárez",20.8866,-98.2054],["Cazones",20.7033,-97.3123],["Coatzintla",20.4824,-97.4608],["Chicontepec",20.972,-98.1783],["Ixhuatlán de Madero",20.6894,-98.0126],["Poza Rica",20.5341,-97.4436],["Castillo de Teayo",20.7497,-97.6327],["Tihuatlán",20.7167,-97.5379],["Tlachichilco",20.6216,-98.199],["Tuxpan",20.9643,-97.4039]]};
+const COSL=Math.cos(20.95*Math.PI/180), KM=111.2;
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function distSeg(lat,lon,a,b){ // km de un punto a un segmento (aprox. plana)
+  const px=lon*COSL,py=lat,ax=a[0]*COSL,ay=a[1],bx=b[0]*COSL,by=b[1];
+  const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy||1)));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy))*KM;}
+function distRiver(lat,lon){let m=1e9;for(let i=1;i<GEO.river.length;i++)m=Math.min(m,distSeg(lat,lon,GEO.river[i-1],GEO.river[i]));return m;}
+const ALAMO=[20.9171,-97.6755];
+const LOCS=GEO.locs.map(([n,lat,lon,alt,pri])=>({n,lat,lon,alt,pri,key:norm(n),
+  d:distRiver(lat,lon),dA:Math.hypot((lon-ALAMO[1])*COSL,lat-ALAMO[0])*KM}));
+const LOC_ALAMO=LOCS.find(l=>l.n==='Álamo');
+
+function zone(l){
+  if(l.d<=1.5&&l.alt<=45)return{k:'junto',drop:0,txt:'Está en zona baja junto al río. Si el río crece, el agua puede llegar aquí de las primeras.'};
+  if(l.d<=4&&l.alt<=80)return{k:'cerca',drop:1,txt:'Está cerca del río. Si el río crece mucho, se pueden inundar las partes bajas y los caminos.'};
+  return{k:'lejos',drop:2,txt:'Está lejos del río Pantepec. El peligro principal son los arroyos que crecen y los caminos que se cortan.'};
+}
+const commLevel=l=>Math.max(0,(current?current.riesgo.nivel:0)-zone(l).drop);
+const kmTxt=d=>d<1?'menos de 1 km':(d<10?d.toFixed(1).replace('.',','):Math.round(d))+' km';
+
+const M={lon:-97.70,lat:20.99,k:0,kDef:0,sel:null,W:0,H:0};
+const mapbox=document.getElementById('mapbox'), msvg=document.getElementById('msvg');
+const REG={lon0:-98.40,lon1:-97.20,lat0:20.38,lat1:21.22};
+function fitDefault(){M.W=mapbox.clientWidth;M.H=mapbox.clientHeight;
+  M.kDef=Math.min(M.W/((0.46)*COSL),M.H/0.42)*0.95;}
+const kMin=()=>Math.min(M.W/((REG.lon1-REG.lon0)*COSL),M.H/(REG.lat1-REG.lat0));
+const kMax=()=>M.kDef*14;
+const P=(lat,lon)=>[M.W/2+(lon-M.lon)*M.k*COSL,M.H/2-(lat-M.lat)*M.k];
+const unP=(x,y)=>[M.lat-(y-M.H/2)/M.k,M.lon+(x-M.W/2)/(M.k*COSL)];
+function clampView(){M.k=Math.max(kMin(),Math.min(kMax(),M.k));
+  M.lon=Math.max(REG.lon0,Math.min(REG.lon1,M.lon));M.lat=Math.max(REG.lat0,Math.min(REG.lat1,M.lat));}
+function zoomAt(x,y,f){const[la,lo]=unP(x,y);M.k*=f;clampView();const[x2,y2]=P(la,lo);M.lon+=(x2-x)/(M.k*COSL);M.lat-=(y2-y)/M.k;clampView();drawMap();}
+
+let raf=0;function drawMap(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;paint();});}
+function paint(){
+  if(!GEO||!M.W)return;
+  const W=M.W,H=M.H,G=current?current.riesgo.nivel:0;
+  const line=pts=>pts.map((p,i)=>(i?'L':'M')+P(p[1],p[0]).map(v=>v.toFixed(1)).join(',')).join('');
+  const rw=Math.max(3,Math.min(9,M.k/120));
+  let s=`<rect width="${W}" height="${H}" fill="var(--land)"/>`;
+  const sea=[...GEO.coast,[-96.0,21.6],[-96.0,20.2]];
+  s+=`<path d="${line(sea)}Z" fill="var(--sea)"/>`;
+  s+=`<path d="${line(GEO.cazones)}" fill="none" stroke="var(--river)" stroke-width="${(rw*0.6).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>`;
+  s+=`<path d="${line(GEO.river)}" fill="none" stroke="var(--river)" stroke-width="${rw.toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s+=`<path class="flow" d="${line(GEO.river)}" fill="none" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="${Math.max(1.5,rw/3).toFixed(1)}" stroke-dasharray="3 17" stroke-linecap="round"/>`;
+
+  // etiquetas: primero se reservan las importantes, luego el resto si cabe
+  const boxes=[{x:W-68,y:0,w:68,h:176},{x:0,y:H-46,w:130,h:46}], labels=[];
+  const fits=b=>b.x>=2&&b.y>=2&&b.x+b.w<=W-2&&b.y+b.h<=H-2&&!boxes.some(o=>b.x<o.x+o.w&&o.x<b.x+b.w&&b.y<o.y+o.h&&o.y<b.y+b.h);
+  function tryLabel(x,y,txt,size,weight,color,r,halo){
+    const w=txt.length*size*0.56+4,h=size+4;
+    for(const [dx,dy,anchor] of [[r+5,0,'start'],[-r-5,0,'end'],[0,-(r+size*0.75),'middle'],[0,r+size*0.75,'middle']]){
+      const b={x:anchor==='start'?x+dx:anchor==='end'?x+dx-w:x-w/2,y:y+dy-h/2,w,h};
+      if(fits(b)){boxes.push(b);labels.push(`<text x="${(x+dx).toFixed(1)}" y="${(y+dy+size*0.36).toFixed(1)}" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}" fill="${color}" stroke="${halo||'var(--land)'}" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${txt}</text>`);return true;}
+    }return false;}
+  const inView=([x,y],m=20)=>x>-m&&x<W+m&&y>-m&&y<H+m;
+
+  // nombres de los ríos
+  const RL=[['Río Pantepec',20.946,-97.76],['Río Tuxpan',20.975,-97.47],['Río Cazones',20.585,-97.52]];
+  for(const[t,la,lo]of RL){const p=P(la,lo);if(inView(p,0))tryLabel(p[0],p[1],t,15,700,'var(--river)',0);}
+  // sierra y lluvia
+  const sp=P(20.56,-98.17);
+  if(inView(sp,40)){
+    const rs=(current&&current.lluvia||[]).slice(0,3).reduce((a,d)=>a+(d.cuenca_mm||0),0)/1.5, rc=rainCat(rs);
+    if(rc.k>=2)s+=`<g transform="translate(${(sp[0]-28).toFixed(1)} ${(sp[1]-62).toFixed(1)})">${rainIcon(rc.k).replace('<svg viewBox="0 0 56 56" aria-hidden="true">','<svg width="56" height="56" viewBox="0 0 56 56">')}</g>`;
+    tryLabel(sp[0]-6,sp[1],'SIERRA: aquí nace el río',15,700,'var(--ink)',0);
+  }
+  // pueblos vecinos (cuadros)
+  const towns=[];
+  for(const[t,la,lo]of GEO.towns){const p=P(la,lo);if(!inView(p))continue;
+    s+=`<rect x="${(p[0]-5).toFixed(1)}" y="${(p[1]-5).toFixed(1)}" width="10" height="10" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>`;towns.push([p,t]);}
+
+  // comunidades
+  const zoomed=M.k/M.kDef, rBase=zoomed<0.6?2.2:zoomed<1.5?3.6:zoomed<4?5:6.5;
+  const vis=[];
+  for(const l of LOCS){const p=P(l.lat,l.lon);if(!inView(p))continue;vis.push([l,p]);}
+  vis.sort((a,b)=>(a[0].pri||999)-(b[0].pri||999));
+  let dots='';
+  for(let i=vis.length-1;i>=0;i--){const[l,p]=vis[i];if(l===LOC_ALAMO)continue;
+    const r=l.pri&&l.pri<=40?rBase+1.5:rBase;
+    dots+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}" fill="${LV[commLevel(l)].c}" stroke="var(--ink)" stroke-width="${r>4?1.6:1}"/>`;}
+  s+=dots;
+  // Álamo
+  const pa=P(LOC_ALAMO.lat,LOC_ALAMO.lon), ca=LV[commLevel(LOC_ALAMO)].c;
+  if(inView(pa,40)){
+    if(G>=2)s+=`<circle class="pulse" cx="${pa[0].toFixed(1)}" cy="${pa[1].toFixed(1)}" r="14" fill="none" stroke="${ca}" stroke-width="5"/>`;
+    s+=`<circle cx="${pa[0].toFixed(1)}" cy="${pa[1].toFixed(1)}" r="12" fill="${ca}" stroke="var(--ink)" stroke-width="3"/>`;}
+  // seleccionado
+  if(M.sel){const p=P(M.sel.lat,M.sel.lon);if(inView(p,40))s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rBase+9}" fill="none" stroke="var(--ink)" stroke-width="3.5"/><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rBase+12}" fill="none" stroke="var(--surface)" stroke-width="2"/>`;}
+
+  // orden de etiquetas: seleccionada, Álamo, pueblos, comunidades por tamaño
+  if(M.sel){const p=P(M.sel.lat,M.sel.lon);if(inView(p,0))tryLabel(p[0],p[1],M.sel.n,18,700,'var(--ink)',rBase+12);}
+  if(inView(pa,0)&&M.sel!==LOC_ALAMO)tryLabel(pa[0],pa[1],'ÁLAMO',22,700,'var(--ink)',13);
+  for(const[p,t]of towns)tryLabel(p[0],p[1],t,14,700,'var(--muted)',6);
+  const maxLabels=zoomed<0.6?0:zoomed<1.5?40:999;
+  let n=0;
+  for(const[l,p]of vis){if(l===LOC_ALAMO||l===M.sel)continue;if(!l.pri&&zoomed<2.5)continue;if(n>=maxLabels)break;
+    if(tryLabel(p[0],p[1],l.n.replace(/\s*\(.*\)$/,''),zoomed>=3?14:13,l.pri&&l.pri<=15?700:400,'var(--ink)',rBase+1.5))n++;}
+  s+=labels.join('');
+  // escala
+  const km10=10/KM*M.k*COSL, km=km10>160?5:km10<40?20:10, px=km/KM*M.k*COSL;
+  s+=`<g transform="translate(12 ${H-16})"><rect x="-6" y="-24" width="${(px+20).toFixed(0)}" height="34" rx="6" fill="var(--surface)" opacity=".85"/><path d="M0 0h${px.toFixed(1)}M0 -5v10M${px.toFixed(1)} -5v10" stroke="var(--ink)" stroke-width="2.5"/><text x="${(px/2).toFixed(1)}" y="-9" font-size="12" text-anchor="middle" fill="var(--ink)">${km} km</text></g>`;
+  msvg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  msvg.innerHTML=fixVars(s);
+}
+
+/* gestos: arrastrar, pellizcar, rueda, tocar */
+const ptrs=new Map();let moved=false,pinch=null,startPt=null;
+msvg.addEventListener('pointerdown',e=>{msvg.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.offsetX,e.offsetY]);
+  if(ptrs.size===1){moved=false;startPt=[e.offsetX,e.offsetY];}
+  if(ptrs.size===2){const[a,b]=[...ptrs.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])};moved=true;}});
+msvg.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId),cur=[e.offsetX,e.offsetY];ptrs.set(e.pointerId,cur);
+  if(ptrs.size===1){if(Math.hypot(cur[0]-startPt[0],cur[1]-startPt[1])>6)moved=true;if(!moved)return;
+    M.lon-=(cur[0]-prev[0])/(M.k*COSL);M.lat+=(cur[1]-prev[1])/M.k;clampView();drawMap();}
+  else if(ptrs.size===2&&pinch){const[a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d>0){zoomAt((a[0]+b[0])/2,(a[1]+b[1])/2,d/pinch.d);pinch.d=d;}}});
+function endPtr(e){if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;
+  if(ptrs.size===0&&!moved&&e.type==='pointerup'){let best=null,bd=24;
+    for(const l of LOCS){const p=P(l.lat,l.lon),d=Math.hypot(p[0]-e.offsetX,p[1]-e.offsetY);if(d<bd){bd=d;best=l;}}
+    if(best)selectLoc(best,false);}}
+msvg.addEventListener('pointerup',endPtr);msvg.addEventListener('pointercancel',endPtr);
+msvg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.offsetX,e.offsetY,Math.exp(-e.deltaY*0.0018));},{passive:false});
+document.getElementById('zin').onclick=()=>zoomAt(M.W/2,M.H/2,1.6);
+document.getElementById('zout').onclick=()=>zoomAt(M.W/2,M.H/2,1/1.6);
+document.getElementById('zreset').onclick=()=>{M.lon=-97.705;M.lat=21.0;M.k=M.kDef;clampView();drawMap();};
+
+/* búsqueda */
+const q=document.getElementById('q'), res=document.getElementById('results');
+function search(){const t=norm(q.value.trim());if(t.length<2){res.hidden=true;return;}
+  const hits=LOCS.filter(l=>l.key.includes(t)).sort((a,b)=>(a.key.startsWith(t)?0:1)-(b.key.startsWith(t)?0:1)||(a.pri||999)-(b.pri||999)||a.dA-b.dA).slice(0,8);
+  res.replaceChildren(...(hits.length?hits.map(l=>el('li',null,el('button',{type:'button'},l.n,el('small',null,`A ${kmTxt(l.dA)} del centro de Álamo · ${l.alt} m de altura`)))):[el('li',{class:'none'},'No encontramos esa comunidad. Pruebe con otra parte del nombre.')]));
+  [...res.querySelectorAll('button')].forEach((b,i)=>b.onclick=()=>{selectLoc(hits[i],true);res.hidden=true;q.value=hits[i].n;q.blur();});
+  res.hidden=false;}
+q.addEventListener('input',search);q.addEventListener('focus',search);
+q.addEventListener('keydown',e=>{if(e.key==='Escape'){res.hidden=true;}if(e.key==='Enter'){const b=res.querySelector('button');if(b)b.click();}});
+document.addEventListener('click',e=>{if(!e.target.closest('.search'))res.hidden=true;});
+
+function selectLoc(l,zoom){M.sel=l;try{localStorage.setItem('mi',l.n+'|'+l.lat+'|'+l.lon)}catch(e){}
+  if(zoom){M.lon=l.lon;M.lat=l.lat;M.k=Math.max(M.k,M.kDef*3.2);clampView();}
+  drawMap();renderCard();renderMine();}
+function renderCard(){const c=document.getElementById('ccard');const l=M.sel;if(!l){c.hidden=true;return;}
+  const lv=commLevel(l),L=LV[lv],z=zone(l);
+  c.style.setProperty('--c',L.c);c.style.setProperty('--on',L.on);
+  c.replaceChildren(el('h3',null,l.n),el('div',{class:'lvl'},'Hoy: '+L.head),el('p',null,z.txt),
+    el('div',{class:'facts'},el('div',null,el('b',null,kmTxt(l.d)),el('span',null,'del río Pantepec')),el('div',null,el('b',null,l.alt+' m'),el('span',null,'de altura')),el('div',null,el('b',null,l===LOC_ALAMO?'—':kmTxt(l.dA)),el('span',null,'del centro de Álamo'))),
+    el('p',{class:'note'},'Riesgo estimado con la distancia al río y la altura del lugar. No toma en cuenta los arroyos.'));
+  c.hidden=false;}
+function renderMine(){const m=document.getElementById('mine');if(!M.sel||!current){m.hidden=true;return;}
+  m.textContent=`Su comunidad, ${M.sel.n}: ${LV[commLevel(M.sel)].head.toLowerCase()}.`;m.hidden=false;}
+function mapUpdate(){if(!M.k){fitDefault();M.k=M.kDef;M.lon=-97.705;M.lat=21.0;
+    try{const s=(localStorage.getItem('mi')||'').split('|');if(s[0]){const l=LOCS.find(x=>x.n===s[0]&&Math.abs(x.lat-(+s[1]))<1e-3);if(l)M.sel=l;}}catch(e){}}
+  drawMap();renderCard();renderMine();}
+new ResizeObserver(()=>{const k0=M.kDef;fitDefault();if(k0&&M.k)M.k*=M.kDef/k0;else M.k=M.kDef;clampView();drawMap();}).observe(mapbox);
+
+/* mapa con calles (solo en la página publicada; OpenStreetMap) */
+const osmBtn=document.getElementById('osmbtn');let osm=null;
+osmBtn.onclick=()=>{const box=document.getElementById('osmmap');
+  if(!box.hidden){box.hidden=true;osmBtn.textContent='Ver mapa con calles';return;}
+  box.hidden=false;osmBtn.textContent='Volver al mapa sencillo';
+  const go=()=>{if(osm){osm.invalidateSize();return;}
+    osm=L.map(box).setView([20.99,-97.70],11);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(osm);
+    for(const l of LOCS)L.circleMarker([l.lat,l.lon],{radius:l===LOC_ALAMO?9:5,color:'#222',weight:1,fillOpacity:.9,fillColor:getComputedStyle(document.documentElement).getPropertyValue(LV[commLevel(l)].c.slice(4,-1))}).bindPopup(`<b>${l.n}</b><br>${kmTxt(l.d)} del río · ${l.alt} m`).on('click',()=>selectLoc(l,false)).addTo(osm);};
+  if(window.L)go();else{const css=document.createElement('link');css.rel='stylesheet';css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.append(css);
+    const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';sc.onload=go;sc.onerror=()=>{box.hidden=true;osmBtn.textContent='Ver mapa con calles';};document.head.append(sc);}};
+
+
+
+
+/* ---------- Respuesta ---------- */
+const ANS=[
+  {a:'No',sub:'Hoy no hay peligro'},
+  {a:'Puede ser',sub:'Esté atento'},
+  {a:'Sí',sub:'Peligro: prepárese'},
+  {a:'Sí',sub:'Peligro muy alto'}
+];
+const SKY=[['#7EC3EA','#CBE8F7'],['#9AB1C2','#D3DEE5'],['#6D7F8C','#AAB7BF'],['#3D4A55','#73818B']];
+const SKY_DARK=[['#173247','#25506B'],['#1C2B36','#2E4250'],['#141E26','#26343E'],['#0B1117','#1B252D']];
+const isDark=()=>matchMedia('(prefers-color-scheme: dark)').matches&&document.documentElement.dataset.theme!=='light'||document.documentElement.dataset.theme==='dark';
+
+/* nivel del agua en el dibujo (y en px del viewBox) */
+function waterY(q,U){return lerp(q,[[0,226],[U.rp2*0.5,200],[U.rp2,170],[U.rp5,140],[U.rp20,108],[U.rp20*1.4,92]]);}
+function sceneSVG(D){
+  const G=D.riesgo.nivel, sky=(isDark()?SKY_DARK:SKY)[G];
+  const U=D.rio&&D.rio.umbrales, S=D.rio&&D.rio.serie||[];
+  const past=S.filter(s=>!s.pron), fut=S.filter(s=>s.pron).slice(0,7);
+  const hasR=U&&past.length&&fut.length;
+  const qNow=hasR?past.at(-1).caudal:0, qPk=hasR?Math.max(...fut.map(s=>s.caudal)):0;
+  const yNow=hasR?waterY(qNow,U):220, yPk=hasR?waterY(qPk,U):220;
+  const iPk=hasR?fut.findIndex(s=>s.caudal===qPk):0;
+  // lluvia
+  let rain='';
+  if(G>=1){const n=G===1?14:G===2?26:40;for(let i=0;i<n;i++){const x=(i*37)%420-10,y=(i*53)%110;rain+=`<path d="M${x} ${y} l-4 12" />`;}}
+  const clouds=G===0?`<circle cx="330" cy="40" r="20" fill="#FFD23F"/>`:
+    `<g fill="${G>=2?'#5B6873':'#C3CED6'}"><ellipse cx="90" cy="30" rx="70" ry="22"/><ellipse cx="150" cy="22" rx="60" ry="22"/><ellipse cx="290" cy="34" rx="80" ry="24"/><ellipse cx="370" cy="26" rx="50" ry="20"/></g>`;
+  // regla (sobre la pila del puente)
+  const gx=144, gw=26, bands=[[170,232,'var(--g)'],[140,170,'var(--y)'],[108,140,'var(--o)'],[78,108,'var(--r)']];
+  let gauge=bands.map(([a,b,c])=>`<rect x="${gx}" y="${a}" width="${gw}" height="${b-a}" fill="${c}"/>`).join('');
+  for(let y=80;y<232;y+=6)gauge+=`<path d="M${gx} ${y}h${(y%30===2)?gw*0.7:gw*0.35}" stroke="#14110A" stroke-width="1.4"/>`;
+  gauge+=`<rect x="${gx}" y="78" width="${gw}" height="154" fill="none" stroke="#14110A" stroke-width="2"/>`;
+  const casa=(x,y)=>`<g><rect x="${x}" y="${y-30}" width="40" height="30" fill="#EADBC2" stroke="#4C3B28" stroke-width="2"/><path d="M${x-5} ${y-28}L${x+20} ${y-48}L${x+45} ${y-28}Z" fill="#B24A2E" stroke="#4C3B28" stroke-width="2"/><rect x="${x+15}" y="${y-16}" width="10" height="16" fill="#4C3B28"/></g>`;
+  const wave=`M-40 0 ${Array.from({length:14},(_,i)=>`q10 -5 20 0 t20 0`).join(' ')} V200 H-40 Z`;
+  return `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient></defs>
+  <rect width="400" height="250" fill="url(#sky)"/>
+  ${clouds}
+  <path d="M0 120 C60 90 120 110 180 96 C240 82 300 104 400 88 V250 H0Z" fill="var(--hill)" opacity=".75"/>
+  ${casa(300,170)}${casa(348,170)}
+  <rect x="150" y="70" width="14" height="170" fill="#8D8F90"/>
+  ${gauge}
+  <g class="water" style="transform:translateY(${(yNow-232).toFixed(1)}px)" id="wgroup">
+    <g transform="translate(0 232)"><path class="waves" d="${wave}" fill="var(--water)" opacity=".92"/></g>
+  </g>
+  <path d="M0 150 L40 150 L105 232 L262 232 L292 170 L400 170 L400 250 L0 250 Z" fill="#7E6448"/>
+  <path d="M0 150 L40 150 L105 232 L262 232 L292 170 L400 170" fill="none" stroke="#4C3B28" stroke-width="3"/>
+  <rect x="0" y="58" width="270" height="14" fill="#A5A7A8" stroke="#55585A" stroke-width="2"/>
+  <path d="M0 58 V44 M30 58V44M60 58V44M90 58V44M120 58V44M150 58V44M180 58V44M210 58V44M240 58V44M270 58V44 M0 46H270" stroke="#55585A" stroke-width="2.5" fill="none"/>
+  <g class="rain" stroke="${G>=2?'#E8EEF2':'#5C7A8C'}" stroke-width="2" stroke-linecap="round" opacity=".8">${rain}</g>
+  ${hasR?`<g><path d="M${gx+gw+2} ${yNow.toFixed(1)} h18" stroke="var(--ink)" stroke-width="3"/><path d="M${gx+gw+2} ${yNow.toFixed(1)} l8 -5 v10z" fill="var(--ink)"/>
+    <text x="${gx+gw+24}" y="${(yNow+6).toFixed(1)}" font-size="18" font-weight="800" fill="var(--ink)" stroke="${sky[1]}" stroke-width="4" paint-order="stroke" font-family="Barlow Condensed, Arial Narrow, sans-serif">HOY</text></g>`:''}
+  ${hasR&&yPk<yNow-14?`<path d="M${gx-30} ${yPk.toFixed(1)} H${gx+gw+80}" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="7 5"/>
+    <text x="${gx-34}" y="${(yPk+5).toFixed(1)}" text-anchor="end" font-size="16" font-weight="800" fill="var(--ink)" stroke="${sky[1]}" stroke-width="4" paint-order="stroke" font-family="Barlow Condensed, Arial Narrow, sans-serif">${iPk===0?'MAÑANA':'EN '+(iPk+1)+' DÍAS'}</text>`:''}`;
+}
+
+/* ---------- Semana ---------- */
+function weekHTML(D){
+  const U=D.rio&&D.rio.umbrales, fut=(D.rio&&D.rio.serie||[]).filter(s=>s.pron);
+  const now=(D.rio&&D.rio.serie||[]).filter(s=>!s.pron).at(-1);
+  const days=(D.lluvia||[]).slice(0,7);
+  return days.map((d,i)=>{
+    const q=i===0&&now?now.caudal:(fut[i-1]||fut.at(-1)||{caudal:0}).caudal;
+    const f=U?Math.max(.06,Math.min(1,(232-waterY(q,U))/(232-78))):.1;
+    const lv=U?(q>=U.rp5?3:q>=U.rp2?2:q>=U.rp2*0.5?1:0):0;
+    const w=['Normal','Alto','Se sale','Inunda'][lv];
+    const mk=U?(232-170)/(232-78)*100:0;
+    const rc=rainCat(d.mm);
+    return `<div class="wd" style="--c:${LV[lv].c}"><div class="dn">${i===0?'Hoy':dayName(d.fecha,i).slice(0,3)}</div>${fixVars(rainIcon(rc.k)).replace('<svg ','<svg class="ri" ')}<div class="tube" role="img" aria-label="${w}"><div class="fill" style="height:${(f*100).toFixed(0)}%"></div><div class="mark" style="bottom:${mk.toFixed(0)}%"></div></div><div class="ww">${w}</div></div>`;}).join('');
+}
+
+/* ---------- Render ---------- */
+const CHIPS=['Álamo','Estero del Ídolo','Chapopote Núñez','Potrero del Llano','Buenos Aires (San Isidro)','Las Cañas de Abajo','Tierra Blanca Booxter','El Alazán'];
+function renderChips(){
+  const box=document.getElementById('chips');
+  box.replaceChildren(...CHIPS.map(n=>{const l=LOCS.find(x=>x.n===n);if(!l)return null;
+    const b=el('button',{type:'button','aria-pressed':String(M.sel===l),style:`--c:${LV[commLevel(l)].c}`},el('i'),n.replace(/\s*\(.*\)$/,''));
+    b.onclick=()=>{selectLoc(l,true);renderChips();document.getElementById('q').value='';};return b;}).filter(Boolean));
+}
+function render(D){
+  const R=D.riesgo, L=LV[R.nivel], A=ANS[R.nivel];
+  const h=document.getElementById('hero'); h.style.setProperty('--c',L.c); h.style.setProperty('--on',L.on);
+  document.getElementById('ans').textContent=A.a;
+  document.getElementById('sub').textContent=A.sub;
+  document.getElementById('msg').textContent=R.resumen;
+  document.getElementById('chance').textContent=`${Math.round(R.probabilidad)} de cada 100`;
+  document.getElementById('when').textContent=`Revisado ${ago(D.actualizado)} · cada 3 horas`;
+  const sc=document.getElementById('scene'); sc.innerHTML=fixVars(sceneSVG(D));
+  // animación: el agua sube desde abajo al cargar
+  const wg=sc.querySelector('#wgroup'); if(wg){const fin=wg.style.transform; wg.style.transform='translateY(0px)'; requestAnimationFrame(()=>requestAnimationFrame(()=>{wg.style.transform=fin;}));}
+  document.getElementById('week').innerHTML=weekHTML(D);
+  const tp=document.getElementById('todopanel'); tp.style.setProperty('--c',L.c); tp.style.setProperty('--on',L.on);
+  document.getElementById('todo').replaceChildren(...L.todo.map(([ic,t])=>el('li',null,el('div',{class:'ti',html:IC[ic]}),el('span',null,t))));
+  const AV=D.avisos&&D.avisos.length?D.avisos:[{fuente:'—',titulo:'No hay avisos de las autoridades para Álamo.',nivel:0,fecha:D.actualizado}];
+  document.getElementById('alerts').replaceChildren(...AV.map(a=>el('li',{style:`--c:${LV[a.nivel].c};--on:${LV[a.nivel].on}`},
+    el('span',{class:'tag'},['Info','Atento','Alerta','Emergencia'][a.nivel]),
+    el('div',null,el('div',{class:'t'},a.url?el('a',{href:a.url,target:'_blank',rel:'noopener'},a.titulo):a.titulo),el('div',{class:'small'},`${a.fuente} · ${dtime(a.fecha)}`)))));
+  document.getElementById('factors').replaceChildren(...R.factores.map(f=>{const lv=f.valor>=.75?3:f.valor>=.5?2:f.valor>=.25?1:0;
+    return el('li',null,el('div',null,el('b',null,f.nombre),el('div',{class:'small'},f.detalle)),el('div',{class:'meter'},el('span',{style:`width:${Math.max(3,f.valor*100)}%;background:${LV[lv].c}`})));}));
+  document.getElementById('sources').replaceChildren(...D.fuentes.map(s=>el('tr',null,el('td',null,s.url?el('a',{href:s.url,target:'_blank',rel:'noopener'},s.nombre):s.nombre),el('td',null,s.aporta),
+    el('td',null,el('span',{style:`color:${s.ok?'var(--g)':'var(--r)'}`},'● '),s.ok?ago(s.fecha):'sin respuesta; se usa la anterior'))));
+  mapUpdate(); renderChips();
+  document.getElementById('osmbtn').hidden=!!D.ejemplo;
+}
+// la selección desde el mapa también actualiza los botones
+const _sel=selectLoc; selectLoc=function(l,z){_sel(l,z);renderChips();};
+
+/* ---------- Escuchar ---------- */
+const listen=document.getElementById('listen');
+if('speechSynthesis' in window){listen.hidden=false;
+  listen.addEventListener('click',()=>{const ss=speechSynthesis;
+    if(ss.speaking){ss.cancel();document.getElementById('listenlbl').textContent='Escuchar';return;}
+    if(!current)return;const R=current.riesgo,L=LV[R.nivel],A=ANS[R.nivel];
+    let t=`¿Se va a inundar Álamo? ${A.a}. ${A.sub}. ${R.resumen}`;
+    if(M.sel)t+=` Su comunidad, ${M.sel.n}: ${LV[commLevel(M.sel)].head}.`;
+    t+=` Qué hacer: ${L.todo.map(x=>x[1]).join(' ')}`;
+    const u=new SpeechSynthesisUtterance(t);u.lang='es-MX';u.rate=.9;
+    const v=ss.getVoices().find(v=>v.lang==='es-MX')||ss.getVoices().find(v=>v.lang&&v.lang.startsWith('es'));if(v)u.voice=v;
+    u.onend=u.onerror=()=>{document.getElementById('listenlbl').textContent='Escuchar';};
+    document.getElementById('listenlbl').textContent='Detener';try{ss.speak(u);}catch(e){}});}
+
+/* ---------- Letra ---------- */
+const SIZES=[17,19,22,25];let fsI=1;try{const s=+localStorage.getItem('fsI');if(s>=0&&s<SIZES.length)fsI=s;}catch(e){}
+function applyFs(){document.documentElement.style.setProperty('--fs',SIZES[fsI]+'px');document.getElementById('font-down').disabled=fsI===0;document.getElementById('font-up').disabled=fsI===SIZES.length-1;try{localStorage.setItem('fsI',fsI)}catch(e){}}
+document.getElementById('font-up').onclick=()=>{fsI=Math.min(SIZES.length-1,fsI+1);applyFs();};
+document.getElementById('font-down').onclick=()=>{fsI=Math.max(0,fsI-1);applyFs();};applyFs();
+
+/* ---------- Arranque ---------- */
+function tick(){const s=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',timeZone:TZ});document.getElementById('date').textContent=s[0].toUpperCase()+s.slice(1);}
+tick();setInterval(tick,6e4);
+function setScenario(sc){document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sc===sc)));try{localStorage.setItem('escB',sc)}catch(e){}try{speechSynthesis.cancel()}catch(e){}current=exampleData(sc);render(current);}
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>setScenario(b.dataset.sc)));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(current)document.getElementById('scene').innerHTML=fixVars(sceneSVG(current));});
+fetch('data.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json();}).then(d=>{current=d;render(d);})
+.catch(()=>{document.getElementById('demo').hidden=false;let sc='normal';try{sc=localStorage.getItem('escB')||'normal'}catch(e){}if(!['normal','vigilancia','alerta'].includes(sc))sc='normal';setScenario(sc);});
+})();
+</script>
+
+</body></html>
