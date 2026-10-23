@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>¿Se inunda Álamo? · Aviso de hoy</title>
+<meta name="description" content="Respuesta diaria y sencilla: ¿hay peligro de inundación del río Pantepec en Álamo Temapache y sus comunidades? Se revisa cada 3 horas.">
+<meta name="theme-color" content="#0B1F2A">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_MX">
+<meta property="og:title" content="¿Se inunda Álamo? · Hoy: vea la respuesta">
+<meta property="og:description" content="Peligro de inundación del río Pantepec en Álamo Temapache y sus comunidades. Se revisa cada 3 horas.">
+<meta property="og:image" content="og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;600&display=swap">
+<style>
+/* Estilo letrero de Protección Civil (propuesta B). Una columna, pensada para celular. */
+:root{
+  --bg:#E9F0F5; --surface:#FFFFFF; --ink:#0B1F2A; --muted:#47606E; --line:#0B1F2A;
+  --soft:#C9D7E0; --river:#2F78A8; --land:#DDE7D3; --hill:#B9C9A6; --sea:#CFE3EF; --water:#4F7F95;
+  --g:#1E7B3E; --y:#F5C518; --o:#E06A10; --r:#C8231F; --na:#5B6670;
+  --on-g:#FFFFFF; --on-y:#14110A; --on-o:#14110A; --on-r:#FFFFFF; --on-na:#FFFFFF;
+  --f-sign:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --f-body:"Barlow","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --fs:19px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A161D; --surface:#11222C; --ink:#EAF2F6; --muted:#9DB3BF; --line:#EAF2F6;
+  --soft:#23404F; --river:#5DA9D8; --land:#1B2A22; --hill:#2A3B2B; --sea:#132B3B; --water:#3F7088;
+  --g:#1F8044; --y:#F5C518; --o:#F07A28; --r:#D2302B; --na:#56626C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A161D; --surface:#11222C; --ink:#EAF2F6; --muted:#9DB3BF; --line:#EAF2F6;
+  --soft:#23404F; --river:#5DA9D8; --land:#1B2A22; --hill:#2A3B2B; --sea:#132B3B; --water:#3F7088;
+  --g:#1F8044; --y:#F5C518; --o:#F07A28; --r:#D2302B; --na:#56626C; color-scheme:dark}
+/* Datos atrasados: el verde se apaga en toda la página */
+:root.atrasado{--g:var(--na);--on-g:var(--on-na)}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:var(--fs);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1rem;line-height:1.45;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px));overflow-x:hidden}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+h1,h2,h3{margin:0;font-family:var(--f-sign);font-weight:800;line-height:1;text-wrap:balance}
+h2{font-size:1.9rem;text-transform:uppercase;letter-spacing:.01em}
+p{margin:0}
+a{color:var(--river)}
+button{font-family:inherit}
+:focus-visible{outline:4px solid var(--river);outline-offset:3px;border-radius:8px}
+.small{font-size:.85rem;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Franjas de estado */
+.banner{border-radius:12px;padding:12px 14px;font-weight:600;line-height:1.3}
+.banner.old{background:#2B3238;color:#FFFFFF;border:3px solid #000}
+.banner .retry{margin-top:8px;min-height:48px;padding:0 16px;border-radius:10px;border:2px solid #FFF;background:transparent;color:#FFF;font-weight:600;font-size:1rem;cursor:pointer}
+.demo{border:3px dashed var(--river);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.demo p{font-size:.9rem}
+.demo b{font-family:var(--f-sign);font-weight:800;font-size:1.2rem;text-transform:uppercase;letter-spacing:.02em}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:48px;border:2px solid var(--soft);background:var(--bg);color:var(--ink);border-radius:10px;font-weight:600;font-size:.92rem;cursor:pointer;padding:0 4px}
+.seg button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+
+/* Barra superior */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.bar h1{font-weight:700;font-size:1.35rem;text-transform:uppercase;letter-spacing:.02em;line-height:1.05}
+.bar h1 span{display:block;font-family:var(--f-body);font-weight:400;font-size:.9rem;text-transform:none;letter-spacing:0;color:var(--muted)}
+.tools{display:flex;gap:6px}
+.tools button{min-width:52px;min-height:50px;border:3px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;font-weight:600;font-size:1.05rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px}
+.tools button svg{width:22px;height:22px}
+.tools button:disabled{opacity:.35;cursor:default}
+
+/* Respuesta + escena del puente */
+.hero{--c:var(--na);--on:var(--on-na);border:4px solid var(--line);border-radius:18px;overflow:hidden;background:var(--surface)}
+.answer{background:var(--c);color:var(--on);padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px}
+.answer .q{font-family:var(--f-sign);font-weight:700;font-size:1.3rem;text-transform:uppercase;letter-spacing:.03em}
+.answer .a{font-family:var(--f-sign);font-weight:800;font-size:clamp(3.4rem,19vw,7rem);line-height:.88;text-transform:uppercase;letter-spacing:-.01em;overflow-wrap:anywhere}
+.answer .sub{font-family:var(--f-sign);font-weight:700;font-size:clamp(1.5rem,7vw,2.2rem);line-height:1.05;text-transform:uppercase}
+.answer .msg{font-size:1.15rem;line-height:1.35;margin-top:6px;max-width:40ch}
+.answer .mine{margin-top:8px;font-size:1rem;font-weight:600;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--on) 18%,transparent);align-self:flex-start}
+.scene{display:block;width:100%;height:auto;border-top:4px solid var(--line)}
+.scene .water{transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+@keyframes waves{to{transform:translateX(-40px)}}
+.scene .waves{animation:waves 2.4s linear infinite}
+@keyframes rain{to{transform:translate(-8px,26px)}}
+.scene .rain{animation:rain .55s linear infinite}
+.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding:10px 16px;font-size:.88rem;color:var(--muted);border-top:2px solid var(--soft)}
+.meta b{color:var(--ink)}
+
+.panel{background:var(--surface);border:3px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+
+/* ¿Dónde vive usted? */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:50px;padding:6px 14px;border-radius:999px;border:2px solid var(--ink);background:var(--bg);color:var(--ink);font-weight:600;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-align:left}
+.chips button i{flex:none;width:14px;height:14px;border-radius:50%;background:var(--c);border:2px solid var(--ink)}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.chips button[aria-pressed="true"] i{border-color:var(--bg)}
+.search{position:relative}
+.search>svg{position:absolute;left:14px;top:50%;width:24px;height:24px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.search input{width:100%;min-height:58px;padding:10px 14px 10px 48px;font:inherit;font-size:1.1rem;color:var(--ink);background:var(--bg);border:3px solid var(--line);border-radius:14px}
+.search input:focus{outline:none;border-color:var(--river)}
+.results{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 6px);list-style:none;margin:0;padding:6px;background:var(--surface);border:2px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgb(0 0 0 / .18);max-height:330px;overflow:auto}
+.results button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:10px 12px;color:var(--ink);font-size:1.05rem;cursor:pointer;min-height:52px}
+.results button:hover,.results button:focus-visible{background:var(--bg)}
+.results small{display:block;color:var(--muted);font-size:.82rem}
+.results .none{padding:12px;color:var(--muted)}
+.locate{align-self:flex-start;min-height:48px;padding:0 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.locate svg{width:22px;height:22px}
+.ccard{--c:var(--g);border-radius:16px;border:4px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface));padding:16px;display:flex;flex-direction:column;gap:10px}
+.ccard h3{font-size:1.9rem;text-transform:uppercase}
+.ccard .lvl{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:6px 14px;border-radius:8px;background:var(--c);color:var(--on);font-family:var(--f-sign);font-weight:700;font-size:1.25rem;text-transform:uppercase;letter-spacing:.02em}
+.ccard .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ccard .facts div{background:var(--surface);border-radius:12px;padding:8px 10px;text-align:center;border:1px solid var(--line)}
+.ccard .facts b{display:block;font-size:1.15rem;white-space:nowrap}
+.ccard .facts span{font-size:.74rem;color:var(--muted);line-height:1.2;display:block}
+.ccard .note{font-size:.8rem;color:var(--muted)}
+
+/* Mapa */
+.mapbox{position:relative;height:clamp(340px,62vh,520px);border-radius:14px;overflow:hidden;border:3px solid var(--line);background:var(--land);touch-action:none;user-select:none;-webkit-user-select:none}
+.mapbox>svg{display:block;width:100%;height:100%;cursor:grab}
+.mapbox>svg:active{cursor:grabbing}
+.mapbox text{font-family:var(--f-body)}
+@keyframes flow{to{stroke-dashoffset:-40}}
+.mapbox .flow{animation:flow 2.2s linear infinite}
+@keyframes pulse{0%{opacity:.9}100%{opacity:0;transform:scale(2)}}
+.mapbox .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 1.6s ease-out infinite}
+.osmmap{position:absolute;inset:0;z-index:2}
+.mapctl{position:absolute;z-index:3;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.mapctl button{width:50px;height:50px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-size:1.6rem;font-weight:600;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 6px rgb(0 0 0 / .15)}
+.mapctl svg{width:24px;height:24px}
+.keys{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;color:var(--muted)}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.keys i{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid var(--ink)}
+.linkbtn{background:none;border:0;padding:0;min-height:48px;color:var(--river);font:inherit;text-decoration:underline;cursor:pointer}
+.maperr{padding:16px;color:var(--muted)}
+
+/* Semana en reglitas */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.wd .dn{font-family:var(--f-sign);font-weight:700;font-size:1.05rem;text-transform:uppercase;line-height:1}
+.wd svg.ri{width:40px;height:40px}
+.tube{position:relative;width:100%;max-width:44px;height:120px;border:3px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.tube .fill{position:absolute;left:0;right:0;bottom:0;background:var(--c)}
+.tube .mark{position:absolute;left:0;right:0;border-top:2px dashed var(--ink);opacity:.6}
+.wd .ww{font-family:var(--f-sign);font-size:.9rem;font-weight:700;line-height:1.05;overflow-wrap:anywhere}
+@media (max-width:420px){.week{gap:3px}.wd .dn{font-size:.85rem}.wd .ww{font-size:.74rem}.wd svg.ri{width:32px;height:32px}.tube{height:100px;border-width:2px}}
+
+/* Qué hacer */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.steps li{display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border-radius:12px;background:var(--bg);font-size:1.08rem;line-height:1.3}
+.steps .ti{width:58px;height:58px;border-radius:12px;background:var(--c);color:var(--on);display:grid;place-items:center}
+.steps .ti svg{width:32px;height:32px}
+
+/* 911 y avisos */
+.call{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;background:#C8231F;color:#FFFFFF;border:4px solid var(--line);border-radius:16px;padding:14px 16px}
+.call .num{font-family:var(--f-sign);font-weight:800;font-size:3.6rem;line-height:1;color:#FFFFFF;text-decoration:none}
+.call p{font-size:1rem}
+.alerts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.alerts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start}
+.alerts .tag{font-family:var(--f-sign);font-weight:800;text-transform:uppercase;font-size:.95rem;padding:3px 10px;border-radius:6px;background:var(--c);color:var(--on)}
+.alerts .t{font-weight:600;line-height:1.3}
+
+/* Datos técnicos */
+details.tech{background:var(--surface);border:3px solid var(--line);border-radius:16px;padding:0 16px}
+details.tech summary{cursor:pointer;min-height:56px;display:flex;align-items:center;font-weight:600;list-style:none}
+details.tech summary::-webkit-details-marker{display:none}
+details.tech summary::before{content:"＋";margin-right:10px}
+details.tech[open] summary::before{content:"－"}
+details.tech .in{display:flex;flex-direction:column;gap:16px;padding-bottom:16px;font-size:.9rem}
+details.tech h3{font-family:var(--f-body);font-weight:600;font-size:1rem}
+.mono{font-family:var(--f-mono);font-size:.74rem;line-height:1.4}
+.chart svg{display:block;width:100%;height:auto}
+.chart text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.factors{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.factors li{display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:4px 12px;align-items:center}
+.meter{height:10px;border-radius:5px;background:var(--soft);overflow:hidden}
+.meter span{display:block;height:100%}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 10px 7px 0;border-top:1px solid var(--soft);vertical-align:top}
+th{border-top:0;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+.dot{font-weight:600}
+footer{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+
+@media (prefers-reduced-motion:reduce){
+  .scene .water{transition:none}
+  .scene .waves,.scene .rain,.mapbox .flow,.mapbox .pulse{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="banner old" id="stale" role="alert" hidden><span id="staletxt"></span><div><button type="button" class="retry" id="retry" hidden>Volver a intentar</button></div></div>
+
+  <header class="bar">
+    <h1>Álamo Temapache<span id="date"></span></h1>
+    <div class="tools">
+      <button type="button" id="listen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="listenlbl">Escuchar</span></button>
+      <button type="button" id="font-down" aria-label="Letra más chica">A−</button>
+      <button type="button" id="font-up" aria-label="Letra más grande">A+</button>
+    </div>
+  </header>
+
+  <div class="demo" id="demo" hidden>
+    <p><b>Datos de ejemplo</b><br>Esto no es el aviso real. Toque una situación para ver cómo cambia la página:</p>
+    <div class="seg" role="group" aria-label="Situación de ejemplo">
+      <button type="button" data-sc="normal" aria-pressed="false">Día normal</button>
+      <button type="button" data-sc="vigilancia" aria-pressed="false">Frente frío</button>
+      <button type="button" data-sc="alerta" aria-pressed="false">Huracán</button>
+    </div>
+  </div>
+
+  <main class="stack">
+    <section class="hero" id="hero" aria-label="Respuesta de hoy">
+      <div class="answer" aria-live="polite" aria-atomic="true">
+        <div class="q">¿Se va a inundar Álamo?</div>
+        <div class="a" id="ans">…</div>
+        <div class="sub" id="sub">Cargando</div>
+        <p class="msg" id="msg"></p>
+        <p class="mine" id="mine" hidden></p>
+      </div>
+      <svg class="scene" id="scene" viewBox="0 0 400 250" role="img" aria-label="Dibujo del río bajo el puente con la regla de colores"></svg>
+      <div class="meta"><span>Posibilidad de inundación: <b id="chance">—</b></span><span id="when"></span></div>
+    </section>
+
+    <section class="panel" id="comunidad" aria-labelledby="h-com">
+      <h2 id="h-com">¿Dónde vive usted?</h2>
+      <p>Toque su comunidad o escriba su nombre.</p>
+      <div class="chips" id="chips"></div>
+      <div class="search">
+        <label for="q" class="vh">Buscar su comunidad</label>
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        <input id="q" type="search" placeholder="Otra comunidad…" autocomplete="off" enterkeyhint="search" aria-controls="results">
+        <ul id="results" class="results" hidden></ul>
+      </div>
+      <button type="button" class="locate" id="locate" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Usar mi ubicación</button>
+      <p class="small" id="locmsg" hidden></p>
+      <div class="ccard" id="ccard" hidden></div>
+      <div class="mapbox" id="mapbox">
+        <svg id="msvg" role="img" aria-label="Mapa del municipio con sus comunidades y el río. Se puede arrastrar y acercar."></svg>
+        <div id="osmmap" class="osmmap" hidden></div>
+        <div class="mapctl">
+          <button type="button" id="zin" aria-label="Acercar el mapa">+</button>
+          <button type="button" id="zout" aria-label="Alejar el mapa">−</button>
+          <button type="button" id="zreset" aria-label="Ver todo el municipio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        </div>
+      </div>
+      <div class="keys" id="keys">
+        <span><i style="background:var(--g)"></i><span id="key0">Sin peligro</span></span>
+        <span><i style="background:var(--y)"></i>Atento</span>
+        <span><i style="background:var(--o)"></i>Peligro</span>
+        <span><i style="background:var(--r)"></i>Muy alto</span>
+      </div>
+      <p class="small">Las 460 comunidades del municipio según el INEGI. <button type="button" class="linkbtn" id="osmbtn" hidden>Ver mapa con calles</button></p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-sem">
+      <h2 id="h-sem">El río esta semana</h2>
+      <p>Cada tubo es la regla del puente: entre más lleno, más alto el río. La línea punteada es la orilla; si el agua la pasa, el río se sale.</p>
+      <div class="week" id="week"></div>
+    </section>
+
+    <section class="panel" id="todopanel" aria-labelledby="todoh">
+      <h2 id="todoh">Qué hacer hoy</h2>
+      <ol class="steps" id="todo"></ol>
+    </section>
+
+    <section class="call" aria-label="Emergencias">
+      <a class="num" href="tel:911">911</a>
+      <p><b>¿Está en peligro? Llame al 911.</b> Haga caso a Protección Civil y al Ayuntamiento. Esta página no reemplaza los avisos de Protección Civil.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-av">
+      <h2 id="h-av">Avisos de las autoridades</h2>
+      <ul class="alerts" id="alerts"></ul>
+    </section>
+
+    <details class="tech" id="tech">
+      <summary>Datos técnicos y fuentes</summary>
+      <div class="in">
+        <div>
+          <h3>Caudal del río Pantepec en Álamo (m³/s)</h3>
+          <div class="chart" id="chart"></div>
+          <p class="small">Línea continua: simulación de los últimos 14 días. Punteada: pronóstico (mediana), con su rango. Líneas de color: crecidas de 2, 5 y 20 años.</p>
+        </div>
+        <div>
+          <h3>Cómo se calculó la posibilidad</h3>
+          <ul class="factors" id="factors"></ul>
+        </div>
+        <div class="tablewrap"><table><thead><tr><th>Fuente</th><th>Qué aporta</th><th>Última lectura</th></tr></thead><tbody id="sources"></tbody></table></div>
+        <div>
+          <h3>Metodología</h3>
+          <p class="small">1. El índice combina el caudal pronosticado del río (GloFAS, 7 días), la lluvia máxima en 72 horas en la sierra y en Álamo, y los avisos oficiales vigentes.<br>
+          2. Cada factor va de 0 a 1 y se suman como riesgos independientes; un aviso oficial nunca se rebaja.<br>
+          3. El riesgo de cada comunidad se estima con su distancia al río y su altura (INEGI). Es una estimación para estar atento, no un pronóstico oficial.</p>
+        </div>
+      </div>
+    </details>
+  </main>
+
+  <footer>
+    <p>Proyecto comunitario, no oficial. Se revisa solo cada 3 horas.</p>
+    <p>Datos: <a href="https://www.globalfloods.eu/" rel="noopener">Copernicus GloFAS</a> ·
+      <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a> (CC BY 4.0) ·
+      <a href="https://smn.conagua.gob.mx/" rel="noopener">SMN · Conagua</a> ·
+      <a href="https://www.nhc.noaa.gov/" rel="noopener">NHC · NOAA</a> ·
+      <a href="https://www.inegi.org.mx/" rel="noopener">INEGI</a> ·
+      <a href="https://www.naturalearthdata.com/" rel="noopener">Natural Earth</a> ·
+      mapa con calles © <a href="https://www.openstreetmap.org/copyright" rel="noopener">colaboradores de OpenStreetMap</a>.</p>
+  </footer>
+</div>
+<script src="app.js" defer></script>
+</body>
+</html>

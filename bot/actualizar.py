@@ -143,6 +143,8 @@ def ejecutar(ruta_datos=RUTA_DATOS, ruta_umbrales=RUTA_UMBRALES, ruta_avisos=RUT
             "nombre": m["nombre"], "aporta": m["aporta"], "url": m["url"], "ok": bien,
             "fecha": ahora.isoformat(timespec="seconds") if bien else fechas_previas.get(m["nombre"]),
         })
+        if clave == "manual":
+            lista_fuentes[-1]["manual"] = True
 
     umbrales = cargar_umbrales(ruta_umbrales, previo)
 

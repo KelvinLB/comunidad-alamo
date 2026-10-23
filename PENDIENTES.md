@@ -26,4 +26,12 @@ Todas se probaron el 23 de octubre de 2026 y sus respuestas reales están en `te
 - **NHC.** Las claves de tipo de sistema (`HU`, `TS`, `TD`, `STS`, `PTC`, `PC`…) se tradujeron según la documentación del NHC; si aparece una desconocida se muestra como "Sistema tropical". La cuenca se lee del `id` (`al` = Atlántico, `ep` = Pacífico Este; el Pacífico Central se ignora).
 - **Lluvia en la sierra.** Para cada día se toma el punto de la cuenca alta con más lluvia, y sobre esa serie se busca el máximo de 72 h. Es un poco más conservador que calcular las 72 h de cada punto por separado.
 
+## Página
+
+- **Imagen para WhatsApp.** `og:image` apunta a `og.png` con ruta relativa; WhatsApp necesita la dirección completa (`https://…/og.png`). Cambiarla en `public/index.html` cuando exista el dominio de Vercel.
+- **Botón Escuchar.** Se probó que aparece y no da errores, pero no se ha escuchado en un celular real. Las voces en español dependen del teléfono; en algunos Android viejos no hay voz es-MX y se usa otra voz en español.
+- **Colores ajustados por contraste (WCAG AA).** Sobre el naranja el texto va oscuro (`#14110A`) porque con blanco el contraste es 4.0:1. En modo oscuro el verde pasó de `#2E9E55` a `#1F8044` y el rojo de `#E5413C` a `#D2302B`, porque con texto blanco no llegaban a 4.5:1.
+- **Leaflet** (mapa con calles) se carga de cdnjs sin verificación de integridad (SRI). Agregar el `integrity` oficial de cdnjs para la versión 1.9.4.
+- **Revisado en**: Chrome de escritorio y WebKit (motor de Safari) con Playwright, a 360 y 390 px, claro y oscuro. Falta probar en un Android sencillo real y en un iPhone real.
+
 ## Para después
