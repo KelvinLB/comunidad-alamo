@@ -6,7 +6,8 @@
 // 4. al volver a abrir la página, abre directo en esa comunidad;
 // 5. el botón de WhatsApp arma el mensaje y su liga abre esa comunidad sin guardarla; la de la familia sí la guarda;
 //    "Qué hacer hoy" solo sale con alerta; con peligro sale el aviso a pantalla completa; la hoja trae QR;
-// 6. se puede poner en el teléfono (PWA) y abre sin señal con el aviso "Sin conexión". Guarda capturas.
+// 6. se puede poner en el teléfono (PWA) y abre sin señal con el aviso "Sin conexión";
+// 7. el botón "Instalar en mi teléfono" siempre se ve y su guía cambia en iPhone, Android y dentro de Facebook. Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 
@@ -137,7 +138,7 @@ for (const ancho of [390, 360]) {
   const manifiesto = await page.evaluate(async () => (await (await fetch(document.querySelector('link[rel=manifest]').href)).json()).icons.length);
   if (manifiesto < 3) fallas.push('el manifiesto no tiene los íconos');
   await page.evaluate(() => navigator.serviceWorker.ready);
-  if (await page.isHidden('#instalar')) fallas.push('no aparece el recuadro para poner la página en el teléfono');
+  if (await page.isHidden('#inst-barra')) fallas.push('no está a la vista el botón "Instalar en mi teléfono"');
   await page.waitForTimeout(800);
   await ctx.setOffline(true);
   await page.reload({ waitUntil: 'load' });
@@ -147,6 +148,30 @@ for (const ancho of [390, 360]) {
   if (errores.length) fallas.push(`sin señal, errores: ${errores.join(' | ')}`);
   console.log('sin señal', JSON.stringify(sin));
   await page.screenshot({ path: 'capturas/sin-senal.png' });
+  await ctx.close();
+}
+
+// 7. El botón de instalar está siempre a la vista y la guía cambia según el teléfono
+for (const [nom, ua, espera] of [
+  ['iphone', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', /Instalar en su iPhone[\s\S]*Agregar a inicio/],
+  ['iphone-facebook', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/470.0]', /Ábrala en Safari[\s\S]*Copiar la dirección/],
+  ['android', 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36', /Instalar en su teléfono[\s\S]*Instalar aplicación/],
+]) {
+  const ctx = await browser.newContext({ viewport: { width: 360, height: 760 }, locale: 'es-MX', userAgent: ua });
+  const page = await ctx.newPage();
+  // sin la ventana propia del navegador, para probar la guía escrita
+  await page.addInitScript(() => addEventListener('beforeinstallprompt', e => e.stopImmediatePropagation(), true));
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await page.goto(base + '?demo=normal', { waitUntil: 'networkidle' });
+  await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+  const barra = await page.evaluate(() => { const r = document.getElementById('inst-btn').getBoundingClientRect(); return r.bottom <= innerHeight && r.top >= 0 && r.height > 40; });
+  if (!barra) fallas.push(`${nom}: el botón de instalar no se ve al bajar la página`);
+  await page.click('#inst-btn');
+  const guia = await page.evaluate(() => document.getElementById('inst-modal').hidden ? '' : document.getElementById('inst-modal').innerText);
+  if (!espera.test(guia)) fallas.push(`${nom}: la guía de instalar no es la correcta: ${guia.slice(0, 100)}`);
+  await page.screenshot({ path: `capturas/instalar-${nom}.png` });
+  await page.click('#inst-ok');
+  if (await page.isVisible('#inst-modal')) fallas.push(`${nom}: la guía de instalar no se cierra`);
   await ctx.close();
 }
 

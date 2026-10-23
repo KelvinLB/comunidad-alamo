@@ -38,10 +38,12 @@ Necesita una cuenta de GitHub y una de Vercel (las dos son gratis).
 
 ## Cómo poner la página en el teléfono
 
-En la página aparece un recuadro **"Tenga esta página en su teléfono"**:
+Abajo de la pantalla siempre está el botón negro **"Instalar en mi teléfono"** (se quita solo cuando la página ya está instalada). Al tocarlo:
 
-- **Android (Chrome):** toque **"Poner en mi teléfono"** y luego **"Instalar"**. Si no aparece el botón: menú **⋮** → **"Agregar a la pantalla principal"**.
-- **iPhone:** abra la página en **Safari**, toque **Compartir** (el cuadrito con flecha) → **"Agregar a inicio"** → **"Agregar"**.
+- **Android (Chrome):** sale la ventana del teléfono para instalar; se toca **"Instalar"** y listo.
+- **iPhone:** Apple no deja que una página se instale sola, así que sale una guía de 3 pasos: **Compartir** → **"Agregar a inicio"** → **"Agregar"**.
+- **Dentro de Facebook, Instagram u otra app:** la guía pide abrir la página en Safari o en Chrome y trae un botón para copiar la dirección.
+- **En computadora:** sale un código QR para abrir la página en el celular.
 
 Funciona solo cuando la página ya está publicada (con `https://`); en `localhost` se puede probar en la computadora.
 

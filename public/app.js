@@ -413,7 +413,7 @@ function mensajeFamilia(l) {
   return [`Hola. Le mando una página para saber si se va a inundar *${cab}* por el río Pantepec. Se revisa sola cada 3 horas y es gratis.`, '',
     `1. Abra esta liga: ${ligaDe(l, true)}`,
     `2. Ya le sale su comunidad, ${cab}. Su teléfono la recuerda.`,
-    '3. Para tenerla siempre a la mano, toque "Poner en mi teléfono". Si no sale, en el menú ⋮ toque "Agregar a la pantalla principal". En iPhone: en Safari, Compartir y luego "Agregar a inicio".', '',
+    '3. Para tenerla siempre a la mano como app, toque el botón negro de abajo, "Instalar en mi teléfono", y siga los pasos.', '',
     '_Es un proyecto comunitario, no oficial. Emergencias: 911._'].join('\n');
 }
 
@@ -964,49 +964,88 @@ function initSinSenal() {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* sin guardado: la página funciona igual */ }));
 }
 
-const IC_COMPARTIR_IOS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Compartir" role="img"><path d="M8 9H6v12h12V9h-2M12 3v12M8.5 6.5L12 3l3.5 3.5"/></svg>';
-const PASOS_IPHONE = [
-  `Abra esta página en <b>Safari</b> y toque el botón Compartir ${IC_COMPARTIR_IOS} (abajo o arriba de la pantalla).`,
-  'Baje y toque <b>"Agregar a inicio"</b>.',
-  'Toque <b>"Agregar"</b>. Listo: el ícono queda junto a sus otras aplicaciones.'];
-const PASOS_ANDROID = [
-  'Toque el menú <b>⋮</b> (los tres puntitos, arriba a la derecha).',
-  'Toque <b>"Agregar a la pantalla principal"</b> o <b>"Instalar aplicación"</b>.',
-  'Toque <b>"Agregar"</b> o <b>"Instalar"</b>. Listo: el ícono queda en su pantalla.'];
-const DIAS_SIN_MOSTRAR = 30;
+const svgPaso = body => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const IC_INST = {
+  compartir: svgPaso('<path d="M8 9H6v12h12V9h-2M12 3v12M8.5 6.5L12 3l3.5 3.5"/>'),
+  agregar: svgPaso('<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M12 8v8M8 12h8"/>'),
+  menu: svgPaso('<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>'),
+};
+// Qué decir según el teléfono. En iPhone, Apple no deja que una página se instale sola: se guía paso a paso.
+const GUIA = {
+  ios: {t: 'Instalar en su iPhone', intro: 'Son 3 pasos. Al terminar, el ícono de Alerta Pantepec queda en su pantalla, como cualquier app.', pasos: [
+    `Toque el botón <b>Compartir</b> ${IC_INST.compartir}. En Safari está en la barra de abajo; si no lo ve, toque primero <b>•••</b> o la barra de la dirección.`,
+    `Baje un poco y toque ${IC_INST.agregar} <b>"Agregar a inicio"</b>.`,
+    'Toque <b>"Agregar"</b>, arriba a la derecha. Listo: el ícono queda junto a sus otras aplicaciones.']},
+  'ios-otro': {t: 'Ábrala en Safari', intro: 'Desde esta aplicación el iPhone no deja instalarla. Copie la dirección, ábrala en Safari y ahí toque "Instalar en mi teléfono" otra vez.', copiar: true, pasos: []},
+  android: {t: 'Instalar en su teléfono', intro: 'Son 3 pasos. Al terminar, el ícono de Alerta Pantepec queda en su pantalla, como cualquier app.', pasos: [
+    `Toque el menú ${IC_INST.menu} (los tres puntitos, arriba a la derecha).`,
+    'Toque <b>"Instalar aplicación"</b> o <b>"Agregar a la pantalla principal"</b>.',
+    'Toque <b>"Instalar"</b> o <b>"Agregar"</b>. Listo: el ícono queda en su pantalla.']},
+  'android-otro': {t: 'Ábrala en Chrome', intro: 'Está viendo la página dentro de otra aplicación. Toque el menú ⋮ (arriba a la derecha) y elija "Abrir en Chrome" o "Abrir en el navegador". Ahí toque "Instalar en mi teléfono" otra vez.', copiar: true, pasos: []},
+  compu: {t: 'Instálela en su teléfono', intro: 'Esta opción es para el celular. Apunte la cámara del teléfono a este código, o escriba la dirección en su navegador:', qr: true, pasos: []},
+};
 
-function initInstalar() {
-  const box = $('instalar'), btn = $('instalarbtn'), pasos = $('pasos');
-  const instalada = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  const ocultoHasta = +store.get('instalar_no') || 0;
-  if (instalada || Date.now() < ocultoHasta || !location.protocol.startsWith('http')) return;
+function plataforma() {
   const ua = navigator.userAgent;
-  const iphone = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const celular = iphone || /Android|Mobi/.test(ua);
-  setHTML(pasos, (iphone ? PASOS_IPHONE : PASOS_ANDROID).map(t => `<li><span>${t}</span></li>`).join(''));
-  box.hidden = !celular;  // en computadora solo se ofrece si el navegador lo permite (abajo)
-  let pedido = null;
-  addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    pedido = e;
-    btn.hidden = false;
-    pasos.hidden = true;
-    box.hidden = false;
-  });
-  btn.onclick = async () => {
-    if (!pedido) return;
-    pedido.prompt();
-    const r = await pedido.userChoice.catch(() => ({}));
-    pedido = null;
-    btn.hidden = true;
-    if (r.outcome === 'accepted') box.hidden = true;
-    else pasos.hidden = false;  // por si quiere hacerlo después a mano
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const dentroDeApp = /FBAN|FBAV|FB_IAB|Instagram|Line\/|Twitter|TikTok|Snapchat|; wv\)/.test(ua);  // navegador dentro de otra app
+  if (ios) return dentroDeApp || !/Safari\//.test(ua) ? 'ios-otro' : 'ios';
+  if (/Android/.test(ua)) return dentroDeApp ? 'android-otro' : 'android';
+  return /Mobi/.test(ua) ? 'android' : 'compu';
+}
+
+function abrirGuia() {
+  const g = GUIA[plataforma()], m = $('inst-modal');
+  setText('inst-t', g.t);
+  setText('inst-intro', g.intro);
+  $('inst-pasos').hidden = !g.pasos.length;
+  setHTML($('inst-pasos'), g.pasos.map(t => `<li><span>${t}</span></li>`).join(''));
+  const extra = $('inst-extra'), url = location.href.split('#')[0];
+  extra.replaceChildren();
+  if (g.copiar) {
+    const b = el('button', {type: 'button', class: 'wa2'}, 'Copiar la dirección');
+    b.onclick = async () => {
+      try { await navigator.clipboard.writeText(url); b.textContent = '✓ Dirección copiada'; }
+      catch (e) { b.textContent = url; }  // sin permiso de copiar: se muestra para copiarla a mano
+    };
+    extra.append(b);
+  }
+  if (g.qr) {  // la página sola, sin ?demo= ni ?c=
+    const base = location.href.split(/[?#]/)[0], caja = el('div', {class: 'inst-qr'}, el('div', {class: 'url'}, base));
+    extra.append(caja);
+    cargarQR().then(() => caja.insertAdjacentHTML('afterbegin', qrSVG(base))).catch(() => { /* sin internet: queda la dirección */ });
+  }
+  m.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('inst-ok').focus();
+}
+function cerrarGuia() {
+  $('inst-modal').hidden = true;
+  document.body.style.overflow = '';
+  $('inst-btn').focus({preventScroll: true});
+}
+
+// Botón fijo abajo, siempre a la vista, hasta que la página quede instalada
+function initInstalar() {
+  const barra = $('inst-barra');
+  const instalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (instalada()) return;
+  barra.hidden = false;
+  document.body.classList.add('con-barra');
+  let pedido = null;  // Android y Chrome: la ventana de instalar del propio teléfono
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedido = e; });
+  $('inst-btn').onclick = async () => {
+    if (!pedido) return abrirGuia();
+    const p = pedido;
+    pedido = null;  // el teléfono solo deja usarla una vez; si la cancela, sale la guía la próxima vez
+    p.prompt();
+    await p.userChoice.catch(() => ({}));
   };
-  addEventListener('appinstalled', () => { box.hidden = true; });
-  $('instalarno').onclick = () => {
-    store.set('instalar_no', String(Date.now() + DIAS_SIN_MOSTRAR * 864e5));
-    box.hidden = true;
-  };
+  addEventListener('appinstalled', () => { barra.hidden = true; document.body.classList.remove('con-barra'); });
+  $('inst-ok').onclick = cerrarGuia;
+  $('inst-x').onclick = cerrarGuia;
+  $('inst-modal').addEventListener('click', e => { if (e.target === $('inst-modal')) cerrarGuia(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('inst-modal').hidden) cerrarGuia(); });
 }
 
 /* ---------- Tamaño de letra ---------- */
