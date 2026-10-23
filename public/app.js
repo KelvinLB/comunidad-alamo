@@ -54,6 +54,7 @@ const LOCAL = [
   'Los arroyos y los caminos se pueden ver afectados. Esté pendiente.',
   'Los arroyos y vados pueden crecer de golpe. No los cruce.'];
 const TAGS = ['Info', 'Atento', 'Alerta', 'Emergencia'];
+const EMOJI = ['🟢', '🟡', '🟠', '🔴'];  // para el mensaje de WhatsApp, siempre junto a la palabra
 
 /* ---------- Estado ---------- */
 const S = {
@@ -66,6 +67,7 @@ const S = {
   geo: null, locs: [], alamo: null,
   sel: null,         // comunidad elegida
   guardada: null,    // lo que había en este teléfono
+  pedida: null,      // comunidad de una liga compartida (?c=lat,lon); se ve pero no se guarda
   vista: 'elegir',   // 'elegir' | 'comunidad' | 'municipio'
 };
 const nivelDia = () => S.data ? S.data.riesgo.nivel : 0;
@@ -308,13 +310,18 @@ function renderBarra() {
   } else {
     setHTML($('para'), `<b>${D ? 'Edición de ' + horaTxt(D.actualizado) : S.fallo ? 'Sin datos' : 'Cargando…'}</b>`);
   }
-  b.hidden = S.vista === 'elegir';
+  b.hidden = S.vista === 'elegir' || (S.vista === 'comunidad' && !S.sel);
 }
 
 /* ---------- La edición de su comunidad ---------- */
 function renderEdicion() {
   if (S.vista === 'elegir') return;
   const D = S.data, n = nivelDia(), l = S.vista === 'comunidad' ? S.sel : null;
+  if (S.vista === 'comunidad' && !l) {  // liga compartida: falta geo.json para saber cuál es
+    setText('ante', 'Cargando la comunidad…'); setText('ans', '…'); setText('sub', 'Cargando');
+    $('compartir').hidden = true;
+    return;
+  }
   const lv = l ? commLevel(l) : n, cab = l ? sinParentesis(l.n) : 'Álamo';
   const A = D ? respuesta(lv) : S.fallo ? {a: 'Sin datos', sub: 'No se pudo cargar el aviso'} : {a: '…', sub: 'Cargando'};
   const sello = D && !apagado(lv) ? SELLO[lv] : SELLO_SIN_DATOS;
@@ -354,6 +361,42 @@ function renderEdicion() {
   setText('reco-para', cab);
   setHTML($('todo'), (D ? todoDe(lv) : LV[1].todo).map(t => `<li>${esc(t)}</li>`).join(''));
   document.title = `¿Se inunda ${cab}? · Hoy: ${A.a}`;
+  renderCompartir();
+}
+
+/* ---------- Compartir por WhatsApp ---------- */
+// Liga a la página; con comunidad, la abre directo en ella. Va por coordenadas porque hay nombres repetidos.
+const ligaDe = l => location.href.split(/[?#]/)[0] + (l ? `?c=${l.lat},${l.lon}` : '');
+
+function mensaje() {
+  const D = S.data, n = nivelDia(), l = S.vista === 'comunidad' ? S.sel : null;
+  const lv = l ? commLevel(l) : n, cab = l ? sinParentesis(l.n) : 'Álamo', A = respuesta(lv);
+  const t = [];
+  if (D.ejemplo) t.push('⚠ *DATOS DE EJEMPLO*: esto no es un aviso real.', '');
+  t.push(`*¿Se va a inundar ${cab}?*`, `${EMOJI[lv]} *${A.a}. ${A.sub}.*`, '');
+  if (l && lv < n) t.push(LOCAL[lv], `${EMOJI[n]} En Álamo y junto al río: ${etiqueta(n).toLowerCase()}.`);
+  else t.push(D.riesgo.resumen.replace('; léalos más abajo.', '; véalos en la página.'));
+  t.push('', '*Qué hacer hoy:*', ...todoDe(lv).slice(0, 2).map(x => '• ' + x));
+  t.push('', `Revisado el ${dtime(D.actualizado).replace(/\.$/, '')}.`, `Vea el aviso completo: ${ligaDe(l)}`);
+  t.push('', '_Alerta Pantepec es un proyecto comunitario, no oficial. Siga los avisos de Protección Civil. Emergencias: 911._');
+  return t.join('\n');
+}
+
+// Con datos atrasados o sin datos no se ofrece compartir: un aviso viejo reenviado confunde
+function renderCompartir() {
+  const a = $('compartir'), ok = S.data && !S.atrasado && S.vista !== 'elegir' && (S.vista !== 'comunidad' || S.sel);
+  a.hidden = !ok;
+  if (ok) a.href = 'https://wa.me/?text=' + encodeURIComponent(mensaje());
+}
+
+// Al elegir otra comunidad o ver el municipio, la liga compartida ya no aplica
+function quitarLiga() {
+  S.pedida = null;
+  if (new URLSearchParams(location.search).has('c')) {
+    const u = new URL(location.href);
+    u.searchParams.delete('c');
+    history.replaceState(null, '', u);
+  }
 }
 
 function renderAlerts(D) {
@@ -468,6 +511,13 @@ function prepararGeo(geo) {
     const l = S.locs.find(l => l.n === m.n && Math.abs(l.lat - m.lat) < 1e-3 && Math.abs(l.lon - m.lon) < 1e-3);
     if (l) { S.sel = l; guardar(l); }
   }
+  // Liga compartida: se muestra esa comunidad sin cambiar la que tiene guardada
+  const p = S.pedida;
+  if (p) {
+    const l = S.locs.find(l => Math.abs(l.lat - p.lat) < 1e-3 && Math.abs(l.lon - p.lon) < 1e-3);
+    if (l) S.sel = l;
+    else quitarLiga();
+  }
 }
 
 /* Cambiar de vista: elegir comunidad, la edición de su comunidad o la de todo el municipio */
@@ -485,7 +535,7 @@ function mostrar(vista) {
   renderBarra();
   if (ed) { renderEdicion(); mapa.ver(vista === 'comunidad' ? S.sel : null); }
   else { renderChips(); document.title = '¿Se inunda Álamo? · Aviso de hoy'; }
-  $('olvidar').hidden = !S.sel;
+  $('olvidar').hidden = !store.get('mi_comunidad');
 }
 
 function irArriba() {
@@ -497,6 +547,7 @@ function irArriba() {
 function elegirComunidad(l, desdeMapa) {
   S.sel = l;
   guardar(l);
+  quitarLiga();
   $('ubicnota').hidden = true;
   if (desdeMapa) {  // ya está viendo la edición: solo cambia de comunidad
     S.vista = 'comunidad';
@@ -910,8 +961,10 @@ async function cargarGeo() {
   try {
     const r = await fetch('geo.json');
     if (!r.ok) throw new Error('HTTP ' + r.status);
+    const habiaLiga = !!S.pedida;
     prepararGeo(await r.json());
-    if (S.vista === 'elegir' && S.sel) mostrar('comunidad');  // guardada con el formato viejo
+    // liga compartida, o comunidad guardada con el formato viejo
+    if (habiaLiga || (S.vista === 'elegir' && S.sel)) mostrar(S.sel ? 'comunidad' : 'elegir');
     renderChips();
     renderEdicion();
     mapa.dibujar();
@@ -920,6 +973,11 @@ async function cargarGeo() {
     $('mapbox').replaceChildren(el('p', {class: 'maperr'}, 'No se pudo cargar el mapa. Vuelva a abrir la página más tarde.'));
     $('top8').replaceChildren();
     setText('top8txt', 'No se pudo cargar la lista de comunidades. Vuelva a abrir la página más tarde, o vea el aviso de todo el municipio.');
+    if (S.pedida) {  // sin mapa no se sabe qué comunidad trae la liga: se vuelve a la guardada
+      quitarLiga();
+      S.sel = completa(S.guardada) ? S.guardada : null;
+      mostrar(S.sel ? 'comunidad' : 'elegir');
+    }
   }
 }
 
@@ -939,8 +997,8 @@ document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click'
   modoDemo(b.dataset.sc);
 }));
 $('retry').onclick = () => cargar();
-$('cambiar').onclick = () => { mostrar('elegir'); $('q').focus(); };
-$('general').onclick = () => { mostrar('municipio'); irArriba(); };
+$('cambiar').onclick = () => { quitarLiga(); mostrar('elegir'); $('q').focus(); };
+$('general').onclick = () => { quitarLiga(); mostrar('municipio'); irArriba(); };
 $('municipio').addEventListener('click', e => { if (e.target.closest('[data-elegir]')) { mostrar('elegir'); $('q').focus(); } });
 $('olvidar').onclick = () => {
   store.del('mi_comunidad');
@@ -965,14 +1023,16 @@ setInterval(tick, 60e3);
 
 // Si ya eligió su comunidad antes, la página abre directo en su edición
 S.guardada = leerGuardada();
-if (completa(S.guardada)) S.sel = S.guardada;
+const liga = /^(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)$/.exec(new URLSearchParams(location.search).get('c') || '');
+if (liga) S.pedida = {lat: +liga[1], lon: +liga[2]};
+else if (completa(S.guardada)) S.sel = S.guardada;
 initLetra();
 initEscuchar();
 initBusqueda();
 initUbicacion();
 initOSM();
 tick();
-mostrar(S.sel ? 'comunidad' : 'elegir');
+mostrar(S.sel || S.pedida ? 'comunidad' : 'elegir');
 cargar();
 cargarGeo();
 })();

@@ -3,7 +3,8 @@
 // 1. la portada pide elegir comunidad y la franja muestra el aviso del municipio;
 // 2. el aviso de todo el municipio dice "SÍ · Peligro muy alto" y el mapa tiene las 460 comunidades;
 // 3. al buscar y elegir una comunidad lejos del río se despliega su edición;
-// 4. al volver a abrir la página, abre directo en esa comunidad. Guarda capturas.
+// 4. al volver a abrir la página, abre directo en esa comunidad;
+// 5. el botón de WhatsApp arma el mensaje y su liga abre esa comunidad sin guardarla. Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 
@@ -54,6 +55,11 @@ for (const ancho of [390, 360]) {
   const ante = await texto('ante'), ans2 = await texto('ans');
   if (!/Cañas/.test(ante) || ans2 !== 'Puede ser') falla(`la comunidad dice "${ante} ${ans2}"`);
   if (await page.isHidden('#municipio')) falla('no aparece el recuadro del resto del municipio');
+  // botón de WhatsApp: mensaje con la comunidad, la respuesta y la liga que la abre
+  const wa = await page.getAttribute('#compartir', 'href');
+  const msj = wa && wa.startsWith('https://wa.me/?text=') ? decodeURIComponent(wa.slice(20)) : '';
+  const ligaWa = (msj.match(/https?:\/\/\S+\?c=[-\d.,]+/) || [''])[0];
+  if (!/Cañas de Abajo/.test(msj) || !/Puede ser/.test(msj) || !/no oficial/.test(msj) || !ligaWa) falla(`el mensaje de WhatsApp no está completo: ${msj.slice(0, 120)}`);
   if (await scroll() > 0) falla(`comunidad con scroll horizontal de ${await scroll()}px`);
   await page.screenshot({ path: `capturas/comunidad-${ancho}.png`, fullPage: true });
 
@@ -62,6 +68,16 @@ for (const ancho of [390, 360]) {
   await page.waitForTimeout(800);
   v = await vista();
   if (v.elegir || !v.edicion || !/Cañas/.test(await texto('ante'))) falla('al volver a abrir no recuerda la comunidad');
+
+  // 5. Quien recibe la liga ve esa comunidad, pero no se le guarda como suya
+  const otra = await browser.newPage({ viewport: { width: ancho, height: 844 }, locale: 'es-MX' });
+  otra.on('pageerror', e => errores.push(String(e)));
+  await otra.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await otra.goto(ligaWa.replace(/^https?:\/\/[^/]+\//, base) + '&demo=alerta', { waitUntil: 'networkidle' });
+  await otra.waitForTimeout(800);
+  const recibida = await otra.evaluate(() => ({ ante: document.getElementById('ante').textContent, guardada: localStorage.getItem('mi_comunidad') }));
+  if (!/Cañas de Abajo/.test(recibida.ante) || recibida.guardada) falla(`la liga compartida abre "${recibida.ante}" (guardada: ${recibida.guardada})`);
+  await otra.close();
 
   const propios = errores.filter(e => !/fonts\.g|ERR_FAILED/.test(e));
   if (propios.length) falla(`errores en consola: ${propios.join(' | ')}`);

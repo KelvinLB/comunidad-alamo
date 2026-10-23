@@ -136,6 +136,9 @@ button{font-family:inherit;color:inherit}
 .nota{font-size:.78rem;color:var(--muted);margin-top:6px}
 .municipio{margin-top:14px;border:2px solid var(--ink);padding:10px 12px;background:var(--paper2);font-size:1rem}
 .municipio b{font-family:var(--f-head)}
+.wa{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;min-height:58px;padding:8px 16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);font-family:var(--f-head);font-weight:900;font-size:1.2rem;line-height:1.15;text-decoration:none;text-align:center}
+.wa svg{width:28px;height:28px;flex:none}
+.wa:hover{background:var(--paper);color:var(--ink)}
 .firma{font-size:.85rem;margin-top:12px;padding-top:8px;border-top:1px solid var(--soft);display:flex;flex-wrap:wrap;gap:4px 14px}
 .firma b{font-weight:600}
 figure{margin:0}
@@ -310,6 +313,8 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
           <p class="nota" id="nota" hidden>Riesgo estimado con la distancia al río y la altura. No toma en cuenta los arroyos.</p>
           <p class="nota" id="ubicnota" hidden></p>
           <p class="municipio" id="municipio" hidden></p>
+          <!-- Botón negro a propósito: el verde se reserva para "Sin peligro" -->
+          <a class="wa" id="compartir" href="https://wa.me/" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5l1.4-4.2A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 10.5h6M9 14h4"/></svg>Compartir por WhatsApp</a>
           <div class="firma"><span><b>Por el sistema Alerta Pantepec</b></span><span id="when"></span><span>Fuentes: Copernicus, SMN, NHC</span></div>
         </div>
         <div>
