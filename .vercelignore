@@ -1,0 +1,9 @@
+# Vercel solo necesita public/
+bot/
+scripts/
+tests/
+cache/
+referencia/
+capturas/
+*.md
+avisos_manuales.json

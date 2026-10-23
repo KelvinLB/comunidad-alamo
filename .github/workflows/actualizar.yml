@@ -1,0 +1,60 @@
+# Consulta las fuentes cada 3 horas y guarda public/data.json. Vercel publica cada commit solo.
+name: Actualizar datos
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - avisos_manuales.json
+      - "bot/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: actualizar-datos
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Pruebas
+        run: python -m unittest
+      - name: Consultar fuentes y calcular el riesgo
+        run: python bot/actualizar.py
+      - name: Guardar data.json si cambió
+        run: |
+          if git diff --quiet -- public/data.json; then
+            echo "data.json no cambió"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data.json
+          git commit -m "datos: $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase origin main
+          git push
+      - name: Avisar a Healthchecks.io (opcional)
+        if: success() && env.HEALTHCHECK_URL != ''
+        run: curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" > /dev/null || echo "No se pudo avisar a Healthchecks"
+
+  # GitHub apaga los workflows programados de repositorios públicos tras 60 días sin actividad.
+  # Esta acción los reactiva por la API, sin hacer commits falsos. Ver PENDIENTES.md.
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@f72ff1a1336129f29bf0166c0fd0ca6cf1bcb38c # v1

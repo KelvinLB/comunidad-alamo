@@ -41,4 +41,18 @@ Todas se probaron el 23 de octubre de 2026 y sus respuestas reales están en `te
 - **Leaflet** (mapa con calles) se carga de cdnjs sin verificación de integridad (SRI). Agregar el `integrity` oficial de cdnjs para la versión 1.9.4.
 - **Revisado en**: Chrome de escritorio y WebKit (motor de Safari) con Playwright, a 360 y 390 px, claro y oscuro. Falta probar en un Android sencillo real y en un iPhone real.
 
+## Operación
+
+- **Keepalive de los 60 días.** La acción sugerida, `gautamkrishnar/keepalive-workflow`, **ya no existe**: GitHub bloqueó ese repositorio por sus términos de servicio (abril de 2025). Se usa `liskin/gh-workflow-keepalive` v1 (activo, sin archivar, última actualización en agosto de 2025), que reactiva el workflow por la API sin hacer commits falsos. Está fijado al commit `f72ff1a` para que nadie pueda cambiar su código sin que lo sepamos. Además, el bot hace un commit en cada revisión, lo que también cuenta como actividad.
+- **Todavía no se ha corrido en GitHub Actions** (falta crear el repositorio). Hay que confirmar ahí: que SMN responda desde EE. UU., que el commit de `data.json` funcione y que Vercel publique cada commit.
+- **`geo.json` se guarda en caché una semana.** Si se vuelve a generar, algunas personas verán la versión anterior hasta 7 días.
+
 ## Para después
+
+### Bot de Telegram (diseño, sin implementar)
+
+- **Qué hace:** publica un mensaje en un canal público de Telegram (por ejemplo, "Alerta Pantepec Álamo") **solo cuando el nivel sube** (de 0 a 1, de 1 a 2…) y cuando vuelve a 0 después de una alerta. Nunca en cada revisión, para no cansar a la gente.
+- **Cómo:** al final de `bot/actualizar.py`, comparar `riesgo.nivel` nuevo con el del `data.json` anterior. Si cambió según la regla, llamar a `https://api.telegram.org/bot<TOKEN>/sendMessage` con `urllib` (biblioteca estándar).
+- **Mensaje:** "⚠ Álamo: PELIGRO (nivel 2). El río puede llegar a la orilla y salirse en las partes bajas. Qué hacer: … Más información: <liga>". Mismo lenguaje sencillo que la página.
+- **Secretos:** `TELEGRAM_TOKEN` y `TELEGRAM_CANAL` en GitHub. Si no existen, se omite sin fallar (igual que Healthchecks).
+- **Cuidados:** no publicar con datos de ejemplo; no publicar si la subida se debe solo a que una fuente volvió después de estar caída (comparar con la última lectura con todas las fuentes bien); guardar la hora del último mensaje en `data.json` para no repetir en menos de 6 horas.
