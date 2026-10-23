@@ -1,5 +1,7 @@
 /* Alerta Pantepec · Álamo Temapache
    La página lee data.json (lo escribe el bot cada 3 horas) y geo.json (comunidades, río y costa).
+   Primero se elige la comunidad y luego se despliega su "edición" del periódico.
+   La franja de arriba siempre muestra el aviso de todo el municipio.
    Sin frameworks: todo se dibuja con DOM y SVG. */
 'use strict';
 (() => {
@@ -11,41 +13,27 @@ const ESCENARIOS = ['normal', 'vigilancia', 'alerta'];
 const $ = id => document.getElementById(id);
 const root = document.documentElement;
 
-/* ---------- Íconos (dibujados, sin imágenes externas) ---------- */
-const svg24 = (body, w = 2.2) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
-const IC = {
-  eye: svg24('<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3" fill="currentColor"/>', 2.4),
-  run: svg24('<circle cx="14" cy="4.5" r="2" fill="currentColor"/><path d="M8 21l3-6 3 2v5M6 12l3-4h5l2 4 3 1M11 15l1-5"/>', 2.4),
-  phone: svg24('<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/>'),
-  bag: svg24('<rect x="4" y="7" width="16" height="14" rx="3"/><path d="M9 7V5a3 3 0 0 1 6 0v2M4 13h16"/>'),
-  map: svg24('<path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>'),
-  nocross: svg24('<circle cx="12" cy="12" r="9.5"/><path d="M5.3 18.7L18.7 5.3"/><path d="M6 14c2 1.5 4 1.5 6 0s4-1.5 6 0"/>'),
-  box: svg24('<path d="M3 10h18M6 10v10h12V10M12 3l-6 4h12l-6-4z"/><path d="M12 13v5M10 15l2-2 2 2"/>'),
-  plug: svg24('<path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"/>'),
-  ear: svg24('<path d="M4 18V12a8 8 0 0 1 16 0v6M4 18a2 2 0 0 0 2 2h1v-6H6a2 2 0 0 0-2 2zM20 18a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2z"/>'),
-};
-
 /* ---------- Niveles: color, nombre y qué hacer ---------- */
 const LV = [
   {head: 'Sin peligro', c: 'var(--g)', on: 'var(--on-g)', todo: [
-    ['eye', 'Viva su día normal. Revise esta página una vez al día en temporada de lluvias.'],
-    ['bag', 'Tenga lista una mochila: papeles en bolsa de plástico, medicinas, lámpara, agua y cargador.'],
-    ['map', 'Sepa a dónde iría: la casa de un familiar en lo alto o el refugio temporal.']]},
+    'Viva su día normal. Revise esta página una vez al día en temporada de lluvias.',
+    'Tenga lista una mochila: papeles en bolsa de plástico, medicinas, lámpara, agua y cargador.',
+    'Sepa a dónde iría: la casa de un familiar en lo alto o el refugio temporal.']},
   {head: 'Esté atento', c: 'var(--y)', on: 'var(--on-y)', todo: [
-    ['eye', 'Revise esta página y la radio varias veces al día, también en la noche.'],
-    ['box', 'Suba a lo alto sus papeles, aparatos y comida.'],
-    ['nocross', 'No cruce arroyos ni vados con agua corriendo, ni a pie ni en carro.'],
-    ['phone', 'Platique con su familia a dónde irían si el río se sale.']]},
+    'Revise esta página y la radio varias veces al día, también en la noche.',
+    'Suba a lo alto sus papeles, aparatos y comida.',
+    'No cruce arroyos ni vados con agua corriendo, ni a pie ni en carro.',
+    'Platique con su familia a dónde irían si el río se sale.']},
   {head: 'Peligro', c: 'var(--o)', on: 'var(--on-o)', todo: [
-    ['bag', 'Ponga la mochila junto a la puerta y cargue el celular.'],
-    ['run', 'Si vive cerca del río o en zona baja, váyase antes de que oscurezca a casa de familiares o al refugio.'],
-    ['plug', 'Si el agua empieza a entrar, apague la luz y cierre el gas.'],
-    ['ear', 'Haga caso de inmediato si Protección Civil pide salir.']]},
+    'Ponga la mochila junto a la puerta y cargue el celular.',
+    'Si vive cerca del río o en zona baja, váyase antes de que oscurezca a casa de familiares o al refugio.',
+    'Si el agua empieza a entrar, apague la luz y cierre el gas.',
+    'Haga caso de inmediato si Protección Civil pide salir.']},
   {head: 'Peligro muy alto', c: 'var(--r)', on: 'var(--on-r)', todo: [
-    ['run', 'Si le piden salir, salga ya hacia el refugio o a un lugar alto.'],
-    ['bag', 'No regrese por sus cosas si el agua ya está subiendo.'],
-    ['nocross', 'No camine ni maneje por calles con agua: aunque se vea poca, la corriente lo puede tumbar.'],
-    ['phone', 'Llame al 911 si usted o alguien más está en peligro.']]},
+    'Si le piden salir, salga ya hacia el refugio o a un lugar alto.',
+    'No regrese por sus cosas si el agua ya está subiendo.',
+    'No camine ni maneje por calles con agua: aunque se vea poca, la corriente lo puede tumbar.',
+    'Llame al 911 si usted o alguien más está en peligro.']},
 ];
 const ANS = [
   {a: 'No', sub: 'Hoy no hay peligro'},
@@ -55,6 +43,16 @@ const ANS = [
 ];
 // Con datos atrasados nunca se dice "No, sin peligro"
 const ANS_ATRASADO = {a: 'Sin datos', sub: 'No podemos confirmar que no hay peligro'};
+const SELLO = [['✓', 'Sin<br>peligro'], ['!', 'Esté<br>atento'], ['⚠', 'Peligro'], ['⚠', 'Muy<br>alto']];
+const SELLO_SIN_DATOS = ['?', 'Sin<br>datos'];
+// Franja de la edición (todo el municipio)
+const EDICION = ['Edición ordinaria', 'Aviso', 'Edición de alerta', 'Edición de alerta'];
+const FRANJA = ['Hoy no hay peligro en el municipio', 'Esté atento en todo el municipio', 'Hay peligro en las zonas junto al río', 'Peligro muy alto junto al río Pantepec'];
+// Cuando su comunidad está más tranquila que el municipio
+const LOCAL = [
+  'En su zona no se espera peligro por ahora. Revise esta página más tarde.',
+  'Los arroyos y los caminos se pueden ver afectados. Esté pendiente.',
+  'Los arroyos y vados pueden crecer de golpe. No los cruce.'];
 const TAGS = ['Info', 'Atento', 'Alerta', 'Emergencia'];
 
 /* ---------- Estado ---------- */
@@ -63,8 +61,12 @@ const S = {
   demo: null,        // escenario de ejemplo, o null
   atrasado: false,   // data.actualizado tiene más de 12 horas
   sinRed: false,     // la última carga falló y se muestra lo guardado
+  fallo: false,      // no hay ningún dato que mostrar
   cargadoEn: 0,
-  geo: null, locs: [], alamo: null, sel: null,
+  geo: null, locs: [], alamo: null,
+  sel: null,         // comunidad elegida
+  guardada: null,    // lo que había en este teléfono
+  vista: 'elegir',   // 'elegir' | 'comunidad' | 'municipio'
 };
 const nivelDia = () => S.data ? S.data.riesgo.nivel : 0;
 const apagado = n => S.atrasado && n === 0;
@@ -101,6 +103,11 @@ function dayName(iso, i) {
   return s[0].toUpperCase() + s.slice(1);
 }
 const dtime = iso => new Date(iso).toLocaleString('es-MX', {day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: TZ});
+// "las 11:17", "la 1:05"
+function horaTxt(iso) {
+  const s = new Date(iso).toLocaleTimeString('es-MX', {hour: 'numeric', minute: '2-digit', hourCycle: 'h23', timeZone: TZ});
+  return (s.startsWith('1:') ? 'la ' : 'las ') + s;
+}
 function lerp(x, pts) {
   if (x <= pts[0][0]) return pts[0][1];
   for (let i = 1; i < pts.length; i++) {
@@ -124,8 +131,12 @@ function fixVars(svg) {
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* modo privado */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* modo privado */ } },
 };
 function setText(id, txt) { const e = $(id); if (e.textContent !== txt) e.textContent = txt; }
+// innerHTML solo si cambió (así los lectores de pantalla no repiten el aviso)
+function setHTML(e, h) { if (e._h !== h) { e._h = h; e.innerHTML = h; } }
+function pinta(e, c, on) { e.style.setProperty('--c', c); e.style.setProperty('--on', on); }
 
 /* ---------- Lluvia en palabras e íconos ---------- */
 function rainCat(mm) {
@@ -147,15 +158,16 @@ function rainIcon(k, attrs = 'aria-hidden="true"') {
   return `<svg viewBox="0 0 56 56" ${attrs}><path d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="${cloud}"/>${drops}${bolt}</svg>`;
 }
 
-/* ---------- Escena del puente ---------- */
-const SKY = [['#7EC3EA', '#CBE8F7'], ['#9AB1C2', '#D3DEE5'], ['#6D7F8C', '#AAB7BF'], ['#3D4A55', '#73818B']];
-const SKY_DARK = [['#173247', '#25506B'], ['#1C2B36', '#2E4250'], ['#141E26', '#26343E'], ['#0B1117', '#1B252D']];
+/* ---------- Escena del puente (estilo grabado) ---------- */
+const SKY = ['#DCE9EE', '#CDD5D8', '#AEB8BD', '#97A2A8'];
+const SKY_DARK = ['#22313A', '#1E272D', '#1A2025', '#151A1E'];
 const isDark = () => root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 
 // Altura del agua en el dibujo (y del viewBox): 232 = fondo, 170 = orilla.
 const waterY = (q, U) => lerp(q, [[0, 226], [U.rp2 * 0.5, 200], [U.rp2, 170], [U.rp5, 140], [U.rp20, 108], [U.rp20 * 1.4, 92]]);
 const nivelRio = (q, U) => q >= U.rp5 ? 3 : q >= U.rp2 ? 2 : q >= U.rp2 * 0.5 ? 1 : 0;
 const PALABRA_RIO = ['Normal', 'Alto', 'Se sale', 'Inunda'];
+const ESTADO_RIO = ['normal', 'alto', 'fuera de su cauce', 'desbordado'];
 
 function serieRio(D) {
   const S_ = (D.rio && D.rio.serie) || [];
@@ -169,48 +181,49 @@ function sceneSVG(D) {
   const qNow = hasR ? past[past.length - 1].caudal : 0, qPk = hasR ? Math.max(...fut.map(s => s.caudal)) : 0;
   const yNow = hasR ? waterY(qNow, U) : 220, yPk = hasR ? waterY(qPk, U) : 220;
   const iPk = hasR ? fut.findIndex(s => s.caudal === qPk) : 0;
+  const tinta = 'var(--ink)', papel = 'var(--paper)';
   let rain = '';
   if (G >= 1) {
     const n = [0, 14, 26, 40][G];
     for (let i = 0; i < n; i++) rain += `<path d="M${(i * 37) % 420 - 10} ${(i * 53) % 110} l-4 12"/>`;
   }
-  const clouds = G === 0 ? '<circle cx="330" cy="40" r="20" fill="#FFD23F"/>'
-    : `<g fill="${G >= 2 ? '#5B6873' : '#C3CED6'}"><ellipse cx="90" cy="30" rx="70" ry="22"/><ellipse cx="150" cy="22" rx="60" ry="22"/><ellipse cx="290" cy="34" rx="80" ry="24"/><ellipse cx="370" cy="26" rx="50" ry="20"/></g>`;
+  const cielo = G === 0
+    ? `<circle cx="330" cy="40" r="18" fill="none" stroke="${tinta}" stroke-width="2"/><path d="M330 12v8M330 60v8M302 40h8M350 40h8M310 20l5 5M345 55l5 5M310 60l5-5M345 25l5-5" stroke="${tinta}" stroke-width="2"/>`
+    : `<g fill="${papel}" stroke="${tinta}" stroke-width="1.5"><path d="M40 40a18 18 0 0 1 30-14a22 22 0 0 1 40 6a14 14 0 0 1 4 26H44a14 14 0 0 1-4-18z"/><path d="M250 46a18 18 0 0 1 30-14a22 22 0 0 1 40 6a14 14 0 0 1 4 26h-70a14 14 0 0 1-4-18z"/></g>`;
   // regla de colores sobre la pila del puente
   const gx = 144, gw = 26, bands = [[170, 232, 'var(--g)'], [140, 170, 'var(--y)'], [108, 140, 'var(--o)'], [78, 108, 'var(--r)']];
   let gauge = bands.map(([a, b, c]) => `<rect x="${gx}" y="${a}" width="${gw}" height="${b - a}" fill="${c}"/>`).join('');
-  for (let y = 80; y < 232; y += 6) gauge += `<path d="M${gx} ${y}h${y % 30 === 2 ? gw * 0.7 : gw * 0.35}" stroke="#14110A" stroke-width="1.4"/>`;
-  gauge += `<rect x="${gx}" y="78" width="${gw}" height="154" fill="none" stroke="#14110A" stroke-width="2"/>`;
-  const casa = (x, y) => `<g><rect x="${x}" y="${y - 30}" width="40" height="30" fill="#EADBC2" stroke="#4C3B28" stroke-width="2"/><path d="M${x - 5} ${y - 28}L${x + 20} ${y - 48}L${x + 45} ${y - 28}Z" fill="#B24A2E" stroke="#4C3B28" stroke-width="2"/><rect x="${x + 15}" y="${y - 16}" width="10" height="16" fill="#4C3B28"/></g>`;
+  for (let y = 80; y < 232; y += 6) gauge += `<path d="M${gx} ${y}h${y % 30 === 2 ? gw * 0.7 : gw * 0.35}" stroke="#141210" stroke-width="1.4"/>`;
+  gauge += `<rect x="${gx}" y="78" width="${gw}" height="154" fill="none" stroke="${tinta}" stroke-width="2"/>`;
+  const casa = (x, y) => `<g fill="${papel}" stroke="${tinta}" stroke-width="2"><rect x="${x}" y="${y - 30}" width="40" height="30"/><path d="M${x - 5} ${y - 28}L${x + 20} ${y - 48}L${x + 45} ${y - 28}Z"/></g><rect x="${x + 15}" y="${y - 16}" width="10" height="16" fill="${tinta}"/>`;
   const wave = `M-40 0 ${Array.from({length: 14}, () => 'q10 -5 20 0 t20 0').join(' ')} V200 H-40 Z`;
-  const label = (x, y, txt, size, anchor = 'start') => `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${size}" font-weight="800" fill="var(--ink)" stroke="${sky[1]}" stroke-width="4" paint-order="stroke" font-family="Barlow Condensed, Arial Narrow, sans-serif">${txt}</text>`;
-  return `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient></defs>
-  <rect width="400" height="250" fill="url(#sky)"/>${clouds}
-  <path d="M0 120 C60 90 120 110 180 96 C240 82 300 104 400 88 V250 H0Z" fill="var(--hill)" opacity=".75"/>
+  const suelo = 'M0 150 L40 150 L105 232 L262 232 L292 170 L400 170 L400 250 L0 250 Z';
+  const label = (x, y, txt, size, anchor = 'start') => `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${size}" font-weight="900" fill="${tinta}" stroke="${sky}" stroke-width="4" paint-order="stroke" font-family="Playfair Display, Georgia, serif">${txt}</text>`;
+  return `<defs><pattern id="tramado" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0v6" stroke="var(--muted)" stroke-width="1.2"/></pattern></defs>
+  <rect width="400" height="250" fill="${sky}"/>${cielo}
   ${casa(300, 170)}${casa(348, 170)}
-  <rect x="150" y="70" width="14" height="170" fill="#8D8F90"/>${gauge}
-  <g class="water" id="wgroup" style="transform:translateY(${(yNow - 232).toFixed(1)}px)"><g transform="translate(0 232)"><path class="waves" d="${wave}" fill="var(--water)" opacity=".92"/></g></g>
-  <path d="M0 150 L40 150 L105 232 L262 232 L292 170 L400 170 L400 250 L0 250 Z" fill="#7E6448"/>
-  <path d="M0 150 L40 150 L105 232 L262 232 L292 170 L400 170" fill="none" stroke="#4C3B28" stroke-width="3"/>
-  <rect x="0" y="58" width="270" height="14" fill="#A5A7A8" stroke="#55585A" stroke-width="2"/>
-  <path d="M0 58V44M30 58V44M60 58V44M90 58V44M120 58V44M150 58V44M180 58V44M210 58V44M240 58V44M270 58V44M0 46H270" stroke="#55585A" stroke-width="2.5" fill="none"/>
-  <g class="rain" stroke="${G >= 2 ? '#E8EEF2' : '#5C7A8C'}" stroke-width="2" stroke-linecap="round" opacity=".8">${rain}</g>
-  ${hasR ? `<g><path d="M${gx + gw + 2} ${yNow.toFixed(1)} h18" stroke="var(--ink)" stroke-width="3"/><path d="M${gx + gw + 2} ${yNow.toFixed(1)} l8 -5 v10z" fill="var(--ink)"/>${label(gx + gw + 24, (yNow + 6).toFixed(1), 'HOY', 18)}</g>` : ''}
-  ${hasR && yPk < yNow - 14 ? `<path d="M${gx - 30} ${yPk.toFixed(1)} H${gx + gw + 80}" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="7 5"/>${label(gx - 34, (yPk + 5).toFixed(1), iPk === 0 ? 'MAÑANA' : 'EN ' + (iPk + 1) + ' DÍAS', 16, 'end')}` : ''}`;
+  <rect x="150" y="70" width="14" height="170" fill="${papel}" stroke="${tinta}" stroke-width="2"/>${gauge}
+  <g class="water" id="wgroup" style="transform:translateY(${(yNow - 232).toFixed(1)}px)"><g transform="translate(0 232)"><path class="waves" d="${wave}" fill="var(--river)" fill-opacity=".6" stroke="${tinta}" stroke-width="1.5"/></g></g>
+  <path d="${suelo}" fill="var(--paper2)"/><path d="${suelo}" fill="url(#tramado)" stroke="${tinta}" stroke-width="2.5"/>
+  <rect x="0" y="58" width="270" height="14" fill="${papel}" stroke="${tinta}" stroke-width="2"/>
+  <path d="M0 58V44M30 58V44M60 58V44M90 58V44M120 58V44M150 58V44M180 58V44M210 58V44M240 58V44M270 58V44M0 46H270" stroke="${tinta}" stroke-width="2" fill="none"/>
+  <g class="rain" stroke="${tinta}" stroke-width="1.6" stroke-linecap="round" opacity=".55">${rain}</g>
+  ${hasR ? `<path d="M${gx + gw + 2} ${yNow.toFixed(1)} h18" stroke="${tinta}" stroke-width="3"/><path d="M${gx + gw + 2} ${yNow.toFixed(1)} l8 -5 v10z" fill="${tinta}"/>${label(gx + gw + 24, (yNow + 6).toFixed(1), 'HOY', 18)}` : ''}
+  ${hasR && yPk < yNow - 14 ? `<path d="M${gx - 30} ${yPk.toFixed(1)} H${gx + gw + 80}" stroke="${tinta}" stroke-width="2.5" stroke-dasharray="7 5"/>${label(gx - 34, (yPk + 5).toFixed(1), iPk === 0 ? 'MAÑANA' : 'EN ' + (iPk + 1) + ' DÍAS', 15, 'end')}` : ''}`;
 }
 
-function sceneLabel(D) {
+function sceneCaption(D) {
   const {U, past, fut} = serieRio(D);
-  if (!U || !past.length) return 'Dibujo del río bajo el puente con la regla de colores.';
-  const hoy = PALABRA_RIO[nivelRio(past[past.length - 1].caudal, U)].toLowerCase();
-  const pico = fut.length ? PALABRA_RIO[nivelRio(Math.max(...fut.map(s => s.caudal)), U)].toLowerCase() : hoy;
-  return `Dibujo del río bajo el puente. Hoy el río está ${hoy}; en los próximos días se espera ${pico}.`;
+  if (!U || !past.length) return 'El río bajo el puente de Álamo, con la regla de colores en la pila.';
+  const hoy = ESTADO_RIO[nivelRio(past[past.length - 1].caudal, U)];
+  const pico = fut.length ? ESTADO_RIO[nivelRio(Math.max(...fut.map(s => s.caudal)), U)] : hoy;
+  return `El río bajo el puente de Álamo. Hoy está ${hoy}. ` + (pico !== hoy ? `En los próximos días puede estar ${pico}.` : 'Así seguiría los próximos días.');
 }
 
 function renderScene(D) {
   const sc = $('scene');
   sc.innerHTML = fixVars(sceneSVG(D));
-  sc.setAttribute('aria-label', sceneLabel(D));
+  setText('pie', sceneCaption(D));
   const wg = sc.querySelector('#wgroup');
   if (wg) {  // el agua sube desde abajo al cargar
     const fin = wg.style.transform;
@@ -219,17 +232,16 @@ function renderScene(D) {
   }
 }
 
-/* ---------- La semana en reglitas ---------- */
-function renderWeek(D) {
+/* ---------- El parte del río (7 días) ---------- */
+function renderParte(D) {
   const {U, past, fut} = serieRio(D), now = past[past.length - 1];
-  const mk = (232 - 170) / (232 - 78) * 100;
-  $('week').innerHTML = (D.lluvia || []).slice(0, 7).map((d, i) => {
+  $('parte').innerHTML = fixVars((D.lluvia || []).slice(0, 7).map((d, i) => {
     const q = i === 0 && now ? now.caudal : (fut[i - 1] || fut[fut.length - 1] || {caudal: 0}).caudal;
-    const f = U ? Math.max(.06, Math.min(1, (232 - waterY(q, U)) / (232 - 78))) : .1;
-    const lv = U ? nivelRio(q, U) : 0, w = PALABRA_RIO[lv], rc = rainCat(d.mm);
-    const dia = dayName(d.fecha, i);
-    return `<div class="wd" style="--c:${LV[lv].c}"><div class="dn" aria-hidden="true">${i === 0 ? 'Hoy' : dia.slice(0, 3)}</div>${fixVars(rainIcon(rc.k, `class="ri" role="img" aria-label="${rc.w}"`))}<div class="tube" role="img" aria-label="${dia}: río ${w.toLowerCase()}, ${rc.w.toLowerCase()}"><div class="fill" style="height:${(f * 100).toFixed(0)}%"></div>${U ? `<div class="mark" style="bottom:${mk.toFixed(0)}%"></div>` : ''}</div><div class="ww">${w}</div></div>`;
-  }).join('');
+    const rc = rainCat(d.mm), lv = U ? nivelRio(q, U) : null;
+    const rio = lv == null ? '<span class="muted">Sin dato</span>'
+      : `<span class="pill" style="--c:${LV[lv].c}"><i></i>${PALABRA_RIO[lv]}</span>`;
+    return `<tr><td class="d">${dayName(d.fecha, i)}</td><td><span class="ll">${rainIcon(rc.k)}<span>${rc.w}</span></span></td><td>${rio}</td></tr>`;
+  }).join(''));
 }
 
 /* ---------- Gráfica técnica del caudal ---------- */
@@ -259,7 +271,7 @@ function renderChart(D) {
   box.innerHTML = fixVars(`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfica del caudal del río: últimos días y pronóstico">${g}</svg>`);
 }
 
-/* ---------- Respuesta y secciones ---------- */
+/* ---------- Franjas de arriba ---------- */
 function renderEstado(D) {
   const b = $('stale');
   let txt = '';
@@ -271,38 +283,89 @@ function renderEstado(D) {
   $('retry').hidden = !S.sinRed;
 }
 
-function renderHero(D) {
-  const R = D.riesgo, n = R.nivel, L = LV[n], A = respuesta(n);
-  const h = $('hero');
-  h.style.setProperty('--c', L.c);
-  h.style.setProperty('--on', L.on);
-  setText('ans', A.a);
-  setText('sub', A.sub);
-  setText('msg', S.atrasado ? `Información de ${ago(D.actualizado)}, puede haber cambiado: ${R.resumen}` : R.resumen);
-  setText('chance', `${Math.round(R.probabilidad)} de cada 100`);
-  setText('when', `Revisado ${ago(D.actualizado)} · cada 3 horas`);
-  document.title = `¿Se inunda Álamo? · Hoy: ${A.a}`;
-  renderMine();
+// Aviso de todo el municipio: se ve siempre, haya o no comunidad elegida
+function renderFranja() {
+  const D = S.data, e = $('edicion');
+  let c = 'var(--na)', on = 'var(--on-na)', ed = 'Cargando el aviso…', txt = '';
+  if (D) {
+    const n = D.riesgo.nivel;
+    c = LV[n].c; on = LV[n].on;
+    if (apagado(n)) { ed = 'Datos atrasados'; txt = ANS_ATRASADO.sub; } else { ed = EDICION[n]; txt = FRANJA[n]; }
+  } else if (S.fallo) { ed = 'Sin datos'; txt = 'No se pudo cargar el aviso. Escuche la radio y siga a Protección Civil.'; }
+  pinta(e, c, on);
+  S.franja = txt ? `${ed}. ${txt}.` : ed;
+  setHTML(e, txt ? `${esc(ed)}<small>${esc(txt)}</small>` : esc(ed));
 }
 
-function renderTodo(D) {
-  const n = D.riesgo.nivel, L = LV[n], tp = $('todopanel');
-  tp.style.setProperty('--c', L.c);
-  tp.style.setProperty('--on', L.on);
-  $('todo').replaceChildren(...todoDe(n).map(([ic, t]) => el('li', null, el('div', {class: 'ti', html: IC[ic]}), el('span', null, t))));
+function renderBarra() {
+  const b = $('cambiar'), D = S.data;
+  if (S.vista === 'comunidad' && S.sel) {
+    setHTML($('para'), `Edición para <b>${esc(S.sel.n)}</b> ·`);
+    b.textContent = 'Cambiar comunidad';
+  } else if (S.vista === 'municipio') {
+    setHTML($('para'), 'Edición para <b>todo el municipio</b> ·');
+    b.textContent = 'Elegir mi comunidad';
+  } else {
+    setHTML($('para'), `<b>${D ? 'Edición de ' + horaTxt(D.actualizado) : S.fallo ? 'Sin datos' : 'Cargando…'}</b>`);
+  }
+  b.hidden = S.vista === 'elegir';
+}
+
+/* ---------- La edición de su comunidad ---------- */
+function renderEdicion() {
+  if (S.vista === 'elegir') return;
+  const D = S.data, n = nivelDia(), l = S.vista === 'comunidad' ? S.sel : null;
+  const lv = l ? commLevel(l) : n, cab = l ? sinParentesis(l.n) : 'Álamo';
+  const A = D ? respuesta(lv) : S.fallo ? {a: 'Sin datos', sub: 'No se pudo cargar el aviso'} : {a: '…', sub: 'Cargando'};
+  const sello = D && !apagado(lv) ? SELLO[lv] : SELLO_SIN_DATOS;
+  const L = D ? LV[lv] : {c: 'var(--na)', on: 'var(--on-na)'};
+
+  setText('ante', `¿Se va a inundar ${cab}?`);
+  setText('ans', A.a);
+  setText('sub', A.sub);
+  $('titular').classList.toggle('largo', A.a.length > 3);
+  pinta($('sello'), L.c, L.on);
+  setHTML($('sello'), `<div><b>${sello[0]}</b><i>${sello[1]}</i></div>`);
+
+  let baj = '';
+  if (D) {
+    const p = [];
+    if (S.atrasado) p.push(`Información de ${ago(D.actualizado)}; puede haber cambiado.`);
+    if (l) p.push(ZONAS[l.z].txt);
+    p.push(l && lv < n ? LOCAL[lv] : D.riesgo.resumen);
+    baj = p.join(' ');
+  } else if (S.fallo) baj = 'Revise su conexión a internet y vuelva a intentar. Mientras, escuche la radio y siga los avisos de Protección Civil.';
+  setText('bajada', baj);
+
+  $('datos').hidden = $('nota').hidden = !l;
+  if (l) setHTML($('datos'), `<div><b>${kmTxt(l.d)}</b><span>del río Pantepec</span></div><div><b>${l.alt} m</b><span>de altura</span></div><div><b>${l.pri === 1 ? '—' : kmTxt(l.dA)}</b><span>del centro de Álamo</span></div>`);
+  if (!l) $('ubicnota').hidden = true;
+
+  // Recuadro con el aviso del resto del municipio
+  const mun = $('municipio');
+  let mh = '';
+  if (D && !l) mh = 'Este es el aviso para Álamo y las zonas junto al río. En las comunidades lejos del río el peligro puede ser menor. <button type="button" class="linkbtn" data-elegir>Elegir mi comunidad</button>';
+  else if (D && lv < n) mh = `<b>En el resto del municipio:</b> ${esc(etiqueta(n).toLowerCase())} en Álamo y en las comunidades junto al río.${n >= 2 ? ' Evite ir a las zonas bajas junto al río.' : ''}`;
+  mun.hidden = !mh;
+  setHTML(mun, mh);
+
+  setText('when', D ? `Revisado ${ago(D.actualizado)} · cada 3 horas` : '');
+  setText('prob', D ? String(Math.round(D.riesgo.probabilidad)) : '—');
+  setText('reco-para', cab);
+  setHTML($('todo'), (D ? todoDe(lv) : LV[1].todo).map(t => `<li>${esc(t)}</li>`).join(''));
+  document.title = `¿Se inunda ${cab}? · Hoy: ${A.a}`;
 }
 
 function renderAlerts(D) {
   const AV = D.avisos || [];
   if (!AV.length) {
-    $('alerts').replaceChildren(el('li', null, el('span', null, 'No hay avisos vigentes de las autoridades para Álamo.')));
+    $('alerts').replaceChildren(el('li', null, 'No hay avisos vigentes de las autoridades para Álamo.'));
     return;
   }
-  $('alerts').replaceChildren(...AV.map(a => el('li', {style: `--c:${LV[a.nivel].c};--on:${LV[a.nivel].on}`},
-    el('span', {class: 'tag'}, TAGS[a.nivel]),
-    el('div', null,
-      el('div', {class: 't'}, a.url ? el('a', {href: a.url, target: '_blank', rel: 'noopener'}, a.titulo) : a.titulo),
-      el('div', {class: 'small'}, `${a.fuente} · ${dtime(a.fecha)}`)))));
+  $('alerts').replaceChildren(...AV.map(a => el('li', null,
+    el('span', {class: 'etq', style: `--c:${LV[a.nivel].c};--on:${LV[a.nivel].on}`}, TAGS[a.nivel]),
+    el('div', {class: 't'}, a.url ? el('a', {href: a.url, target: '_blank', rel: 'noopener'}, a.titulo) : a.titulo),
+    el('div', {class: 'small'}, `${a.fuente} · ${dtime(a.fecha)}`))));
 }
 
 function renderTech(D) {
@@ -316,7 +379,7 @@ function renderTech(D) {
   $('sources').replaceChildren(...(D.fuentes || []).map(s => el('tr', null,
     el('td', null, s.url ? el('a', {href: s.url, target: '_blank', rel: 'noopener'}, s.nombre) : s.nombre),
     el('td', null, s.aporta),
-    el('td', null, el('span', {class: 'dot', style: `color:${s.ok ? '#1E7B3E' : 'var(--r)'}`}, s.ok ? '✓ ' : '✗ '),
+    el('td', null, el('span', {class: 'dot', style: `color:${s.ok ? 'var(--g)' : 'var(--r)'}`}, s.ok ? '✓ ' : '✗ '),
       s.ok ? `${s.manual ? 'Captura manual · archivo revisado' : 'Funciona ·'} ${ago(s.fecha)}` : (s.fecha ? `Sin respuesta; se usa la lectura de ${ago(s.fecha)}` : 'Sin respuesta')))));
   renderChart(D);
 }
@@ -324,37 +387,35 @@ function renderTech(D) {
 function render() {
   const D = S.data;
   if (!D) return;
+  S.fallo = false;
   S.atrasado = !D.ejemplo && horasDesde(D.actualizado) > HORAS_ATRASO;
   root.classList.toggle('atrasado', S.atrasado);
   setText('key0', S.atrasado ? 'Sin datos recientes' : 'Sin peligro');
   $('demo').hidden = !S.demo;
   renderEstado(D);
-  renderHero(D);
+  renderFranja();
+  renderBarra();
+  renderChips();
+  renderEdicion();
   renderScene(D);
-  renderWeek(D);
-  renderTodo(D);
+  renderParte(D);
   renderAlerts(D);
   renderTech(D);
-  renderComunidad();
   mapa.dibujar();
   $('osmbtn').hidden = !!D.ejemplo || !S.geo;
 }
 
 function sinDatos() {
+  S.fallo = true;
   S.atrasado = true;  // sin datos tampoco se muestra verde
   root.classList.add('atrasado');
   setText('key0', 'Sin datos recientes');
-  const h = $('hero');
-  h.style.setProperty('--c', 'var(--na)');
-  h.style.setProperty('--on', 'var(--on-na)');
-  setText('ans', 'Sin datos');
-  setText('sub', 'No se pudo cargar el aviso');
-  setText('msg', 'Revise su conexión a internet y vuelva a intentar. Mientras, escuche la radio y siga los avisos de Protección Civil.');
-  setText('chance', '—');
-  setText('when', '');
   setText('staletxt', '⚠ Sin conexión: no se pudo cargar la información.');
   $('stale').hidden = false;
   $('retry').hidden = false;
+  renderFranja();
+  renderBarra();
+  renderEdicion();
 }
 
 /* ---------- Comunidades ---------- */
@@ -380,6 +441,18 @@ const commLevel = l => Math.max(0, nivelDia() - ZONAS[l.z].drop);
 const kmTxt = d => d < 1 ? 'menos de 1 km' : (d < 10 ? d.toFixed(1).replace('.', ',') : Math.round(d)) + ' km';
 const sinParentesis = n => n.replace(/\s*\(.*\)$/, '');
 
+// La comunidad guardada trae sus datos, así su edición se ve aunque no cargue el mapa
+function leerGuardada() {
+  try {
+    const m = JSON.parse(store.get('mi_comunidad') || 'null');
+    return m && typeof m.n === 'string' && typeof m.lat === 'number' && typeof m.lon === 'number' ? m : null;
+  } catch (e) { return null; }
+}
+const completa = m => m && ZONAS[m.z] && [m.alt, m.d, m.dA].every(v => typeof v === 'number');
+function guardar(l) {
+  store.set('mi_comunidad', JSON.stringify({n: l.n, lat: l.lat, lon: l.lon, alt: l.alt, d: +l.d.toFixed(2), z: l.z, dA: +l.dA.toFixed(2), pri: l.pri || 0}));
+}
+
 function prepararGeo(geo) {
   S.geo = geo;
   S.locs = geo.locs.map(([n, lat, lon, alt, pri]) => {
@@ -390,60 +463,61 @@ function prepararGeo(geo) {
   });
   S.alamo = S.locs.find(l => l.pri === 1) || S.locs[0];
   for (const l of S.locs) l.dA = distKm(l, S.alamo);
-  try {
-    const m = JSON.parse(store.get('mi_comunidad') || 'null');
-    if (m) S.sel = S.locs.find(l => l.n === m.n && Math.abs(l.lat - m.lat) < 1e-3 && Math.abs(l.lon - m.lon) < 1e-3) || null;
-  } catch (e) { /* valor viejo o roto */ }
+  const m = S.guardada;
+  if (m) {
+    const l = S.locs.find(l => l.n === m.n && Math.abs(l.lat - m.lat) < 1e-3 && Math.abs(l.lon - m.lon) < 1e-3);
+    if (l) { S.sel = l; guardar(l); }
+  }
 }
 
-function selectLoc(l, zoom) {
+/* Cambiar de vista: elegir comunidad, la edición de su comunidad o la de todo el municipio */
+function mostrar(vista) {
+  S.vista = vista;
+  const ed = vista !== 'elegir', box = $('edic');
+  $('elegir').hidden = ed;
+  if (ed && box.hidden) {
+    box.hidden = false;
+    box.classList.remove('despliega');
+    void box.offsetWidth;  // reinicia la animación
+    box.classList.add('despliega');
+  }
+  if (!ed) box.hidden = true;
+  renderBarra();
+  if (ed) { renderEdicion(); mapa.ver(vista === 'comunidad' ? S.sel : null); }
+  else { renderChips(); document.title = '¿Se inunda Álamo? · Aviso de hoy'; }
+  $('olvidar').hidden = !S.sel;
+}
+
+function irArriba() {
+  const y = $('barra').getBoundingClientRect().top + scrollY;
+  if (scrollY > y) scrollTo({top: y, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  $('ante').focus({preventScroll: true});
+}
+
+function elegirComunidad(l, desdeMapa) {
   S.sel = l;
-  store.set('mi_comunidad', JSON.stringify({n: l.n, lat: l.lat, lon: l.lon}));
-  if (zoom) mapa.centrar(l);
-  renderComunidad();
-  renderMine();
-  mapa.dibujar();
+  guardar(l);
+  $('ubicnota').hidden = true;
+  if (desdeMapa) {  // ya está viendo la edición: solo cambia de comunidad
+    S.vista = 'comunidad';
+    renderBarra(); renderEdicion(); mapa.dibujar();
+    $('olvidar').hidden = false;
+    return;
+  }
+  mostrar('comunidad');
+  irArriba();
 }
 
 function renderChips() {
+  if (!S.geo || S.vista !== 'elegir') return;
   const top = S.locs.filter(l => l.pri).sort((a, b) => a.pri - b.pri).slice(0, 8);
-  $('chips').replaceChildren(...top.map(l => {
-    const b = el('button', {type: 'button', 'aria-pressed': String(S.sel === l), style: `--c:${LV[commLevel(l)].c}`},
-      el('i', {'aria-hidden': 'true'}), sinParentesis(l.n), el('span', {class: 'vh'}, `: ${etiqueta(commLevel(l))}`));
-    b.onclick = () => { selectLoc(l, true); $('q').value = ''; };
+  $('top8').replaceChildren(...top.map(l => {
+    const lv = commLevel(l);
+    const b = el('button', {type: 'button', 'aria-pressed': String(S.sel === l), style: `--c:${LV[lv].c}`},
+      el('i', {'aria-hidden': 'true'}), el('span', null, sinParentesis(l.n), el('span', {class: 'vh'}, S.data ? `: ${etiqueta(lv)}` : '')));
+    b.onclick = () => elegirComunidad(l);
     return b;
   }));
-}
-
-function renderCard() {
-  const c = $('ccard'), l = S.sel;
-  if (!l || !S.data) { c.hidden = true; return; }
-  const lv = commLevel(l), L = LV[lv];
-  c.style.setProperty('--c', L.c);
-  c.style.setProperty('--on', L.on);
-  c.replaceChildren(
-    el('h3', null, l.n),
-    el('div', {class: 'lvl'}, 'Hoy: ' + etiqueta(lv)),
-    el('p', null, ZONAS[l.z].txt),
-    el('div', {class: 'facts'},
-      el('div', null, el('b', null, kmTxt(l.d)), el('span', null, 'del río Pantepec')),
-      el('div', null, el('b', null, l.alt + ' m'), el('span', null, 'de altura')),
-      el('div', null, el('b', null, l === S.alamo ? '—' : kmTxt(l.dA)), el('span', null, 'del centro de Álamo'))),
-    el('p', {class: 'note'}, 'Riesgo estimado con la distancia al río y la altura. No toma en cuenta los arroyos.'));
-  c.hidden = false;
-}
-
-function renderMine() {
-  const m = $('mine');
-  if (!S.sel || !S.data) { m.hidden = true; return; }
-  setText('mine', `Su comunidad, ${S.sel.n}: ${etiqueta(commLevel(S.sel)).toLowerCase()}.`);
-  m.hidden = false;
-}
-
-function renderComunidad() {
-  if (!S.geo) return;
-  renderChips();
-  renderCard();
 }
 
 /* búsqueda sin importar acentos */
@@ -458,7 +532,7 @@ function initBusqueda() {
     res.replaceChildren(...(hits.length
       ? hits.map(l => {
         const b = el('button', {type: 'button'}, l.n, el('small', null, `A ${kmTxt(l.dA)} del centro de Álamo · ${l.alt} m de altura`));
-        b.onclick = () => { selectLoc(l, true); res.hidden = true; q.value = l.n; q.blur(); $('ccard').scrollIntoView({block: 'nearest', behavior: 'smooth'}); };
+        b.onclick = () => { res.hidden = true; q.value = ''; elegirComunidad(l); };
         return el('li', null, b);
       })
       : [el('li', {class: 'none'}, 'No encontramos esa comunidad. Pruebe con otra parte del nombre.')]));
@@ -486,10 +560,12 @@ function initUbicacion() {
       const yo = {lat: p.coords.latitude, lon: p.coords.longitude};
       let best = null, bd = 1e9;
       for (const l of S.locs) { const d = distKm(l, yo); if (d < bd) { bd = d; best = l; } }
-      if (bd > 6) { msg.textContent = `Usted está a ${kmTxt(bd)} de la comunidad más cercana del municipio. Elija su comunidad en la lista.`; return; }
-      selectLoc(best, true);
-      msg.textContent = `Elegimos ${best.n}, la comunidad más cercana a usted (a ${kmTxt(bd)}).`;
-    }, () => { msg.textContent = 'No pudimos saber su ubicación. Elija su comunidad en la lista.'; },
+      if (bd > 6) { msg.textContent = `Usted está a ${kmTxt(bd)} de la comunidad más cercana del municipio. Escriba su comunidad o tóquela en la lista.`; return; }
+      msg.hidden = true;
+      elegirComunidad(best);
+      $('ubicnota').textContent = `Elegimos ${best.n}, la comunidad más cercana a usted (a ${kmTxt(bd)}). Si no es la suya, toque "Cambiar comunidad".`;
+      $('ubicnota').hidden = false;
+    }, () => { msg.textContent = 'No pudimos saber su ubicación. Escriba su comunidad o tóquela en la lista.'; },
     {enableHighAccuracy: false, timeout: 15000, maximumAge: 600000});
   };
 }
@@ -530,7 +606,7 @@ const mapa = (() => {
   function paint() {
     if (!S.geo || !M.W) return;
     if (!M.k) { M.k = M.kDef; clamp(); }
-    const W = M.W, H = M.H, G = nivelDia(), GEO = S.geo;
+    const W = M.W, H = M.H, G = nivelDia(), GEO = S.geo, sel = S.vista === 'comunidad' ? S.sel : null;
     const line = pts => pts.map((p, i) => (i ? 'L' : 'M') + P(p[1], p[0]).map(v => v.toFixed(1)).join(',')).join('');
     const rw = Math.max(3, Math.min(9, M.k / 120));
     let s = `<rect width="${W}" height="${H}" fill="var(--land)"/>`;
@@ -540,7 +616,7 @@ const mapa = (() => {
     s += `<path class="flow" d="${line(GEO.river)}" fill="none" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="${Math.max(1.5, rw / 3).toFixed(1)}" stroke-dasharray="3 17" stroke-linecap="round"/>`;
 
     // etiquetas sin encimarse: primero las importantes, luego el resto si cabe
-    const boxes = [{x: W - 68, y: 0, w: 68, h: 176}, {x: 0, y: H - 46, w: 130, h: 46}], labels = [];
+    const boxes = [{x: W - 64, y: 0, w: 64, h: 172}, {x: 0, y: H - 46, w: 130, h: 46}], labels = [];
     const fits = b => b.x >= 2 && b.y >= 2 && b.x + b.w <= W - 2 && b.y + b.h <= H - 2 && !boxes.some(o => b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h);
     function tryLabel(x, y, txt, size, weight, color, r) {
       const w = txt.length * size * 0.56 + 4, h = size + 4;
@@ -588,19 +664,19 @@ const mapa = (() => {
       if (G >= 2) s += `<circle class="pulse" cx="${pa[0].toFixed(1)}" cy="${pa[1].toFixed(1)}" r="14" fill="none" stroke="${ca}" stroke-width="5"/>`;
       s += `<circle cx="${pa[0].toFixed(1)}" cy="${pa[1].toFixed(1)}" r="12" fill="${ca}" stroke="var(--ink)" stroke-width="3"/>`;
     }
-    if (S.sel) {
-      const p = P(S.sel.lat, S.sel.lon);
+    if (sel) {
+      const p = P(sel.lat, sel.lon);
       if (inView(p, 40)) s += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rBase + 9}" fill="none" stroke="var(--ink)" stroke-width="3.5"/><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rBase + 12}" fill="none" stroke="var(--surface)" stroke-width="2"/>`;
     }
 
     // orden de etiquetas: seleccionada, Álamo, pueblos, comunidades por población
-    if (S.sel) { const p = P(S.sel.lat, S.sel.lon); if (inView(p, 0)) tryLabel(p[0], p[1], S.sel.n, 18, 700, 'var(--ink)', rBase + 12); }
-    if (inView(pa, 0) && S.sel !== S.alamo) tryLabel(pa[0], pa[1], 'ÁLAMO', 22, 700, 'var(--ink)', 13);
+    if (sel) { const p = P(sel.lat, sel.lon); if (inView(p, 0)) tryLabel(p[0], p[1], sel.n, 18, 700, 'var(--ink)', rBase + 12); }
+    if (inView(pa, 0) && sel !== S.alamo) tryLabel(pa[0], pa[1], 'ÁLAMO', 22, 700, 'var(--ink)', 13);
     for (const [p, t] of towns) tryLabel(p[0], p[1], t, 14, 700, 'var(--muted)', 6);
     const maxLabels = zoomed < 0.6 ? 0 : zoomed < 1.5 ? 40 : 999;
     let n = 0;
     for (const [l, p] of vis) {
-      if (l === S.alamo || l === S.sel) continue;
+      if (l === S.alamo || l === sel) continue;
       if (!l.pri && zoomed < 2.5) continue;
       if (n >= maxLabels) break;
       if (tryLabel(p[0], p[1], sinParentesis(l.n), zoomed >= 3 ? 14 : 13, l.pri && l.pri <= 15 ? 700 : 400, 'var(--ink)', rBase + 1.5)) n++;
@@ -608,7 +684,7 @@ const mapa = (() => {
     s += labels.join('');
     // escala en km
     const km10 = 10 / KM * M.k * COSL, km = km10 > 160 ? 5 : km10 < 40 ? 20 : 10, px = km / KM * M.k * COSL;
-    s += `<g transform="translate(12 ${H - 16})"><rect x="-6" y="-24" width="${(px + 20).toFixed(0)}" height="34" rx="6" fill="var(--surface)" opacity=".85"/><path d="M0 0h${px.toFixed(1)}M0 -5v10M${px.toFixed(1)} -5v10" stroke="var(--ink)" stroke-width="2.5"/><text x="${(px / 2).toFixed(1)}" y="-9" font-size="12" text-anchor="middle" fill="var(--ink)">${km} km</text></g>`;
+    s += `<g transform="translate(12 ${H - 16})"><rect x="-6" y="-24" width="${(px + 20).toFixed(0)}" height="34" fill="var(--surface)" opacity=".85"/><path d="M0 0h${px.toFixed(1)}M0 -5v10M${px.toFixed(1)} -5v10" stroke="var(--ink)" stroke-width="2.5"/><text x="${(px / 2).toFixed(1)}" y="-9" font-size="12" text-anchor="middle" fill="var(--ink)">${km} km</text></g>`;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.innerHTML = fixVars(s);
   }
@@ -646,7 +722,7 @@ const mapa = (() => {
       const [x, y] = pos(e);
       let best = null, bd = 24;
       for (const l of S.locs) { const p = P(l.lat, l.lon), d = Math.hypot(p[0] - x, p[1] - y); if (d < bd) { bd = d; best = l; } }
-      if (best) selectLoc(best, false);
+      if (best) elegirComunidad(best, true);
     }
   }
   svg.addEventListener('pointerup', endPtr);
@@ -654,7 +730,7 @@ const mapa = (() => {
   svg.addEventListener('wheel', e => { e.preventDefault(); const [x, y] = pos(e); zoomAt(x, y, Math.exp(-e.deltaY * 0.0018)); }, {passive: false});
   $('zin').onclick = () => zoomAt(M.W / 2, M.H / 2, 1.6);
   $('zout').onclick = () => zoomAt(M.W / 2, M.H / 2, 1 / 1.6);
-  $('zreset').onclick = () => { Object.assign(M, INICIO); M.k = M.kDef; clamp(); dibujar(); };
+  $('zreset').onclick = () => ver(null);
   new ResizeObserver(() => {
     const k0 = M.kDef;
     medir();
@@ -662,8 +738,15 @@ const mapa = (() => {
     clamp(); dibujar();
   }).observe(box);
 
-  function centrar(l) { M.lon = l.lon; M.lat = l.lat; M.k = Math.max(M.k, M.kDef * 3.2); clamp(); }
-  return {dibujar, centrar};
+  // Centra el mapa en su comunidad, o muestra todo el municipio
+  function ver(l) {
+    medir();
+    if (!M.W) return;
+    if (l) { M.lon = l.lon; M.lat = l.lat; M.k = M.kDef * 3.2; }
+    else { Object.assign(M, INICIO); M.k = M.kDef; }
+    clamp(); dibujar();
+  }
+  return {dibujar, ver};
 })();
 
 /* Mapa con calles (OpenStreetMap + Leaflet), solo con datos reales y si la persona lo pide */
@@ -677,12 +760,12 @@ function initOSM() {
     const color = c => getComputedStyle(root).getPropertyValue(c.slice(4, -1)).trim();
     const go = () => {
       if (osm) { osm.invalidateSize(); return; }
-      const L = window.L;
-      osm = L.map(box).setView([20.99, -97.70], 11);
+      const L = window.L, c = S.vista === 'comunidad' && S.sel;
+      osm = L.map(box).setView(c ? [S.sel.lat, S.sel.lon] : [20.99, -97.70], c ? 14 : 11);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(osm);
       for (const l of S.locs) {
         L.circleMarker([l.lat, l.lon], {radius: l === S.alamo ? 9 : 5, color: '#222', weight: 1, fillOpacity: .9, fillColor: color(LV[commLevel(l)].c)})
-          .bindPopup(`<b>${esc(l.n)}</b><br>${kmTxt(l.d)} del río · ${l.alt} m`).on('click', () => selectLoc(l, false)).addTo(osm);
+          .bindPopup(`<b>${esc(l.n)}</b><br>${kmTxt(l.d)} del río · ${l.alt} m`).on('click', () => elegirComunidad(l, true)).addTo(osm);
       }
     };
     if (window.L) return go();
@@ -694,7 +777,7 @@ function initOSM() {
   };
 }
 
-/* ---------- Escuchar ---------- */
+/* ---------- Escuchar: lee lo que está en pantalla ---------- */
 function initEscuchar() {
   if (!('speechSynthesis' in window) || !window.SpeechSynthesisUtterance) return;
   const btn = $('listen'), lbl = $('listenlbl'), ss = speechSynthesis;
@@ -703,11 +786,14 @@ function initEscuchar() {
     if (ss.speaking) { ss.cancel(); lbl.textContent = 'Escuchar'; return; }
     const D = S.data;
     if (!D) return;
-    const n = D.riesgo.nivel, A = respuesta(n);
     let t = S.atrasado ? `Atención: esta información es de ${ago(D.actualizado)}. Consulte la radio y a Protección Civil. ` : '';
-    t += `¿Se va a inundar Álamo? ${A.a}. ${A.sub}. ${D.riesgo.resumen}`;
-    if (S.sel) t += ` Su comunidad, ${S.sel.n}: ${etiqueta(commLevel(S.sel))}.`;
-    t += ` Qué hacer hoy: ${todoDe(n).map(x => x[1]).join(' ')}`;
+    if (S.vista === 'elegir') t += `${S.franja} ¿Dónde vive usted? Elija su comunidad y le decimos si se puede inundar hoy y qué hacer.`;
+    else {
+      const mun = $('municipio');
+      t += `${$('ante').textContent} ${$('ans').textContent}. ${$('sub').textContent}. ${$('bajada').textContent}`;
+      if (!mun.hidden && S.vista === 'comunidad') t += ` ${mun.textContent}`;
+      t += ` Qué hacer hoy: ${[...$('todo').children].map(li => li.textContent).join(' ')}`;
+    }
     const u = new SpeechSynthesisUtterance(t);
     u.lang = 'es-MX';
     u.rate = 0.9;
@@ -722,7 +808,7 @@ function initEscuchar() {
 
 /* ---------- Tamaño de letra ---------- */
 function initLetra() {
-  const SIZES = [17, 19, 22, 25];
+  const SIZES = [17, 20, 23, 26];
   let i = SIZES.indexOf(+store.get('letra'));
   if (i < 0) i = 1;
   const apply = () => {
@@ -825,24 +911,26 @@ async function cargarGeo() {
     const r = await fetch('geo.json');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     prepararGeo(await r.json());
-    renderComunidad();
-    renderMine();
+    if (S.vista === 'elegir' && S.sel) mostrar('comunidad');  // guardada con el formato viejo
+    renderChips();
+    renderEdicion();
     mapa.dibujar();
     if (S.data) $('osmbtn').hidden = !!S.data.ejemplo;
   } catch (e) {
     $('mapbox').replaceChildren(el('p', {class: 'maperr'}, 'No se pudo cargar el mapa. Vuelva a abrir la página más tarde.'));
-    $('chips').replaceChildren();
+    $('top8').replaceChildren();
+    setText('top8txt', 'No se pudo cargar la lista de comunidades. Vuelva a abrir la página más tarde, o vea el aviso de todo el municipio.');
   }
 }
 
 /* ---------- Arranque ---------- */
 function tick() {
-  const s = new Date().toLocaleDateString('es-MX', {weekday: 'long', day: 'numeric', month: 'long', timeZone: TZ});
+  const s = new Date().toLocaleDateString('es-MX', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ});
   setText('date', s[0].toUpperCase() + s.slice(1));
   if (!S.data) return;
   const atrasado = !S.data.ejemplo && horasDesde(S.data.actualizado) > HORAS_ATRASO;
   if (atrasado !== S.atrasado) render();
-  else { setText('when', `Revisado ${ago(S.data.actualizado)} · cada 3 horas`); renderEstado(S.data); }
+  else { if (S.vista !== 'elegir') setText('when', `Revisado ${ago(S.data.actualizado)} · cada 3 horas`); renderEstado(S.data); }
 }
 
 document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
@@ -851,6 +939,15 @@ document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click'
   modoDemo(b.dataset.sc);
 }));
 $('retry').onclick = () => cargar();
+$('cambiar').onclick = () => { mostrar('elegir'); $('q').focus(); };
+$('general').onclick = () => { mostrar('municipio'); irArriba(); };
+$('municipio').addEventListener('click', e => { if (e.target.closest('[data-elegir]')) { mostrar('elegir'); $('q').focus(); } });
+$('olvidar').onclick = () => {
+  store.del('mi_comunidad');
+  S.sel = S.guardada = null;
+  mostrar('elegir');
+  scrollTo({top: 0});
+};
 $('tech').addEventListener('toggle', () => {
   if (!$('tech').open) return;
   if (!document.querySelector('link[data-mono]')) {
@@ -866,12 +963,16 @@ document.addEventListener('visibilitychange', () => {
 setInterval(() => { if (document.visibilityState === 'visible' && !S.demo) cargar(); }, RECARGA_MS);
 setInterval(tick, 60e3);
 
+// Si ya eligió su comunidad antes, la página abre directo en su edición
+S.guardada = leerGuardada();
+if (completa(S.guardada)) S.sel = S.guardada;
 initLetra();
 initEscuchar();
 initBusqueda();
 initUbicacion();
 initOSM();
 tick();
+mostrar(S.sel ? 'comunidad' : 'elegir');
 cargar();
 cargarGeo();
 })();

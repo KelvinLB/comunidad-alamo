@@ -1,6 +1,9 @@
 // Prueba de la página en un navegador (se corre en CI): node tests/pagina.mjs http://localhost:8000/
-// Abre ?demo=alerta a 390 px, revisa que no haya errores en consola ni scroll horizontal,
-// que diga "SÍ · Peligro muy alto" y que el mapa tenga las 460 comunidades. Guarda una captura.
+// Abre ?demo=alerta a 390 y 360 px y revisa, sin errores en consola ni scroll horizontal:
+// 1. la portada pide elegir comunidad y la franja muestra el aviso del municipio;
+// 2. el aviso de todo el municipio dice "SÍ · Peligro muy alto" y el mapa tiene las 460 comunidades;
+// 3. al buscar y elegir una comunidad lejos del río se despliega su edición;
+// 4. al volver a abrir la página, abre directo en esa comunidad. Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 
@@ -17,23 +20,52 @@ for (const ancho of [390, 360]) {
   page.on('pageerror', e => errores.push(String(e)));
   // Las fuentes de Google no son necesarias para la prueba y pueden fallar sin red
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  const falla = t => fallas.push(`${ancho}px: ${t}`);
+  const scroll = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const texto = id => page.evaluate(i => document.getElementById(i).textContent.trim(), id);
+  const vista = () => page.evaluate(() => ({ elegir: !document.getElementById('elegir').hidden, edicion: !document.getElementById('edic').hidden }));
+
   await page.goto(base + '?demo=alerta', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(1500);
-  const r = await page.evaluate(() => ({
-    scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    ans: document.getElementById('ans').textContent.trim().toUpperCase(),
-    sub: document.getElementById('sub').textContent.trim(),
-    puntos: [...document.querySelectorAll('#msvg circle')].filter(c => !c.classList.contains('pulse')).length,
-    demo: !document.getElementById('demo').hidden,
-  }));
-  const propios = errores.filter(e => !/fonts\.g|ERR_FAILED/.test(e));
-  if (propios.length) fallas.push(`${ancho}px: errores en consola: ${propios.join(' | ')}`);
-  if (r.scroll > 0) fallas.push(`${ancho}px: hay scroll horizontal de ${r.scroll}px`);
-  if (r.ans !== 'SÍ' || r.sub !== 'Peligro muy alto') fallas.push(`${ancho}px: la respuesta es "${r.ans} · ${r.sub}"`);
-  if (r.puntos < 460) fallas.push(`${ancho}px: el mapa tiene ${r.puntos} puntos`);
-  if (!r.demo) fallas.push(`${ancho}px: no aparece la franja de datos de ejemplo`);
+  await page.waitForTimeout(800);
+  // 1. Portada
+  let v = await vista();
+  if (!v.elegir || v.edicion) falla('la portada no pide elegir comunidad');
+  if (!/alerta/i.test(await texto('edicion'))) falla(`la franja del municipio dice "${await texto('edicion')}"`);
+  if (await page.locator('#top8 button').count() !== 8) falla('no aparecen las 8 comunidades más pobladas');
+  if (await page.isHidden('#demo')) falla('no aparece la franja de datos de ejemplo');
+  if (await scroll() > 0) falla(`portada con scroll horizontal de ${await scroll()}px`);
+  await page.screenshot({ path: `capturas/portada-${ancho}.png`, fullPage: true });
+
+  // 2. Aviso de todo el municipio
+  await page.click('#general');
+  await page.waitForTimeout(1200);
+  const ans = (await texto('ans')).toUpperCase(), sub = await texto('sub');
+  if (ans !== 'SÍ' || sub !== 'Peligro muy alto') falla(`el municipio dice "${ans} · ${sub}"`);
+  const puntos = await page.evaluate(() => [...document.querySelectorAll('#msvg circle')].filter(c => !c.classList.contains('pulse')).length);
+  if (puntos < 460) falla(`el mapa tiene ${puntos} puntos`);
+  if (await scroll() > 0) falla(`municipio con scroll horizontal de ${await scroll()}px`);
   await page.screenshot({ path: `capturas/alerta-${ancho}.png`, fullPage: true });
-  console.log(`${ancho}px`, JSON.stringify(r));
+
+  // 3. Buscar y elegir una comunidad lejos del río
+  await page.click('#cambiar');
+  await page.fill('#q', 'canas');
+  await page.locator('#results button').first().click();
+  await page.waitForTimeout(800);
+  const ante = await texto('ante'), ans2 = await texto('ans');
+  if (!/Cañas/.test(ante) || ans2 !== 'Puede ser') falla(`la comunidad dice "${ante} ${ans2}"`);
+  if (await page.isHidden('#municipio')) falla('no aparece el recuadro del resto del municipio');
+  if (await scroll() > 0) falla(`comunidad con scroll horizontal de ${await scroll()}px`);
+  await page.screenshot({ path: `capturas/comunidad-${ancho}.png`, fullPage: true });
+
+  // 4. Al volver, abre directo en su comunidad
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(800);
+  v = await vista();
+  if (v.elegir || !v.edicion || !/Cañas/.test(await texto('ante'))) falla('al volver a abrir no recuerda la comunidad');
+
+  const propios = errores.filter(e => !/fonts\.g|ERR_FAILED/.test(e));
+  if (propios.length) falla(`errores en consola: ${propios.join(' | ')}`);
+  console.log(`${ancho}px`, JSON.stringify({ ans, sub, puntos, ante, ans2 }));
   await page.close();
 }
 

@@ -2,6 +2,7 @@
 
 Página web que responde, con solo abrirla, si hay peligro de inundación por el río Pantepec en **Álamo Temapache, Veracruz**, y en cada una de las 460 comunidades del municipio.
 
+- Tiene forma de **periódico**: primero pregunta "¿Dónde vive usted?" y, al elegir la comunidad, muestra su propia edición (respuesta, qué hacer, el parte del río y el mapa). Arriba siempre se ve el aviso de todo el municipio.
 - Se revisa **sola cada 3 horas**, consultando fuentes científicas y oficiales: el pronóstico del río (Copernicus GloFAS), la lluvia en Álamo y en la sierra (Open-Meteo), el pronóstico oficial (SMN · Conagua) y los huracanes (Centro Nacional de Huracanes).
 - Funciona en celulares sencillos y con internet lento. Pesa menos de 100 KB.
 - Cuesta **$0 al mes**: GitHub hace las revisiones y Vercel publica la página.
