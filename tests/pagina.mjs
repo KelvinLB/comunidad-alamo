@@ -4,7 +4,8 @@
 // 2. el aviso de todo el municipio dice "SÍ · Peligro muy alto" y el mapa tiene las 460 comunidades;
 // 3. al buscar y elegir una comunidad lejos del río se despliega su edición;
 // 4. al volver a abrir la página, abre directo en esa comunidad;
-// 5. el botón de WhatsApp arma el mensaje y su liga abre esa comunidad sin guardarla. Guarda capturas.
+// 5. el botón de WhatsApp arma el mensaje y su liga abre esa comunidad sin guardarla;
+// 6. se puede poner en el teléfono (PWA) y abre sin señal con el aviso "Sin conexión". Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 
@@ -83,6 +84,30 @@ for (const ancho of [390, 360]) {
   if (propios.length) falla(`errores en consola: ${propios.join(' | ')}`);
   console.log(`${ancho}px`, JSON.stringify({ ans, sub, puntos, ante, ans2 }));
   await page.close();
+}
+
+// 6. Se puede poner en el teléfono y abre sin señal, con el aviso de "Sin conexión"
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'es-MX', userAgent: 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36' });
+  const page = await ctx.newPage();
+  const errores = [];
+  page.on('pageerror', e => errores.push(String(e)));
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await page.goto(base, { waitUntil: 'networkidle' });
+  const manifiesto = await page.evaluate(async () => (await (await fetch(document.querySelector('link[rel=manifest]').href)).json()).icons.length);
+  if (manifiesto < 3) fallas.push('el manifiesto no tiene los íconos');
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  if (await page.isHidden('#instalar')) fallas.push('no aparece el recuadro para poner la página en el teléfono');
+  await page.waitForTimeout(800);
+  await ctx.setOffline(true);
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(1200);
+  const sin = await page.evaluate(() => ({ franja: document.getElementById('edicion').textContent, aviso: document.getElementById('stale').hidden ? '' : document.getElementById('staletxt').textContent }));
+  if (!/^⚠ (Sin conexión|Datos atrasados)/.test(sin.aviso) || /Cargando/.test(sin.franja)) fallas.push(`sin señal no abre bien: ${JSON.stringify(sin)}`);
+  if (errores.length) fallas.push(`sin señal, errores: ${errores.join(' | ')}`);
+  console.log('sin señal', JSON.stringify(sin));
+  await page.screenshot({ path: 'capturas/sin-senal.png' });
+  await ctx.close();
 }
 
 await browser.close();

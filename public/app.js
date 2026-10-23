@@ -857,6 +857,58 @@ function initEscuchar() {
   });
 }
 
+/* ---------- Poner la página en el teléfono (PWA) ---------- */
+// Guarda la página para abrir sin señal. data.json no se guarda ahí (ver sw.js).
+function initSinSenal() {
+  if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* sin guardado: la página funciona igual */ }));
+}
+
+const IC_COMPARTIR_IOS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Compartir" role="img"><path d="M8 9H6v12h12V9h-2M12 3v12M8.5 6.5L12 3l3.5 3.5"/></svg>';
+const PASOS_IPHONE = [
+  `Abra esta página en <b>Safari</b> y toque el botón Compartir ${IC_COMPARTIR_IOS} (abajo o arriba de la pantalla).`,
+  'Baje y toque <b>"Agregar a inicio"</b>.',
+  'Toque <b>"Agregar"</b>. Listo: el ícono queda junto a sus otras aplicaciones.'];
+const PASOS_ANDROID = [
+  'Toque el menú <b>⋮</b> (los tres puntitos, arriba a la derecha).',
+  'Toque <b>"Agregar a la pantalla principal"</b> o <b>"Instalar aplicación"</b>.',
+  'Toque <b>"Agregar"</b> o <b>"Instalar"</b>. Listo: el ícono queda en su pantalla.'];
+const DIAS_SIN_MOSTRAR = 30;
+
+function initInstalar() {
+  const box = $('instalar'), btn = $('instalarbtn'), pasos = $('pasos');
+  const instalada = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const ocultoHasta = +store.get('instalar_no') || 0;
+  if (instalada || Date.now() < ocultoHasta || !location.protocol.startsWith('http')) return;
+  const ua = navigator.userAgent;
+  const iphone = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const celular = iphone || /Android|Mobi/.test(ua);
+  setHTML(pasos, (iphone ? PASOS_IPHONE : PASOS_ANDROID).map(t => `<li><span>${t}</span></li>`).join(''));
+  box.hidden = !celular;  // en computadora solo se ofrece si el navegador lo permite (abajo)
+  let pedido = null;
+  addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    pedido = e;
+    btn.hidden = false;
+    pasos.hidden = true;
+    box.hidden = false;
+  });
+  btn.onclick = async () => {
+    if (!pedido) return;
+    pedido.prompt();
+    const r = await pedido.userChoice.catch(() => ({}));
+    pedido = null;
+    btn.hidden = true;
+    if (r.outcome === 'accepted') box.hidden = true;
+    else pasos.hidden = false;  // por si quiere hacerlo después a mano
+  };
+  addEventListener('appinstalled', () => { box.hidden = true; });
+  $('instalarno').onclick = () => {
+    store.set('instalar_no', String(Date.now() + DIAS_SIN_MOSTRAR * 864e5));
+    box.hidden = true;
+  };
+}
+
 /* ---------- Tamaño de letra ---------- */
 function initLetra() {
   const SIZES = [17, 20, 23, 26];
@@ -1031,6 +1083,8 @@ initEscuchar();
 initBusqueda();
 initUbicacion();
 initOSM();
+initSinSenal();
+initInstalar();
 tick();
 mostrar(S.sel || S.pedida ? 'comunidad' : 'elegir');
 cargar();

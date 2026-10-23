@@ -5,6 +5,8 @@ Página web que responde, con solo abrirla, si hay peligro de inundación por el
 - Tiene forma de **periódico**: primero pregunta "¿Dónde vive usted?" y, al elegir la comunidad, muestra su propia edición (respuesta, qué hacer, el parte del río y el mapa). Arriba siempre se ve el aviso de todo el municipio.
 - Se revisa **sola cada 3 horas**, consultando fuentes científicas y oficiales: el pronóstico del río (Copernicus GloFAS), la lluvia en Álamo y en la sierra (Open-Meteo), el pronóstico oficial (SMN · Conagua) y los huracanes (Centro Nacional de Huracanes).
 - Funciona en celulares sencillos y con internet lento. Pesa menos de 100 KB.
+- Se puede **poner como ícono en el teléfono** sin descargar nada de la tienda (es una "PWA"). Así abre rápido y, si no hay señal, muestra la última revisión guardada con el aviso "Sin conexión".
+- Trae un botón para **compartir el aviso por WhatsApp**.
 - Cuesta **$0 al mes**: GitHub hace las revisiones y Vercel publica la página.
 - **No es una página oficial** y no reemplaza los avisos de Protección Civil.
 
@@ -29,6 +31,17 @@ Necesita una cuenta de GitHub y una de Vercel (las dos son gratis).
 3. **Conecte Vercel.** En [vercel.com](https://vercel.com), elija *Add New → Project*, escoja el repositorio y oprima *Deploy*. No cambie nada: el archivo `vercel.json` ya le dice a Vercel qué publicar.
 4. **Pruebe el robot.** En GitHub, vaya a la pestaña *Actions → Actualizar datos → Run workflow*. En un par de minutos debe aparecer un cambio nuevo llamado `datos: …` y, poco después, la página dirá "Revisado hace unos minutos".
 5. **Ponga la dirección de la imagen para WhatsApp.** Cuando Vercel le dé la dirección de la página (por ejemplo, `https://alerta-pantepec.vercel.app`), abra `public/index.html` y cambie `content="og.png"` por `content="https://alerta-pantepec.vercel.app/og.png"`.
+
+---
+
+## Cómo poner la página en el teléfono
+
+En la página aparece un recuadro **"Tenga esta página en su teléfono"**:
+
+- **Android (Chrome):** toque **"Poner en mi teléfono"** y luego **"Instalar"**. Si no aparece el botón: menú **⋮** → **"Agregar a la pantalla principal"**.
+- **iPhone:** abra la página en **Safari**, toque **Compartir** (el cuadrito con flecha) → **"Agregar a inicio"** → **"Agregar"**.
+
+Funciona solo cuando la página ya está publicada (con `https://`); en `localhost` se puede probar en la computadora.
 
 ---
 
@@ -93,6 +106,8 @@ Qué hacer:
 | Comunidades, río y costa | `python scripts/generar_geo.py` → `public/geo.json` |
 | Crecidas de 2, 5 y 20 años | `python scripts/calcular_umbrales.py` → `public/umbrales.json` |
 | Revisión con octubre de 2025 | `python scripts/calibrar.py` |
+| Abrir sin señal (PWA) | `public/sw.js` y `public/manifest.webmanifest`. Si cambia `app.js`, suba el número de `app.js?v=` en `index.html` y en la lista `BASE` de `sw.js` |
+| Íconos del teléfono | `node scripts/iconos.mjs` → `public/icono-*.png` |
 | Lo que falta verificar | `PENDIENTES.md` |
 
 El bot solo usa la biblioteca estándar de Python 3.12: no hay que instalar nada.

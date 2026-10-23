@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>¿Se inunda Álamo? · Aviso de hoy</title>
 <meta name="description" content="Respuesta diaria y sencilla: ¿hay peligro de inundación del río Pantepec en Álamo Temapache y sus comunidades? Se revisa cada 3 horas.">
-<meta name="theme-color" content="#F6F1E6">
+<meta name="theme-color" content="#F6F1E6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16140F" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_MX">
 <meta property="og:title" content="¿Se inunda Álamo? · Hoy: vea la respuesta">
@@ -15,6 +16,9 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Alerta Pantepec">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
@@ -221,6 +225,17 @@ details.tech h3{font-family:var(--f-body);font-weight:600;font-size:1rem}
 .tablewrap{overflow-x:auto}
 .tablewrap td{vertical-align:top}
 .dot{font-weight:600}
+.instalar{margin:22px 4px 18px;border:2px dashed var(--ink);padding:16px 14px 10px;position:relative;background:var(--paper2);display:flex;flex-direction:column;gap:10px}
+.instalar::before{content:"✂";position:absolute;top:-15px;left:12px;background:var(--paper);padding:0 4px;font-size:1.1rem}
+.instalar h2{font-weight:900;font-size:1.5rem}
+.instalar .btn{min-height:58px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);font-family:var(--f-head);font-weight:900;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 16px}
+.instalar .btn svg{width:26px;height:26px;flex:none}
+.pasos{margin:0;padding:0;list-style:none;counter-reset:p;display:flex;flex-direction:column;gap:8px}
+.pasos li{counter-increment:p;display:grid;grid-template-columns:1.8rem minmax(0,1fr);gap:6px;align-items:start;font-size:1.02rem;line-height:1.35}
+.pasos li::before{content:counter(p);font-family:var(--f-head);font-weight:900;font-size:1.7rem;line-height:1}
+.pasos svg{width:22px;height:22px;vertical-align:-4px}
+.pasos b{font-weight:600}
+.instalar .linkbtn{align-self:flex-start;font-size:.9rem}
 footer{margin-top:10px;border-top:4px double var(--rule);padding-top:10px;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
 
@@ -372,6 +387,15 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
       </section>
     </div>
 
+    <!-- Instalar como ícono en el teléfono (PWA), sin tienda de aplicaciones -->
+    <aside class="instalar" id="instalar" aria-labelledby="h-inst" hidden>
+      <h2 id="h-inst">Tenga esta página en su teléfono</h2>
+      <p>Queda como un ícono en su pantalla, sin descargar nada de la tienda. Abre rápido y, si no hay señal, muestra la última revisión guardada.</p>
+      <button type="button" class="btn" id="instalarbtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M12 7v7M9 11l3 3 3-3M10 18h4"/></svg>Poner en mi teléfono</button>
+      <ol class="pasos" id="pasos"></ol>
+      <button type="button" class="linkbtn" id="instalarno">Ahora no</button>
+    </aside>
+
     <details class="tech" id="tech">
       <summary>Datos técnicos y fuentes</summary>
       <div class="in">
@@ -407,6 +431,6 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
       mapa con calles © <a href="https://www.openstreetmap.org/copyright" rel="noopener">colaboradores de OpenStreetMap</a>.</p>
   </footer>
 </div>
-<script src="app.js" defer></script>
+<script src="app.js?v=2" defer></script>
 </body>
 </html>

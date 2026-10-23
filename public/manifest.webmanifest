@@ -1,0 +1,19 @@
+{
+  "name": "Alerta Pantepec · Álamo Temapache",
+  "short_name": "Alerta Pantepec",
+  "description": "¿Hay peligro de inundación del río Pantepec en su comunidad? Se revisa cada 3 horas. Proyecto comunitario, no oficial.",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F1E6",
+  "theme_color": "#F6F1E6",
+  "categories": ["weather", "news"],
+  "icons": [
+    { "src": "icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
