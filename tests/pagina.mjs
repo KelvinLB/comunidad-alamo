@@ -225,6 +225,8 @@ for (const [nom, ua, espera] of [
   const dias = await page.evaluate(() => [...document.querySelectorAll('#parte .pd-fila .d')].map(td => td.innerText.replace(/\s+/g, ' ').trim()));
   if (dias.length !== 6 || dias[0] !== `Hoy ${fechaMx()}` || dias.some(d => d.endsWith(fechaMx(Date.now() - DIA)))) fallas.push(`con datos de ayer, el parte dice: ${dias.join(' | ')}`);
   console.log('datos de ayer', JSON.stringify(dias));
+  // la página vuelve a pedir data.json sola (cada 15 min); se sueltan esas peticiones antes de cerrar
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
   await page.close();
 }
 
@@ -254,6 +256,8 @@ for (const [nom, ua, espera] of [
   const sinDato = await grande();
   if (antes !== '27° Despejado' || despues !== '23° Nublado' || sinDato !== 'oculto') fallas.push(`la temperatura de ahora no cambia con la hora: ${antes} → ${despues} → ${sinDato}`);
   console.log('clima', JSON.stringify([antes, despues, sinDato]));
+  // la página vuelve a pedir data.json sola (cada 15 min); se sueltan esas peticiones antes de cerrar
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
   await page.close();
 }
 
