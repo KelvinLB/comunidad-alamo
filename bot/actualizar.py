@@ -91,7 +91,7 @@ def ejecutar(ruta_datos=RUTA_DATOS, ruta_umbrales=RUTA_UMBRALES, ruta_avisos=RUT
     leido, ok = {}, {}
     lectores = {
         "glofas": lambda crudo: F.leer_glofas(crudo, hoy),
-        "lluvia": F.leer_lluvia,
+        "lluvia": lambda crudo: (F.leer_lluvia(crudo), F.leer_horas(crudo)),
         "smn": lambda crudo: F.leer_smn(crudo, ahora),
         "nhc": lambda crudo: F.leer_nhc(crudo, ahora),
     }
@@ -122,7 +122,7 @@ def ejecutar(ruta_datos=RUTA_DATOS, ruta_umbrales=RUTA_UMBRALES, ruta_avisos=RUT
         return previo[seccion] if previo else defecto
 
     serie = leido["glofas"] if ok.get("glofas") else previa("rio", {}).get("serie", [])
-    lluvia = leido["lluvia"] if ok.get("lluvia") else previa("lluvia", [])
+    lluvia, horas = leido["lluvia"] if ok.get("lluvia") else (previa("lluvia", []), (previo or {}).get("horas", []))
 
     avisos_previos = previa("avisos", [])
     avisos = []
@@ -156,6 +156,7 @@ def ejecutar(ruta_datos=RUTA_DATOS, ruta_umbrales=RUTA_UMBRALES, ruta_avisos=RUT
         "riesgo": riesgo.calcular(serie, umbrales, lluvia, avisos, hoy),
         "rio": {"umbrales": umbrales, "serie": serie},
         "lluvia": lluvia,
+        "horas": horas,
         "avisos": avisos,
         "fuentes": lista_fuentes,
     }

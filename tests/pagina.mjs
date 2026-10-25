@@ -9,7 +9,8 @@
 // 6. se puede poner en el teléfono (PWA) y abre sin señal con el aviso "Sin conexión";
 // 7. el botón "Instalar en mi teléfono" siempre se ve y su guía cambia en iPhone, Android y dentro de Facebook;
 // 8. el parte de 7 días trae la fecha y la temperatura de cada día, cada día se abre al tocarlo y,
-//    con datos de ayer, ayer no sale como "Hoy". Guarda capturas.
+//    con datos de ayer, ayer no sale como "Hoy";
+// 9. la temperatura de ahora sale en grande y cambia sola al pasar la hora. Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 
@@ -72,8 +73,9 @@ for (const ancho of [390, 360]) {
   await page.locator('#parte .pd-fila').nth(3).screenshot({ path: `capturas/parte-dia-${ancho}.png` });
   await page.locator('#parte .pd-fila').nth(3).click();
   if ((await abiertos()).some(Boolean)) falla('al tocar otra vez el día abierto no se cierra');
-  // la temperatura de hoy en la cabecera
-  if (await texto('clima') !== 'Hoy en Álamo: máxima 27°, mínima 23°') falla(`la cabecera dice "${await texto('clima')}"`);
+  // la temperatura de ahora, en grande, con las próximas horas
+  const clima = await page.evaluate(() => document.getElementById('clima').hidden ? '' : document.getElementById('clima').innerText.replace(/\s+/g, ' '));
+  if (!/^Ahora en Álamo \d+° Tormenta Máxima 27° Mínima 23°( \d{1,2} [ap]\.m\. \d+°){5} Temperatura estimada/i.test(clima)) falla(`el recuadro del clima dice "${clima}"`);
   await page.screenshot({ path: `capturas/alerta-${ancho}.png`, fullPage: true });
 
   // 3. Buscar y elegir una comunidad lejos del río
@@ -219,6 +221,32 @@ for (const [nom, ua, espera] of [
   const dias = await page.evaluate(() => [...document.querySelectorAll('#parte .pd-fila .d')].map(td => td.innerText.replace(/\s+/g, ' ').trim()));
   if (dias.length !== 6 || dias[0] !== `Hoy ${fechaMx()}` || dias.some(d => d.endsWith(fechaMx(Date.now() - DIA)))) fallas.push(`con datos de ayer, el parte dice: ${dias.join(' | ')}`);
   console.log('datos de ayer', JSON.stringify(dias));
+  await page.close();
+}
+
+// 9. La temperatura de ahora cambia sola al pasar la hora, sin recargar (y no se inventa si los datos no llegan)
+{
+  const page = await browser.newPage({ viewport: { width: 360, height: 844 }, locale: 'es-MX' });
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  const t0 = Math.floor(Date.now() / 36e5) * 36e5 + 10 * 60e3;  // las tantas y 10
+  const horaMx = t => `${isoMx(t)}T${new Date(t).toLocaleString('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: TZ })}:00`;
+  await page.route(/data\.json/, async r => {
+    const d = await (await r.fetch()).json();
+    d.ejemplo = false;
+    d.actualizado = new Date(t0 - 5 * 60e3).toISOString();
+    d.horas = [[0, 27, 0], [1, 23, 3], [2, 21, 61]].map(([o, t, cod]) => ({ hora: horaMx(t0 + o * 36e5), t, cod, dia: true }));
+    await r.fulfill({ json: d });
+  });
+  await page.clock.install({ time: t0 });
+  await page.goto(base, { waitUntil: 'networkidle' });
+  const grande = () => page.evaluate(() => document.getElementById('clima').hidden ? 'oculto' : document.querySelector('.cl-t b').textContent + ' ' + document.querySelector('.cl-txt b').textContent);
+  const antes = await grande();
+  await page.clock.runFor(60 * 60e3);
+  const despues = await grande();
+  await page.clock.runFor(3 * 60 * 60e3);
+  const sinDato = await grande();
+  if (antes !== '27° Despejado' || despues !== '23° Nublado' || sinDato !== 'oculto') fallas.push(`la temperatura de ahora no cambia con la hora: ${antes} → ${despues} → ${sinDato}`);
+  console.log('clima', JSON.stringify([antes, despues, sinDato]));
   await page.close();
 }
 

@@ -14,6 +14,7 @@ PUNTO_RIO = (20.92, -97.68)
 
 # Lluvia: el pueblo y la cuenca alta (Sierra Norte de Puebla e Hidalgo).
 PUNTO_LOCAL = ("Álamo", 20.917, -97.675)
+HORAS_CLIMA = 36  # horas de temperatura hacia adelante: alcanza aunque el bot se atrase muchas horas
 PUNTOS_CUENCA = [
     ("Sierra Norte de Puebla (Pantepec)", 20.51, -97.89),
     ("Francisco Z. Mena", 20.73, -97.83),

@@ -108,7 +108,7 @@ def leer_glofas(crudo, hoy):
 
 LLUVIA = {
     "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
-    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo",
+    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo hora por hora",
     "url": "https://open-meteo.com/",
 }
 
@@ -119,7 +119,9 @@ def url_lluvia():
         "latitude": ",".join(str(p[1]) for p in pts),
         "longitude": ",".join(str(p[2]) for p in pts),
         "daily": "precipitation_sum,precipitation_probability_max,temperature_2m_max,temperature_2m_min",
-        "forecast_days": 7, "timezone": C.ZONA_HORARIA,
+        # hora por hora: la página toma la de la hora actual, así cambia aunque el bot se atrase
+        "hourly": "temperature_2m,weather_code,is_day",
+        "forecast_days": 7, "past_hours": 1, "forecast_hours": C.HORAS_CLIMA, "timezone": C.ZONA_HORARIA,
     }
     return "https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode(q, safe=",/")
 
@@ -154,6 +156,25 @@ def leer_lluvia(crudo):
             "tmin": _grados(local, "temperature_2m_min", i),
         })
     return dias
+
+
+def leer_horas(crudo):
+    """Temperatura, cielo (código WMO) y si es de día en Álamo, hora por hora (hora local de Álamo).
+    Las horas sin temperatura válida se saltan; si Open-Meteo no mandó nada, la lista queda vacía."""
+    h = (crudo[0].get("hourly") or {}) if isinstance(crudo, list) and crudo else {}
+    horas = []
+    for i, hora in enumerate(h.get("time") or []):
+        t = _grados(h, "temperature_2m", i)
+        if t is None:
+            continue
+        cod, dia = (h.get("weather_code") or [])[i:i + 1], (h.get("is_day") or [])[i:i + 1]
+        horas.append({
+            "hora": hora,
+            "t": t,
+            "cod": int(cod[0]) if cod and isinstance(cod[0], (int, float)) else None,
+            "dia": bool(dia[0]) if dia else 6 <= int(hora[11:13]) < 19,
+        })
+    return horas
 
 
 # --- Pronóstico oficial: SMN, Conagua -----------------------------------

@@ -3,7 +3,7 @@
 Página web que responde, con solo abrirla, si hay peligro de inundación por el río Pantepec en **Álamo Temapache, Veracruz**, y en cada una de las 460 comunidades del municipio.
 
 - Tiene forma de **periódico**: primero pregunta "¿Dónde vive usted?" y, al elegir la comunidad, muestra su propia edición (respuesta, qué hacer, el parte del río y el mapa). Arriba siempre se ve el aviso de todo el municipio.
-- **El parte de 7 días** trae el día con su fecha ("Martes · 27 de octubre"), el dibujo de la lluvia con su probabilidad, cómo estará el río y la temperatura máxima y mínima. Cada día se toca para ver el detalle. La temperatura de hoy sale también en la cabecera.
+- **El parte de 7 días** trae el día con su fecha ("Martes · 27 de octubre"), el dibujo de la lluvia con su probabilidad, cómo estará el río y la temperatura máxima y mínima. Cada día se toca para ver el detalle. Arriba, en grande, está **la temperatura de ahora** en Álamo, con el cielo (despejado, nublado, lluvia…) y las próximas horas. El bot guarda la temperatura hora por hora y la página toma la de la hora actual, así cambia sola durante el día aunque el bot se atrase.
 - Se revisa **sola cada hora**, consultando fuentes científicas y oficiales: el pronóstico del río (Copernicus GloFAS), la lluvia en Álamo y en la sierra y la temperatura (Open-Meteo), el pronóstico oficial (SMN · Conagua) y los huracanes (Centro Nacional de Huracanes).
 - Funciona en celulares sencillos y con internet lento. Pesa menos de 100 KB.
 - Se puede **poner como ícono en el teléfono** sin descargar nada de la tienda (es una "PWA"). Así abre rápido y, si no hay señal, muestra la última revisión guardada con el aviso "Sin conexión".

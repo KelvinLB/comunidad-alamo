@@ -69,7 +69,8 @@ const S = {
   guardada: null,    // lo que había en este teléfono
   pedida: null,      // comunidad de una liga compartida (?c=lat,lon); se ve pero no se guarda
   vista: 'elegir',   // 'elegir' | 'comunidad' | 'municipio'
-  diaAbierto: undefined,  // fecha del día abierto en el parte; undefined = hoy, null = todos cerrados
+  diaAbierto: undefined,
+  horaClima: null,   // hora que muestra el recuadro del clima  // fecha del día abierto en el parte; undefined = hoy, null = todos cerrados
 };
 const nivelDia = () => S.data ? S.data.riesgo.nivel : 0;
 const apagado = n => S.atrasado && n === 0;
@@ -305,12 +306,55 @@ function abrirDia(b) {
   });
 }
 
-// Temperatura de hoy en la cabecera, como el clima en la esquina de un periódico
+/* ---------- El clima de ahora: la temperatura de esta hora, en grande ---------- */
+// El bot guarda la temperatura hora por hora; la página toma la de la hora actual,
+// así a las 8 muestra la de las 8 aunque el bot haya corrido a las 4.
+const hh = t => new Date(t).toLocaleString('en-GB', {hour: '2-digit', hourCycle: 'h23', timeZone: TZ});
+const horaDe = t => `${fechaHoy(t)}T${hh(t)}:00`;  // como la escribe Open-Meteo: "2026-10-25T16:00"
+const horaAhora = () => horaDe(Date.now());
+function horaTxtCorta(hora) {  // "2026-10-25T18:00" → "6 p.m."
+  const h = Number(hora.slice(11, 13));
+  return `${h % 12 || 12} ${h < 12 ? 'a.m.' : 'p.m.'}`;
+}
+// Código del cielo de Open-Meteo (WMO) → palabra y dibujo
+function cielo(cod) {
+  if (cod == null) return null;
+  if (cod === 0) return {w: 'Despejado', k: 'sol'};
+  if (cod <= 2) return {w: 'Poco nublado', k: 'nubes'};
+  if (cod === 3) return {w: 'Nublado', k: 'nube'};
+  if (cod === 45 || cod === 48) return {w: 'Neblina', k: 'nube'};
+  if (cod >= 51 && cod <= 57) return {w: 'Llovizna', k: 'lluvia'};
+  if ((cod >= 61 && cod <= 67) || (cod >= 80 && cod <= 82)) return {w: 'Lluvia', k: 'lluvia'};
+  if (cod >= 95) return {w: 'Tormenta', k: 'tormenta'};
+  return null;  // nieve y otros que no se dan en Álamo
+}
+const SOL_G = '<circle cx="28" cy="28" r="10" fill="#F2B705"/><g stroke="#F2B705" stroke-width="3.5" stroke-linecap="round"><path d="M28 6v6M28 44v6M6 28h6M44 28h6M12.4 12.4l4.2 4.2M39.4 39.4l4.2 4.2M12.4 43.6l4.2-4.2M39.4 16.6l4.2-4.2"/></g>';
+const LUNA_G = '<path d="M34 8a18 18 0 1 0 14 26A14 14 0 0 1 34 8z" fill="#E9DCA8" stroke="#8A7A4A" stroke-width="1.5"/>';
+const NUBE_G = '<path d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="#9AA9B6"/>';
+function iconoCielo(c, dia) {
+  const astro = dia ? SOL_G : LUNA_G, svg = g => `<svg viewBox="0 0 56 56" aria-hidden="true">${g}</svg>`;
+  if (!c || c.k === 'sol') return svg(astro);
+  if (c.k === 'nubes') return svg(`<g transform="translate(18 -4) scale(.62)">${astro}</g>${NUBE_G}`);
+  if (c.k === 'nube') return svg(NUBE_G);
+  return rainIcon(c.k === 'tormenta' ? 4 : 2);
+}
+
 function renderClima(D) {
-  const h = (D.lluvia || []).find(x => x.fecha === fechaHoy());
-  const ok = h && h.tmax != null && h.tmin != null;
-  $('clima').hidden = !ok;
-  if (ok) setText('clima', `Hoy en Álamo: máxima ${h.tmax}°, mínima ${h.tmin}°`);
+  const H = D.horas || [], k = H.findIndex(h => h.hora === horaAhora()), box = $('clima');
+  S.horaClima = horaAhora();
+  box.hidden = k < 0;  // si los datos ya no llegan a esta hora, no se inventa
+  if (k < 0) return;
+  const h = H[k], c = cielo(h.cod), hoy = (D.lluvia || []).find(x => x.fecha === fechaHoy());
+  const maxmin = hoy && hoy.tmax != null && hoy.tmin != null ? `<span>Máxima ${hoy.tmax}°</span><span>Mínima ${hoy.tmin}°</span>` : '';
+  const prox = H.slice(k + 2).filter((_, i) => i % 2 === 0).slice(0, 5);  // cada 2 horas
+  box.innerHTML = fixVars(`<div class="cl-ahora">
+      <span class="cl-eti">Ahora en Álamo</span>
+      <span class="cl-ico">${iconoCielo(c, h.dia)}</span>
+      <div class="cl-t"><b>${h.t}<span class="cl-g">°</span></b></div>
+      <div class="cl-txt">${c ? `<b>${c.w}</b>` : ''}${maxmin}</div>
+    </div>
+    ${prox.length ? `<ol class="cl-horas" aria-label="Las próximas horas">${prox.map(p => `<li><span>${horaTxtCorta(p.hora)}</span>${iconoCielo(cielo(p.cod), p.dia)}<b>${p.t}°</b></li>`).join('')}</ol>` : ''}
+    <p class="cl-nota">Temperatura estimada para esta hora (Open-Meteo). Cambia sola cada hora.</p>`);
 }
 
 /* ---------- Gráfica técnica del caudal ---------- */
@@ -1133,15 +1177,15 @@ function ejemplo(sc) {
   const now = new Date(), day = 864e5, iso = d => fechaHoy(now.getTime() + d * day);
   const P = {
     normal: {prob: 9, lvl: 0, base: 70, peak: 95, rain: [2, 0, 4, 11, 6, 1, 0], up: [3, 1, 6, 14, 9, 2, 1], pr: [20, 10, 30, 45, 35, 15, 10],
-      tx: [30, 31, 29, 28, 30, 31, 31], tn: [21, 21, 20, 19, 20, 21, 22],
+      tx: [30, 31, 29, 28, 30, 31, 31], tn: [21, 21, 20, 19, 20, 21, 22], cielo: 1,
       msg: 'El río está normal. No se espera lluvia fuerte esta semana.',
       alerts: [{src: 'Servicio Meteorológico Nacional', t: 'No hay huracanes ni tormentas cerca de Veracruz.', lv: 0, h: 2}]},
     vigilancia: {prob: 46, lvl: 1, base: 240, peak: 780, rain: [12, 30, 40, 18, 6, 2, 0], up: [20, 45, 60, 25, 8, 3, 1], pr: [70, 90, 95, 75, 40, 20, 10],
-      tx: [24, 19, 18, 20, 23, 25, 26], tn: [17, 15, 14, 15, 16, 18, 19],
+      tx: [24, 19, 18, 20, 23, 25, 26], tn: [17, 15, 14, 15, 16, 18, 19], cielo: 61,
       msg: 'El río va a subir, pero se espera que siga dentro de su cauce. Va a llover fuerte en la sierra, de donde baja el agua. Hay avisos de las autoridades; léalos más abajo. Esté pendiente.',
       alerts: [{src: 'Servicio Meteorológico Nacional', t: 'Frente frío: lluvias muy fuertes en el norte de Veracruz y la sierra de Puebla.', lv: 1, h: 3}, {src: 'Protección Civil Veracruz', t: 'Vigilan los ríos Pantepec, Vinazco y Tuxpan.', lv: 1, h: 5}]},
     alerta: {prob: 84, lvl: 3, base: 600, peak: 2350, rain: [95, 180, 140, 60, 20, 5, 2], up: [140, 260, 210, 90, 30, 8, 3], pr: [100, 100, 100, 90, 60, 30, 20],
-      tx: [27, 25, 24, 25, 27, 28, 29], tn: [23, 22, 22, 22, 23, 23, 23],
+      tx: [27, 25, 24, 25, 27, 28, 29], tn: [23, 22, 22, 22, 23, 23, 23], cielo: 95,
       msg: 'El río puede salirse de su cauce y meterse a las calles. Va a llover muchísimo en la sierra, de donde baja el agua. Hay avisos de las autoridades; léalos más abajo. Si vive cerca del río, salga a un lugar alto.',
       alerts: [{src: 'Protección Civil Veracruz', t: 'Alerta roja en Álamo Temapache, Tuxpan y Poza Rica. Refugios temporales abiertos.', lv: 3, h: 1}, {src: 'Servicio Meteorológico Nacional', t: 'Huracán frente a la costa de Veracruz: lluvias extraordinarias en el norte del estado.', lv: 3, h: 1}, {src: 'Centro Nacional de Huracanes', t: 'Aviso de tormenta tropical de Tuxpan a Cabo Rojo.', lv: 2, h: 2}]},
   }[sc];
@@ -1164,10 +1208,14 @@ function ejemplo(sc) {
       {nombre: 'Avisos oficiales', detalle: `${P.alerts.length} aviso(s) vigente(s)`, valor: Math.max(...P.alerts.map(a => a.lv)) / 3}]},
     rio: {umbrales, serie},
     lluvia: P.rain.map((mm, i) => ({fecha: iso(i), mm, cuenca_mm: P.up[i], prob: P.pr[i], tmax: P.tx[i], tmin: P.tn[i]})),
+    horas: Array.from({length: 38}, (_, o) => {
+      const t = now.getTime() + (o - 1) * 36e5, h = Number(hh(t)), d = fechaHoy(t) === iso(0) ? 0 : 1;
+      return {hora: horaDe(t), t: Math.round(P.tn[d] + (P.tx[d] - P.tn[d]) * (0.5 + 0.5 * Math.cos((h - 15) / 12 * Math.PI))), cod: P.cielo, dia: h >= 7 && h < 19};
+    }),
     avisos: P.alerts.map(a => ({fuente: a.src, titulo: a.t, nivel: a.lv, fecha: t(a.h * 60), url: ''})),
     fuentes: [
       {nombre: 'GloFAS v4 (Copernicus) vía Open-Meteo', aporta: 'Caudal simulado y pronóstico', url: 'https://www.globalfloods.eu/', ok: true, fecha: t(40)},
-      {nombre: 'Open-Meteo', aporta: 'Lluvia en Álamo y en la sierra, y temperatura en Álamo', url: 'https://open-meteo.com/', ok: true, fecha: t(40)},
+      {nombre: 'Open-Meteo', aporta: 'Lluvia en Álamo y en la sierra, y temperatura en Álamo hora por hora', url: 'https://open-meteo.com/', ok: true, fecha: t(40)},
       {nombre: 'SMN · Conagua', aporta: 'Pronóstico oficial para Temapache', url: 'https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios', ok: true, fecha: t(41)},
       {nombre: 'NHC · NOAA', aporta: 'Huracanes y tormentas cercanos', url: 'https://www.nhc.noaa.gov/', ok: true, fecha: t(41)},
       {nombre: 'Protección Civil Veracruz', aporta: 'Alertas y refugios (captura manual)', url: 'https://www.veracruz.gob.mx/proteccioncivil/', ok: sc !== 'normal', fecha: sc !== 'normal' ? t(300) : null}],
@@ -1243,6 +1291,7 @@ function tick() {
   const s = new Date().toLocaleDateString('es-MX', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ});
   setText('date', s[0].toUpperCase() + s.slice(1));
   if (!S.data) return;
+  if (horaAhora() !== S.horaClima) renderClima(S.data);  // la temperatura cambia sola al cambiar la hora
   const atrasado = !S.data.ejemplo && horasDesde(S.data.actualizado) > HORAS_ATRASO;
   if (atrasado !== S.atrasado) render();
   else { if (S.vista !== 'elegir') setText('when', `Revisado ${ago(S.data.actualizado)} · cada hora`); renderEstado(S.data); }

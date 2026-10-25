@@ -4,6 +4,7 @@ Uso desde la terminal:  python bot/esquema.py public/data.json
 """
 
 import json
+import re
 import sys
 from datetime import datetime
 
@@ -95,6 +96,16 @@ def validar(d):
         _tipo(l["prob"], NUM, ruta + ".prob", nulo=True)
         for k in ("tmax", "tmin"):  # opcionales: los data.json de antes no los traen
             _tipo(l.get(k), NUM, f"{ruta}.{k}", nulo=True)
+
+    _tipo(d.get("horas", []), list, "horas")  # opcional: los data.json de antes no la traen
+    for i, h in enumerate(d.get("horas", [])):
+        ruta = f"horas[{i}]"
+        _campos(h, ["hora", "t", "cod", "dia"], ruta)
+        if not isinstance(h["hora"], str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:00", h["hora"]):
+            raise EsquemaInvalido(f"{ruta}.hora debe ser AAAA-MM-DDTHH:00")
+        _tipo(h["t"], NUM, ruta + ".t")
+        _tipo(h["cod"], int, ruta + ".cod", nulo=True)
+        _tipo(h["dia"], bool, ruta + ".dia")
 
     _tipo(d["avisos"], list, "avisos")
     for i, a in enumerate(d["avisos"]):

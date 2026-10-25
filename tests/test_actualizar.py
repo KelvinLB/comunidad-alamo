@@ -54,6 +54,9 @@ class TestActualizar(unittest.TestCase):
         self.assertEqual(self.correr(BUENAS), 0)
         hoy = json.loads(self.datos.read_text(encoding="utf-8"))["lluvia"][0]
         self.assertEqual((hoy["tmax"], hoy["tmin"]), (27, 21))
+        horas = json.loads(self.datos.read_text(encoding="utf-8"))["horas"]
+        self.assertEqual(horas, [{"hora": "2026-10-25T15:00", "t": 26, "cod": 51, "dia": True},
+                                 {"hora": "2026-10-25T16:00", "t": 23, "cod": 81, "dia": True}])
         # un valor imposible o que no vino no se muestra
         crudo = fixture("lluvia.json")
         crudo[0]["daily"]["temperature_2m_max"][0] = 99.0
