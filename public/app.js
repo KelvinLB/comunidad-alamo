@@ -70,7 +70,8 @@ const S = {
   pedida: null,      // comunidad de una liga compartida (?c=lat,lon); se ve pero no se guarda
   vista: 'elegir',   // 'elegir' | 'comunidad' | 'municipio'
   diaAbierto: undefined,
-  horaClima: null,   // hora que muestra el recuadro del clima  // fecha del día abierto en el parte; undefined = hoy, null = todos cerrados
+  horaClima: null,   // hora que muestra el recuadro del clima
+  climaClave: null, climaT: null,  // lo que ya está dibujado en el recuadro del clima  // fecha del día abierto en el parte; undefined = hoy, null = todos cerrados
 };
 const nivelDia = () => S.data ? S.data.riesgo.nivel : 0;
 const apagado = n => S.atrasado && n === 0;
@@ -166,10 +167,10 @@ function rainIcon(k, attrs = 'aria-hidden="true"') {
   let drops = '';
   for (let i = 0; i < n; i++) {
     const x = n === 1 ? 28 : 14 + i * (28 / (n - 1));
-    drops += `<path d="M${x} 40 l-3 7" stroke="var(--river)" stroke-width="3.5" stroke-linecap="round"/>`;
+    drops += `<path class="gota" d="M${x} 40 l-3 7" stroke="var(--river)" stroke-width="3.5" stroke-linecap="round" style="animation-delay:${(i * 0.23).toFixed(2)}s"/>`;
   }
-  const bolt = k === 4 ? '<path d="M30 34l-5 9h5l-3 8 8-11h-5l3-6z" fill="#F2B705"/>' : '';
-  return `<svg viewBox="0 0 56 56" ${attrs}><path d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="${cloud}"/>${drops}${bolt}</svg>`;
+  const bolt = k === 4 ? '<path class="rayo" d="M30 34l-5 9h5l-3 8 8-11h-5l3-6z" fill="#F2B705"/>' : '';
+  return `<svg viewBox="0 0 56 56" ${attrs}><path class="nube" d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="${cloud}"/>${drops}${bolt}</svg>`;
 }
 
 /* ---------- Escena del puente (estilo grabado) ---------- */
@@ -328,9 +329,9 @@ function cielo(cod) {
   if (cod >= 95) return {w: 'Tormenta', k: 'tormenta'};
   return null;  // nieve y otros que no se dan en Álamo
 }
-const SOL_G = '<circle cx="28" cy="28" r="10" fill="#F2B705"/><g stroke="#F2B705" stroke-width="3.5" stroke-linecap="round"><path d="M28 6v6M28 44v6M6 28h6M44 28h6M12.4 12.4l4.2 4.2M39.4 39.4l4.2 4.2M12.4 43.6l4.2-4.2M39.4 16.6l4.2-4.2"/></g>';
-const LUNA_G = '<path d="M34 8a18 18 0 1 0 14 26A14 14 0 0 1 34 8z" fill="#E9DCA8" stroke="#8A7A4A" stroke-width="1.5"/>';
-const NUBE_G = '<path d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="#9AA9B6"/>';
+const SOL_G = '<circle class="sol" cx="28" cy="28" r="10" fill="#F2B705"/><g class="rayos" stroke="#F2B705" stroke-width="3.5" stroke-linecap="round"><path d="M28 6v6M28 44v6M6 28h6M44 28h6M12.4 12.4l4.2 4.2M39.4 39.4l4.2 4.2M12.4 43.6l4.2-4.2M39.4 16.6l4.2-4.2"/></g>';
+const LUNA_G = '<path class="luna" d="M34 8a18 18 0 1 0 14 26A14 14 0 0 1 34 8z" fill="#E9DCA8" stroke="#8A7A4A" stroke-width="1.5"/>';
+const NUBE_G = '<path class="nube" d="M16 36a9 9 0 0 1 1-18 12 12 0 0 1 23 3 7.5 7.5 0 0 1-1 15z" fill="#9AA9B6"/>';
 function iconoCielo(c, dia) {
   const astro = dia ? SOL_G : LUNA_G, svg = g => `<svg viewBox="0 0 56 56" aria-hidden="true">${g}</svg>`;
   if (!c || c.k === 'sol') return svg(astro);
@@ -339,22 +340,46 @@ function iconoCielo(c, dia) {
   return rainIcon(c.k === 'tormenta' ? 4 : 2);
 }
 
+// El número grande sube contando hasta la temperatura (no se anima si el teléfono pide menos movimiento)
+const quieto = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function contar(el, de, a) {
+  if (de === a || quieto()) { el.textContent = a; return; }
+  const t0 = performance.now(), dur = 1100;
+  const paso = ahora => {
+    const p = Math.min(1, Math.max(0, (ahora - t0) / dur));  // el primer cuadro puede traer una hora anterior a t0
+    el.textContent = Math.round(de + (a - de) * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(paso);
+  };
+  requestAnimationFrame(paso);
+}
+
 function renderClima(D) {
   const H = D.horas || [], k = H.findIndex(h => h.hora === horaAhora()), box = $('clima');
   S.horaClima = horaAhora();
   box.hidden = k < 0;  // si los datos ya no llegan a esta hora, no se inventa
-  if (k < 0) return;
+  if (k < 0) { S.climaClave = null; return; }
   const h = H[k], c = cielo(h.cod), hoy = (D.lluvia || []).find(x => x.fecha === fechaHoy());
-  const maxmin = hoy && hoy.tmax != null && hoy.tmin != null ? `<span>Máxima ${hoy.tmax}°</span><span>Mínima ${hoy.tmin}°</span>` : '';
   const prox = H.slice(k + 2).filter((_, i) => i % 2 === 0).slice(0, 5);  // cada 2 horas
+  const conMM = hoy && hoy.tmax != null && hoy.tmin != null;
+  // si no cambió nada, no se vuelve a dibujar (así la animación no se repite al cambiar de comunidad)
+  const clave = JSON.stringify([h, conMM && [hoy.tmin, hoy.tmax], prox]);
+  if (clave === S.climaClave) return;
+  S.climaClave = clave;
+  // termómetro del día: dónde está la temperatura de ahora entre la mínima y la máxima de hoy
+  // al abrir sube desde la mínima de hoy; al cambiar la hora, desde la temperatura anterior
+  const de = quieto() ? h.t : S.climaT ?? (conMM ? hoy.tmin : h.t);
+  const pos = conMM && hoy.tmax > hoy.tmin ? Math.min(100, Math.max(0, (h.t - hoy.tmin) / (hoy.tmax - hoy.tmin) * 100)) : null;
   box.innerHTML = fixVars(`<div class="cl-ahora">
       <span class="cl-eti">Ahora en Álamo</span>
       <span class="cl-ico">${iconoCielo(c, h.dia)}</span>
-      <div class="cl-t"><b>${h.t}<span class="cl-g">°</span></b></div>
-      <div class="cl-txt">${c ? `<b>${c.w}</b>` : ''}${maxmin}</div>
+      <div class="cl-t"><b><span class="cl-n">${de}</span><span class="cl-g">°</span></b></div>
+      <div class="cl-txt">${c ? `<b>${c.w}</b>` : ''}${conMM ? `<span>Máxima ${hoy.tmax}°</span><span>Mínima ${hoy.tmin}°</span>` : ''}</div>
+      ${pos == null ? '' : `<div class="cl-termo" aria-hidden="true"><span>${hoy.tmin}°</span><div class="cl-barra"><i class="${pos < 15 ? 'ini' : pos > 85 ? 'fin' : ''}" style="left:${pos.toFixed(1)}%"><span>ahora</span></i></div><span>${hoy.tmax}°</span></div>`}
     </div>
-    ${prox.length ? `<ol class="cl-horas" aria-label="Las próximas horas">${prox.map(p => `<li><span>${horaTxtCorta(p.hora)}</span>${iconoCielo(cielo(p.cod), p.dia)}<b>${p.t}°</b></li>`).join('')}</ol>` : ''}
+    ${prox.length ? `<ol class="cl-horas" aria-label="Las próximas horas">${prox.map((p, i) => `<li style="--i:${i}"><span>${horaTxtCorta(p.hora)}</span>${iconoCielo(cielo(p.cod), p.dia)}<b>${p.t}°</b></li>`).join('')}</ol>` : ''}
     <p class="cl-nota">Temperatura estimada para esta hora (Open-Meteo). Cambia sola cada hora.</p>`);
+  contar(box.querySelector('.cl-n'), de, h.t);
+  S.climaT = h.t;
 }
 
 /* ---------- Gráfica técnica del caudal ---------- */

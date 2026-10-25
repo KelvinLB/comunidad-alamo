@@ -10,7 +10,8 @@
 // 7. el botón "Instalar en mi teléfono" siempre se ve y su guía cambia en iPhone, Android y dentro de Facebook;
 // 8. el parte de 7 días trae la fecha y la temperatura de cada día, cada día se abre al tocarlo y,
 //    con datos de ayer, ayer no sale como "Hoy";
-// 9. la temperatura de ahora sale en grande y cambia sola al pasar la hora. Guarda capturas.
+// 9. la temperatura de ahora sale en grande, animada, y cambia sola al pasar la hora;
+//    con "reducir movimiento" no se mueve. Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 
@@ -75,7 +76,10 @@ for (const ancho of [390, 360]) {
   if ((await abiertos()).some(Boolean)) falla('al tocar otra vez el día abierto no se cierra');
   // la temperatura de ahora, en grande, con las próximas horas
   const clima = await page.evaluate(() => document.getElementById('clima').hidden ? '' : document.getElementById('clima').innerText.replace(/\s+/g, ' '));
-  if (!/^Ahora en Álamo \d+° Tormenta Máxima 27° Mínima 23°( \d{1,2} [ap]\.m\. \d+°){5} Temperatura estimada/i.test(clima)) falla(`el recuadro del clima dice "${clima}"`);
+  if (!/^Ahora en Álamo \d+° Tormenta Máxima 27° Mínima 23° 23° ahora 27°( \d{1,2} [ap]\.m\. \d+°){5} Temperatura estimada/i.test(clima)) falla(`el recuadro del clima dice "${clima}"`);
+  // los dibujos del clima se mueven (la tormenta: lluvia y rayo)
+  const mueve = await page.evaluate(() => ['.gota', '.rayo'].map(c => getComputedStyle(document.querySelector('#clima ' + c)).animationName));
+  if (mueve.includes('none')) falla(`los dibujos del clima no se mueven: ${mueve}`);
   await page.screenshot({ path: `capturas/alerta-${ancho}.png`, fullPage: true });
 
   // 3. Buscar y elegir una comunidad lejos del río
@@ -224,9 +228,10 @@ for (const [nom, ua, espera] of [
   await page.close();
 }
 
-// 9. La temperatura de ahora cambia sola al pasar la hora, sin recargar (y no se inventa si los datos no llegan)
+// 9. La temperatura de ahora cambia sola al pasar la hora, sin recargar (y no se inventa si los datos no llegan).
+//    Con "reducir movimiento" en el teléfono, nada se mueve y el número sale directo.
 {
-  const page = await browser.newPage({ viewport: { width: 360, height: 844 }, locale: 'es-MX' });
+  const page = await browser.newPage({ viewport: { width: 360, height: 844 }, locale: 'es-MX', reducedMotion: 'reduce' });
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   const t0 = Math.floor(Date.now() / 36e5) * 36e5 + 10 * 60e3;  // las tantas y 10
   const horaMx = t => `${isoMx(t)}T${new Date(t).toLocaleString('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: TZ })}:00`;
@@ -241,6 +246,8 @@ for (const [nom, ua, espera] of [
   await page.goto(base, { waitUntil: 'networkidle' });
   const grande = () => page.evaluate(() => document.getElementById('clima').hidden ? 'oculto' : document.querySelector('.cl-t b').textContent + ' ' + document.querySelector('.cl-txt b').textContent);
   const antes = await grande();
+  const quieto = await page.evaluate(() => [...document.querySelectorAll('#clima svg, #clima svg *, #clima li, #clima i')].every(e => getComputedStyle(e).animationName === 'none'));
+  if (!quieto) fallas.push('con "reducir movimiento" el clima se sigue moviendo');
   await page.clock.runFor(60 * 60e3);
   const despues = await grande();
   await page.clock.runFor(3 * 60 * 60e3);
