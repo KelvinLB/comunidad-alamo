@@ -8,6 +8,7 @@ from pathlib import Path
 
 import actualizar
 import esquema
+import fuentes
 
 FIX = Path(__file__).resolve().parent / "fixtures"
 AHORA = datetime(2026, 10, 23, 16, 17, tzinfo=timezone.utc)
@@ -48,6 +49,17 @@ class TestActualizar(unittest.TestCase):
         self.assertTrue(esquema.validar(d))
         self.assertTrue(all(f["ok"] for f in d["fuentes"]))
         self.assertFalse(self.dir.joinpath("data.json.tmp").exists())
+
+    def test_temperatura_de_alamo(self):
+        self.assertEqual(self.correr(BUENAS), 0)
+        hoy = json.loads(self.datos.read_text(encoding="utf-8"))["lluvia"][0]
+        self.assertEqual((hoy["tmax"], hoy["tmin"]), (27, 21))
+        # un valor imposible o que no vino no se muestra
+        crudo = fixture("lluvia.json")
+        crudo[0]["daily"]["temperature_2m_max"][0] = 99.0
+        del crudo[0]["daily"]["temperature_2m_min"]
+        dia = fuentes.leer_lluvia(crudo)[0]
+        self.assertEqual((dia["tmax"], dia["tmin"]), (None, None))
 
     def test_todas_fallan_no_toca_el_archivo(self):
         self.correr(BUENAS)
@@ -119,6 +131,12 @@ class TestEsquema(unittest.TestCase):
         del d["fuentes"]
         with self.assertRaises(esquema.EsquemaInvalido):
             esquema.validar(d)
+
+    def test_acepta_datos_sin_temperatura(self):
+        d = json.loads((FIX / "data_ejemplo.json").read_text(encoding="utf-8"))
+        for dia in d["lluvia"]:
+            dia.pop("tmax", None), dia.pop("tmin", None)
+        self.assertTrue(esquema.validar(d))
 
 
 if __name__ == "__main__":

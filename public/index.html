@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>¿Se inunda Álamo? · Aviso de hoy</title>
-<meta name="description" content="Respuesta diaria y sencilla: ¿hay peligro de inundación del río Pantepec en Álamo Temapache y sus comunidades? Se revisa cada 3 horas.">
+<meta name="description" content="Respuesta diaria y sencilla: ¿hay peligro de inundación del río Pantepec en Álamo Temapache y sus comunidades? Se revisa cada hora.">
 <meta name="theme-color" content="#F6F1E6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#16140F" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_MX">
 <meta property="og:title" content="¿Se inunda Álamo? · Hoy: vea la respuesta">
-<meta property="og:description" content="Peligro de inundación del río Pantepec en Álamo Temapache y sus comunidades. Se revisa cada 3 horas.">
+<meta property="og:description" content="Peligro de inundación del río Pantepec en Álamo Temapache y sus comunidades. Se revisa cada hora.">
 <meta property="og:image" content="og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -169,7 +169,30 @@ figcaption{font-style:italic;font-size:.85rem;margin-top:6px;padding-left:8px;bo
 table{width:100%;border-collapse:collapse;font-size:.95rem}
 th,td{padding:7px 4px;border-bottom:1px solid var(--soft);text-align:left;vertical-align:middle}
 th{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;border-bottom:2px solid var(--rule);font-weight:600}
-td.d{font-weight:600;white-space:nowrap}
+#clima{font-weight:600}
+.pd-ayuda{margin:4px 0 8px}
+.parte{list-style:none;margin:0;padding:0;border-top:2px solid var(--rule)}
+.pd{border-bottom:1px solid var(--soft)}
+.pd-fila{width:100%;min-height:56px;display:grid;grid-template-columns:minmax(0,1fr) 2.6rem auto 2.4rem 1.1rem;align-items:center;gap:8px;padding:8px 4px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.pd-fila[aria-expanded="true"]{background:var(--surface)}
+.pd-fila .d{font-weight:600;line-height:1.2;min-width:0}
+.pd-fila .fecha{display:block;font-weight:400;font-size:.85rem}
+.pd-ll{display:flex;flex-direction:column;align-items:center;font-size:.78rem;line-height:1;gap:1px}
+.pd-ll svg{width:30px;height:30px}
+.pd-t{text-align:right;line-height:1.15}
+.pd-t b{display:block;font-size:1.05rem}
+.pd-t span{font-size:.85rem;color:var(--muted)}
+.pd-chev{width:1.1rem;height:1.1rem;transition:transform .2s}
+.pd-fila[aria-expanded="true"] .pd-chev{transform:rotate(180deg)}
+.pd-det{background:var(--surface);padding:2px 10px 12px}
+.pd-det dl{margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
+.pd-det dt{font-weight:600;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;margin-top:8px}
+.pd-det dd{margin:0;font-size:.95rem;line-height:1.35}
+.pbar-txt{display:block;margin-top:2px}
+.pbar,.tbar{position:relative;height:10px;border-radius:5px;background:var(--soft);margin-top:6px;max-width:320px}
+.pbar i,.tbar i{position:absolute;top:0;bottom:0;left:0;border-radius:5px;background:var(--river)}
+.tbar i{background:linear-gradient(90deg,#2F78A8,#F5C518,#E06A10)}
+@media (prefers-reduced-motion:reduce){.pd-chev{transition:none}}
 .ll{display:inline-flex;align-items:center;gap:4px;font-size:.85rem;line-height:1.15}
 .ll svg{width:30px;height:30px;flex:none}
 .pill{display:inline-flex;align-items:center;gap:6px;font-weight:600;white-space:nowrap}
@@ -275,17 +298,18 @@ details.tech h3{font-family:var(--f-body);font-weight:600;font-size:1rem}
   .hj-sello b{display:block;font-size:24pt}
   .hj-baj{font-size:12.5pt;margin-top:6pt}
   .hj-mun{border:1.5pt solid #000;padding:5pt 8pt;margin-top:6pt;font-size:11pt}
-  .hj-cols{display:grid;grid-template-columns:1fr 1fr;gap:16pt;margin-top:10pt}
+  .hj-cols{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:14pt;margin-top:10pt}
+  .hoja th,.hoja td:first-child,.hoja td:nth-child(2),.hoja td:last-child{white-space:nowrap}
   .hj-cols.uno{grid-template-columns:1fr}
   .hoja h3{font-family:var(--f-head);font-weight:900;font-size:14pt;border-top:2pt solid #000;padding-top:3pt;margin:0 0 4pt}
   .hoja ol{margin:0;padding-left:16pt;font-size:11pt}
   .hoja li{margin-bottom:3pt}
   .hoja table{font-size:10.5pt}
   .hoja th,.hoja td{padding:2.5pt 4pt;border-bottom:.75pt solid #999}
-  .hj-911{border:3pt solid #000;padding:6pt 10pt;display:flex;gap:12pt;align-items:center;margin-top:10pt;font-size:11pt}
+  .hj-911{border:3pt solid #000;padding:4pt 10pt;display:flex;gap:12pt;align-items:center;margin-top:10pt;font-size:11pt}
   .hj-911 b{font-family:var(--f-head);font-weight:900;font-size:32pt;color:#C8231F;line-height:1}
-  .hj-qr{display:flex;gap:14pt;align-items:center;margin-top:10pt;border:1.5pt dashed #000;padding:8pt;font-size:11pt}
-  .hj-qr svg{width:96pt;height:96pt;flex:none}
+  .hj-qr{display:flex;gap:14pt;align-items:center;margin-top:8pt;border:1.5pt dashed #000;padding:6pt;font-size:11pt}
+  .hj-qr svg{width:84pt;height:84pt;flex:none}
   .hj-qr .url{font-weight:600;word-break:break-all}
   .hj-pie{font-size:9pt;margin-top:8pt;border-top:1pt solid #000;padding-top:4pt}
 }
@@ -313,7 +337,7 @@ body.con-barra{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 footer{margin-top:10px;border-top:4px double var(--rule);padding-top:10px;font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
 
-@media (max-width:520px){.top span:nth-child(2){display:none}}
+@media (max-width:520px){.top .top-lugar{display:none}}
 @media (min-width:780px){
   .elegir{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px 32px;align-items:start}
   .elegir .der{border-left:1px solid var(--rule);padding-left:32px}
@@ -349,7 +373,7 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
     </div>
   </div>
 
-  <div class="top"><span id="date"></span><span>Álamo Temapache, Veracruz</span><span>Gratuito · se revisa cada 3 horas</span></div>
+  <div class="top"><span id="date"></span><span id="clima" hidden></span><span class="top-lugar">Álamo Temapache, Veracruz</span><span>Gratuito · se revisa cada hora</span></div>
   <header class="cabezal">
     <div class="nombre">Alerta Pantepec</div>
     <div class="lema">El periódico del río · Proyecto comunitario, no oficial</div>
@@ -431,7 +455,8 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
         <section class="col" aria-labelledby="h-rio">
           <div class="seccion"><span>El tiempo</span><span>Próximos 7 días</span></div>
           <h2 id="h-rio">El parte del río</h2>
-          <table><thead><tr><th>Día</th><th>Lluvia</th><th>El río</th></tr></thead><tbody id="parte"></tbody></table>
+          <p class="small pd-ayuda">Toque un día para ver la lluvia, el río y la temperatura.</p>
+          <ul class="parte" id="parte"></ul>
           <p class="small">"Se sale" quiere decir que el agua puede pasar la orilla en las partes bajas.</p>
         </section>
         <section class="col" aria-labelledby="h-map">
@@ -560,6 +585,6 @@ footer .linkbtn{color:var(--ink);font-size:.85rem;align-self:flex-start}
   </div>
 </div>
 <div class="hoja" id="hoja" aria-hidden="true"></div>
-<script src="app.js?v=4" defer></script>
+<script src="app.js?v=5" defer></script>
 </body>
 </html>

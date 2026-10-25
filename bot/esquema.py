@@ -93,6 +93,8 @@ def validar(d):
         _tipo(l["mm"], NUM, ruta + ".mm")
         _tipo(l["cuenca_mm"], NUM, ruta + ".cuenca_mm")
         _tipo(l["prob"], NUM, ruta + ".prob", nulo=True)
+        for k in ("tmax", "tmin"):  # opcionales: los data.json de antes no los traen
+            _tipo(l.get(k), NUM, f"{ruta}.{k}", nulo=True)
 
     _tipo(d["avisos"], list, "avisos")
     for i, a in enumerate(d["avisos"]):

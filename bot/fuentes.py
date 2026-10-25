@@ -108,7 +108,7 @@ def leer_glofas(crudo, hoy):
 
 LLUVIA = {
     "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
-    "aporta": "Lluvia pronosticada en Álamo y en la sierra",
+    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo",
     "url": "https://open-meteo.com/",
 }
 
@@ -118,7 +118,7 @@ def url_lluvia():
     q = {
         "latitude": ",".join(str(p[1]) for p in pts),
         "longitude": ",".join(str(p[2]) for p in pts),
-        "daily": "precipitation_sum,precipitation_probability_max",
+        "daily": "precipitation_sum,precipitation_probability_max,temperature_2m_max,temperature_2m_min",
         "forecast_days": 7, "timezone": C.ZONA_HORARIA,
     }
     return "https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode(q, safe=",/")
@@ -128,9 +128,15 @@ def descargar_lluvia():
     return pedir_json(url_lluvia())
 
 
+def _grados(diario, clave, i):
+    """Temperatura redondeada a grados enteros; None si no vino o es imposible para Álamo."""
+    t = (diario.get(clave) or [])[i:i + 1]
+    return round(t[0]) if t and isinstance(t[0], (int, float)) and -5 <= t[0] <= 50 else None
+
+
 def leer_lluvia(crudo):
     """7 días: mm en Álamo, mm en la sierra (el máximo de los puntos de la cuenca alta ese día)
-    y probabilidad de lluvia en Álamo."""
+    probabilidad de lluvia y temperatura máxima y mínima en Álamo (en °C, None si no vino)."""
     if not isinstance(crudo, list) or len(crudo) != 1 + len(C.PUNTOS_CUENCA):
         raise FuenteCaida("Open-Meteo no devolvió todos los puntos")
     local, cuenca = crudo[0]["daily"], [c["daily"] for c in crudo[1:]]
@@ -144,6 +150,8 @@ def leer_lluvia(crudo):
             "mm": _num(mm or 0),
             "cuenca_mm": _num(max(sierra) if sierra else 0),
             "prob": None if prob is None else int(prob),
+            "tmax": _grados(local, "temperature_2m_max", i),
+            "tmin": _grados(local, "temperature_2m_min", i),
         })
     return dias
 

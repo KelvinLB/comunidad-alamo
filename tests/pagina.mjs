@@ -7,7 +7,9 @@
 // 5. el botón de WhatsApp arma el mensaje y su liga abre esa comunidad sin guardarla; la de la familia sí la guarda;
 //    "Qué hacer hoy" solo sale con alerta; con peligro sale el aviso a pantalla completa; la hoja trae QR;
 // 6. se puede poner en el teléfono (PWA) y abre sin señal con el aviso "Sin conexión";
-// 7. el botón "Instalar en mi teléfono" siempre se ve y su guía cambia en iPhone, Android y dentro de Facebook. Guarda capturas.
+// 7. el botón "Instalar en mi teléfono" siempre se ve y su guía cambia en iPhone, Android y dentro de Facebook;
+// 8. el parte de 7 días trae la fecha y la temperatura de cada día, cada día se abre al tocarlo y,
+//    con datos de ayer, ayer no sale como "Hoy". Guarda capturas.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 
@@ -16,6 +18,10 @@ mkdirSync('capturas', { recursive: true });
 // CHANNEL=chrome usa el Chrome instalado en lugar del Chromium de Playwright
 const browser = await chromium.launch(process.env.CHANNEL ? { channel: process.env.CHANNEL } : {});
 const fallas = [];
+// "25 de octubre" de hoy (o de otro día) en Álamo
+const TZ = 'America/Mexico_City', DIA = 864e5;
+const fechaMx = (t = Date.now()) => new Date(t).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', timeZone: TZ });
+const isoMx = (t = Date.now()) => new Date(t).toLocaleDateString('en-CA', { timeZone: TZ });
 
 for (const ancho of [390, 360]) {
   const page = await browser.newPage({ viewport: { width: ancho, height: 844 }, locale: 'es-MX' });
@@ -53,6 +59,21 @@ for (const ancho of [390, 360]) {
   const puntos = await page.evaluate(() => [...document.querySelectorAll('#msvg circle')].filter(c => !c.classList.contains('pulse')).length);
   if (puntos < 460) falla(`el mapa tiene ${puntos} puntos`);
   if (await scroll() > 0) falla(`municipio con scroll horizontal de ${await scroll()}px`);
+  // el parte de 7 días: "Hoy" con la fecha de hoy, y cada día con su fecha
+  const dias = await page.evaluate(() => [...document.querySelectorAll('#parte .pd-fila .d')].map(td => td.innerText.replace(/\s+/g, ' ').trim()));
+  if (dias.length !== 7 || dias[0] !== `Hoy ${fechaMx()}` || !dias[1].startsWith('Mañana ') || !dias.every(d => / \d{1,2} de [a-z]+$/.test(d))) falla(`el parte de 7 días no trae las fechas: ${dias.join(' | ')}`);
+  // cada día se abre al tocarlo: "Hoy" empieza abierto; al tocar el miércoles se abre ese y se cierra hoy
+  const abiertos = () => page.evaluate(() => [...document.querySelectorAll('#parte .pd-fila')].map(b => b.getAttribute('aria-expanded') === 'true' && !document.getElementById(b.getAttribute('aria-controls')).hidden));
+  if ((await abiertos()).join() !== 'true,false,false,false,false,false,false') falla(`al abrir, "Hoy" no está abierto: ${await abiertos()}`);
+  await page.locator('#parte .pd-fila').nth(3).click();
+  const det = await page.evaluate(() => document.getElementById('pd-3').innerText);
+  if ((await abiertos()).join() !== 'false,false,false,true,false,false,false' || !/Probabilidad de que llueva: 90 %/.test(det) || !/Máxima 25°, mínima 22°/.test(det)) falla(`al tocar un día no se abre bien: ${det.slice(0, 160)}`);
+  if (await scroll() > 0) falla(`parte abierto con scroll horizontal de ${await scroll()}px`);
+  await page.locator('#parte .pd-fila').nth(3).screenshot({ path: `capturas/parte-dia-${ancho}.png` });
+  await page.locator('#parte .pd-fila').nth(3).click();
+  if ((await abiertos()).some(Boolean)) falla('al tocar otra vez el día abierto no se cierra');
+  // la temperatura de hoy en la cabecera
+  if (await texto('clima') !== 'Hoy en Álamo: máxima 27°, mínima 23°') falla(`la cabecera dice "${await texto('clima')}"`);
   await page.screenshot({ path: `capturas/alerta-${ancho}.png`, fullPage: true });
 
   // 3. Buscar y elegir una comunidad lejos del río
@@ -81,6 +102,11 @@ for (const ancho of [390, 360]) {
   const hoja = await page.evaluate(() => ({ txt: document.getElementById('hoja').textContent, qr: !!document.querySelector('#hoja .hj-qr svg') }));
   if (!/Cañas de Abajo/.test(hoja.txt) || !/911/.test(hoja.txt)) falla('la hoja para imprimir no tiene la comunidad o el 911');
   if (!hoja.qr) falla('la hoja para imprimir no tiene el código QR');
+  // en papel no hay "hoy" ni "mañana": solo el día con su fecha
+  const diasHoja = await page.evaluate(() => [...document.querySelectorAll('#hoja tbody td:first-child')].map(td => td.textContent.trim()));
+  const tempHoja = await page.evaluate(() => [...document.querySelectorAll('#hoja tbody td:last-child')].map(td => td.textContent.trim()));
+  if (!tempHoja.every(t => /^\d+° \/ \d+°$/.test(t))) falla(`la hoja no trae la temperatura: ${tempHoja.join(' | ')}`);
+  if (diasHoja.length !== 7 || !diasHoja.every(d => /^[A-ZÁÉ][a-záé]+,? \d{1,2} de [a-z]+$/.test(d))) falla(`la hoja no trae los días con fecha: ${diasHoja.join(' | ')}`);
   await page.emulateMedia({ media: 'print' });
   await page.screenshot({ path: `capturas/hoja-${ancho}.png`, fullPage: true });
   await page.emulateMedia({ media: 'screen' });
@@ -173,6 +199,27 @@ for (const [nom, ua, espera] of [
   await page.click('#inst-ok');
   if (await page.isVisible('#inst-modal')) fallas.push(`${nom}: la guía de instalar no se cierra`);
   await ctx.close();
+}
+
+// 8. Con datos de ayer, el día de ayer no sale como "Hoy": el parte empieza en la fecha de hoy
+{
+  const page = await browser.newPage({ viewport: { width: 360, height: 844 }, locale: 'es-MX' });
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await page.route(/data\.json/, async r => {
+    const d = await (await r.fetch()).json();
+    d.ejemplo = false;
+    d.actualizado = new Date(Date.now() - 20 * 36e5).toISOString();
+    d.lluvia = d.lluvia.slice(0, 7).map((x, i) => ({ ...x, fecha: isoMx(Date.now() + (i - 1) * DIA) }));
+    await r.fulfill({ json: d });
+  });
+  await page.goto(base, { waitUntil: 'networkidle' });
+  if (await page.isVisible('#peligro')) await page.click('#pel-ok');
+  await page.click('#general');
+  await page.waitForTimeout(600);
+  const dias = await page.evaluate(() => [...document.querySelectorAll('#parte .pd-fila .d')].map(td => td.innerText.replace(/\s+/g, ' ').trim()));
+  if (dias.length !== 6 || dias[0] !== `Hoy ${fechaMx()}` || dias.some(d => d.endsWith(fechaMx(Date.now() - DIA)))) fallas.push(`con datos de ayer, el parte dice: ${dias.join(' | ')}`);
+  console.log('datos de ayer', JSON.stringify(dias));
+  await page.close();
 }
 
 await browser.close();

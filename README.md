@@ -3,7 +3,8 @@
 Página web que responde, con solo abrirla, si hay peligro de inundación por el río Pantepec en **Álamo Temapache, Veracruz**, y en cada una de las 460 comunidades del municipio.
 
 - Tiene forma de **periódico**: primero pregunta "¿Dónde vive usted?" y, al elegir la comunidad, muestra su propia edición (respuesta, qué hacer, el parte del río y el mapa). Arriba siempre se ve el aviso de todo el municipio.
-- Se revisa **sola cada 3 horas**, consultando fuentes científicas y oficiales: el pronóstico del río (Copernicus GloFAS), la lluvia en Álamo y en la sierra (Open-Meteo), el pronóstico oficial (SMN · Conagua) y los huracanes (Centro Nacional de Huracanes).
+- **El parte de 7 días** trae el día con su fecha ("Martes · 27 de octubre"), el dibujo de la lluvia con su probabilidad, cómo estará el río y la temperatura máxima y mínima. Cada día se toca para ver el detalle. La temperatura de hoy sale también en la cabecera.
+- Se revisa **sola cada hora**, consultando fuentes científicas y oficiales: el pronóstico del río (Copernicus GloFAS), la lluvia en Álamo y en la sierra y la temperatura (Open-Meteo), el pronóstico oficial (SMN · Conagua) y los huracanes (Centro Nacional de Huracanes).
 - Funciona en celulares sencillos y con internet lento. Pesa menos de 100 KB.
 - Se puede **poner como ícono en el teléfono** sin descargar nada de la tienda (es una "PWA"). Así abre rápido y, si no hay señal, muestra la última revisión guardada con el aviso "Sin conexión".
 - Trae un botón para **compartir el aviso por WhatsApp** y otro para **imprimir una hoja** con código QR, para pegarla en la tienda, la agencia municipal o la iglesia.
@@ -16,7 +17,7 @@ Página web que responde, con solo abrirla, si hay peligro de inundación por el
 
 ## Cómo funciona, en pocas palabras
 
-1. Cada 3 horas, un "robot" de GitHub (se llama *GitHub Actions*) corre el programa de la carpeta `bot/`.
+1. Cada hora, un "robot" de GitHub (se llama *GitHub Actions*) corre el programa de la carpeta `bot/`.
 2. El robot consulta las fuentes, calcula la posibilidad de inundación y guarda el resultado en el archivo `public/data.json`.
 3. En cuanto ese archivo cambia, Vercel publica la página nueva. No hay que hacer nada a mano.
 4. Si una fuente no responde, se usa su última lectura y se marca como "sin respuesta".
@@ -88,7 +89,7 @@ Qué hacer:
 
 ### Vigilancia extra (opcional)
 
-[Healthchecks.io](https://healthchecks.io) es gratis y le avisa si el robot **deja de correr** (no solo si falla). Cree un "check" con periodo de 3 horas y 1 hora de tolerancia, copie su dirección y guárdela en GitHub en *Settings → Secrets and variables → Actions → New repository secret* con el nombre `HEALTHCHECK_URL`.
+[Healthchecks.io](https://healthchecks.io) es gratis y le avisa si el robot **deja de correr** (no solo si falla). Cree un "check" con periodo de 1 hora y 2 horas de tolerancia (GitHub a veces retrasa las corridas), copie su dirección y guárdela en GitHub en *Settings → Secrets and variables → Actions → New repository secret* con el nombre `HEALTHCHECK_URL`.
 
 ---
 

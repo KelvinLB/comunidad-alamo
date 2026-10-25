@@ -1,9 +1,9 @@
-# Consulta las fuentes cada 3 horas y guarda public/data.json. Vercel publica cada commit solo.
+# Consulta las fuentes cada hora y guarda public/data.json. Vercel publica cada commit solo.
 name: Actualizar datos
 
 on:
   schedule:
-    - cron: "17 */3 * * *"
+    - cron: "17 * * * *"  # minuto 17: a la hora en punto GitHub va más saturado
   workflow_dispatch:
   push:
     branches: [main]

@@ -1,5 +1,5 @@
 /* Alerta Pantepec · Álamo Temapache
-   La página lee data.json (lo escribe el bot cada 3 horas) y geo.json (comunidades, río y costa).
+   La página lee data.json (lo escribe el bot cada hora) y geo.json (comunidades, río y costa).
    Primero se elige la comunidad y luego se despliega su "edición" del periódico.
    La franja de arriba siempre muestra el aviso de todo el municipio.
    Sin frameworks: todo se dibuja con DOM y SVG. */
@@ -69,6 +69,7 @@ const S = {
   guardada: null,    // lo que había en este teléfono
   pedida: null,      // comunidad de una liga compartida (?c=lat,lon); se ve pero no se guarda
   vista: 'elegir',   // 'elegir' | 'comunidad' | 'municipio'
+  diaAbierto: undefined,  // fecha del día abierto en el parte; undefined = hoy, null = todos cerrados
 };
 const nivelDia = () => S.data ? S.data.riesgo.nivel : 0;
 const apagado = n => S.atrasado && n === 0;
@@ -100,12 +101,20 @@ function ago(iso) {
   if (h < 48) return `hace ${h} ${h === 1 ? 'hora' : 'horas'}`;
   return `hace ${Math.round(h / 24)} días`;
 }
-function dayName(iso, i) {
-  if (i === 0) return 'Hoy';
-  if (i === 1) return 'Mañana';
-  const s = new Date(iso + 'T12:00:00').toLocaleDateString('es-MX', {weekday: 'long', timeZone: TZ});
-  return s[0].toUpperCase() + s.slice(1);
+// "2026-10-25" de hoy en Álamo, aunque el teléfono tenga otra zona horaria
+const fechaHoy = (t = Date.now()) => new Date(t).toLocaleDateString('en-CA', {timeZone: TZ});
+const diasDesdeHoy = f => Math.round((Date.parse(f) - Date.parse(fechaHoy())) / 864e5);
+const cap = s => s[0].toUpperCase() + s.slice(1);
+// mediodía en Álamo (UTC−6), para que la fecha no se corra un día en ninguna zona horaria
+const fechaTxt = (f, opc) => new Date(f + 'T18:00:00Z').toLocaleDateString('es-MX', {...opc, timeZone: TZ});
+// En pantalla: "Hoy", "Mañana" o "Martes", y abajo la fecha ("25 de octubre") para que se vea que es de esta semana.
+// Se compara con la fecha de hoy, no con el orden: si los datos son de ayer, ayer no sale como "Hoy".
+function dayName(f) {
+  const k = diasDesdeHoy(f);
+  return `${k === 0 ? 'Hoy' : k === 1 ? 'Mañana' : cap(fechaTxt(f, {weekday: 'long'}))}<span class="fecha">${fechaTxt(f, {day: 'numeric', month: 'long'})}</span>`;
 }
+// En papel no hay "hoy" ni "mañana": la hoja se queda pegada varios días
+const diaHoja = f => cap(fechaTxt(f, {weekday: 'long', day: 'numeric', month: 'long'}));
 const dtime = iso => new Date(iso).toLocaleString('es-MX', {day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: TZ});
 // "las 11:17", "la 1:05"
 function horaTxt(iso) {
@@ -237,15 +246,71 @@ function renderScene(D) {
 }
 
 /* ---------- El parte del río (7 días) ---------- */
-function renderParte(D) {
+// Los días del parte con el caudal de cada uno, de hoy en adelante (los días que ya pasaron no se muestran)
+function diasParte(D) {
   const {U, past, fut} = serieRio(D), now = past[past.length - 1];
-  $('parte').innerHTML = fixVars((D.lluvia || []).slice(0, 7).map((d, i) => {
-    const q = i === 0 && now ? now.caudal : (fut[i - 1] || fut[fut.length - 1] || {caudal: 0}).caudal;
-    const rc = rainCat(d.mm), lv = U ? nivelRio(q, U) : null;
-    const rio = lv == null ? '<span class="muted">Sin dato</span>'
-      : `<span class="pill" style="--c:${LV[lv].c}"><i></i>${PALABRA_RIO[lv]}</span>`;
-    return `<tr><td class="d">${dayName(d.fecha, i)}</td><td><span class="ll">${rainIcon(rc.k)}<span>${rc.w}</span></span></td><td>${rio}</td></tr>`;
+  return (D.lluvia || []).slice(0, 7).map((d, i) => ({d, U,
+    q: i === 0 && now ? now.caudal : (fut[i - 1] || fut[fut.length - 1] || {caudal: 0}).caudal,
+  })).filter(x => diasDesdeHoy(x.d.fecha) >= 0);
+}
+const SIN_PARTE = 'No hay pronóstico de estos días. Escuche la radio y a Protección Civil.';
+const grados = v => v == null ? '—' : `${v}°`;
+const CHEVRON = '<svg class="pd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+// Cada día es un renglón que se toca para ver los detalles (como en las aplicaciones del clima)
+function renderParte(D) {
+  const dias = diasParte(D);
+  if (!dias.length) { $('parte').innerHTML = `<li class="pd muted">${SIN_PARTE}</li>`; return; }
+  if (S.diaAbierto !== null && !dias.some(x => x.d.fecha === S.diaAbierto)) S.diaAbierto = dias[0].d.fecha;
+  const ts = dias.flatMap(x => [x.d.tmin, x.d.tmax]).filter(v => v != null);
+  const tLo = Math.min(...ts), tHi = Math.max(...ts);
+  $('parte').innerHTML = fixVars(dias.map(({d, U, q}, j) => {
+    const rc = rainCat(d.mm), lv = U ? nivelRio(q, U) : null, abierto = d.fecha === S.diaAbierto, hoy = diasDesdeHoy(d.fecha) === 0;
+    const rio = lv == null ? '<span class="muted">Sin dato</span>' : `<span class="pill" style="--c:${LV[lv].c}"><i></i>${PALABRA_RIO[lv]}</span>`;
+    const conT = d.tmax != null && d.tmin != null;
+    // la barra de temperatura va de lo más fresco a lo más caluroso de la semana
+    const tBarra = conT && tHi > tLo ? `<div class="tbar" aria-hidden="true"><i style="left:${(d.tmin - tLo) / (tHi - tLo) * 100}%;width:${Math.max(4, (d.tmax - d.tmin) / (tHi - tLo) * 100)}%"></i></div>` : '';
+    const sierra = rainCat(d.cuenca_mm || 0);
+    return `<li class="pd">
+      <button type="button" class="pd-fila" data-f="${d.fecha}" aria-expanded="${abierto}" aria-controls="pd-${j}">
+        <span class="d">${dayName(d.fecha)}</span>
+        <span class="pd-ll">${rainIcon(rc.k)}${d.prob == null ? '' : `<span>${d.prob} %</span>`}</span>
+        ${rio}
+        <span class="pd-t"><b>${grados(d.tmax)}</b><span>${grados(d.tmin)}</span></span>
+        ${CHEVRON}
+      </button>
+      <div class="pd-det" id="pd-${j}"${abierto ? '' : ' hidden'}>
+        <dl>
+          <dt>Lluvia en Álamo</dt>
+          <dd>${rc.w}: ${fmt(d.mm)} mm${d.prob == null ? '' : `<span class="pbar-txt">Probabilidad de que llueva: <b>${d.prob} %</b></span><div class="pbar" aria-hidden="true"><i style="width:${d.prob}%"></i></div>`}</dd>
+          <dt>En la sierra</dt>
+          <dd>${sierra.w}: ${fmt(d.cuenca_mm || 0)} mm. De ahí baja el agua al río.</dd>
+          <dt>El río</dt>
+          <dd>${lv == null ? 'Sin dato' : `${hoy ? 'Hoy está' : 'Estaría'} ${ESTADO_RIO[lv]}.`}</dd>
+          <dt>Temperatura</dt>
+          <dd>${conT ? `Máxima ${grados(d.tmax)}, mínima ${grados(d.tmin)}.${tBarra}` : 'Sin dato'}</dd>
+        </dl>
+      </div>
+    </li>`;
   }).join(''));
+}
+
+// Al tocar un día se abre y se cierra el que estaba abierto
+function abrirDia(b) {
+  S.diaAbierto = b.getAttribute('aria-expanded') === 'true' ? null : b.dataset.f;
+  $('parte').querySelectorAll('.pd-fila').forEach(x => {
+    const si = x.dataset.f === S.diaAbierto;
+    x.setAttribute('aria-expanded', String(si));
+    $(x.getAttribute('aria-controls')).hidden = !si;
+  });
+}
+
+// Temperatura de hoy en la cabecera, como el clima en la esquina de un periódico
+function renderClima(D) {
+  const h = (D.lluvia || []).find(x => x.fecha === fechaHoy());
+  const ok = h && h.tmax != null && h.tmin != null;
+  $('clima').hidden = !ok;
+  if (ok) setText('clima', `Hoy en Álamo: máxima ${h.tmax}°, mínima ${h.tmin}°`);
 }
 
 /* ---------- Gráfica técnica del caudal ---------- */
@@ -357,7 +422,7 @@ function renderEdicion() {
   mun.hidden = !mh;
   setHTML(mun, mh);
 
-  setText('when', D ? `Revisado ${ago(D.actualizado)} · cada 3 horas` : '');
+  setText('when', D ? `Revisado ${ago(D.actualizado)} · cada hora` : '');
   setText('prob', D ? String(Math.round(D.riesgo.probabilidad)) : '—');
   setText('reco-para', cab);
   const alerta = conAlerta(lv);
@@ -410,7 +475,7 @@ function quitarLiga() {
 /* ---------- Para la familia: dejarles la página lista a sus papás ---------- */
 function mensajeFamilia(l) {
   const cab = sinParentesis(l.n);
-  return [`Hola. Le mando una página para saber si se va a inundar *${cab}* por el río Pantepec. Se revisa sola cada 3 horas y es gratis.`, '',
+  return [`Hola. Le mando una página para saber si se va a inundar *${cab}* por el río Pantepec. Se revisa sola cada hora y es gratis.`, '',
     `1. Abra esta liga: ${ligaDe(l, true)}`,
     `2. Ya le sale su comunidad, ${cab}. Su teléfono la recuerda.`,
     '3. Para tenerla siempre a la mano como app, toque el botón negro de abajo, "Instalar en mi teléfono", y siga los pasos.', '',
@@ -486,11 +551,9 @@ function armarHoja() {
   const sello = apagado(lv) ? SELLO_SIN_DATOS : SELLO[lv], c = apagado(lv) ? '#5B6670' : HOJA_C[lv], on = apagado(lv) ? '#FFFFFF' : HOJA_ON[lv];
   const hoy = new Date().toLocaleDateString('es-MX', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: TZ});
   const alerta = conAlerta(lv), liga = ligaDe(l), qr = qrSVG(liga);
-  const {U, past, fut} = serieRio(D), now = past[past.length - 1];
-  const parte = (D.lluvia || []).slice(0, 7).map((d, i) => {
-    const q = i === 0 && now ? now.caudal : (fut[i - 1] || fut[fut.length - 1] || {caudal: 0}).caudal;
-    return `<tr><td><b>${dayName(d.fecha, i)}</b></td><td>${rainCat(d.mm).w}</td><td>${U ? PALABRA_RIO[nivelRio(q, U)] : '—'}</td></tr>`;
-  }).join('');
+  const parte = diasParte(D).map(({d, U, q}) =>
+    `<tr><td><b>${diaHoja(d.fecha)}</b></td><td>${rainCat(d.mm).w}</td><td>${U ? PALABRA_RIO[nivelRio(q, U)] : '—'}</td><td>${grados(d.tmax)} / ${grados(d.tmin)}</td></tr>`,
+  ).join('') || `<tr><td colspan="4">${SIN_PARTE}</td></tr>`;
   const mun = l && lv < n ? `<p class="hj-mun"><b>En el resto del municipio:</b> ${esc(etiqueta(n).toLowerCase())} en Álamo y en las comunidades junto al río.</p>` : '';
   $('hoja').innerHTML = `${D.ejemplo ? '<div class="hj-ed">⚠ Datos de ejemplo: esta hoja no es un aviso real</div>' : ''}
     <div class="hj-top"><span>${hoy[0].toUpperCase() + hoy.slice(1)}</span><span>Álamo Temapache, Veracruz</span></div>
@@ -506,7 +569,7 @@ function armarHoja() {
     ${mun}
     <div class="hj-cols${alerta ? '' : ' uno'}">
       ${alerta ? `<div><h3>Qué hacer hoy</h3><ol>${todoDe(lv).map(t => `<li>${esc(t)}</li>`).join('')}</ol></div>` : ''}
-      <div><h3>El parte del río</h3><table><thead><tr><th>Día</th><th>Lluvia</th><th>El río</th></tr></thead><tbody>${parte}</tbody></table></div>
+      <div><h3>El parte del río</h3><table><thead><tr><th>Día</th><th>Lluvia</th><th>El río</th><th>Máx. / mín.</th></tr></thead><tbody>${parte}</tbody></table></div>
     </div>
     <div class="hj-911"><b>911</b><span><b style="font-size:inherit;color:inherit">¿Está en peligro? Llame al 911.</b> Haga caso a Protección Civil y al Ayuntamiento.</span></div>
     <div class="hj-qr">${qr}<div>Este aviso cambia. Para ver el de cada día, apunte la cámara del teléfono a este cuadro${qr ? '' : ' (sin código: no había internet al imprimir)'} o entre a:<div class="url">${esc(liga)}</div></div></div>
@@ -566,6 +629,7 @@ function render() {
   renderEdicion();
   renderScene(D);
   renderParte(D);
+  renderClima(D);
   renderAlerts(D);
   renderFuentes(D);
   renderTech(D);
@@ -1066,15 +1130,18 @@ function initLetra() {
 
 /* ---------- Datos de ejemplo (modo demostración) ---------- */
 function ejemplo(sc) {
-  const now = new Date(), day = 864e5, iso = d => new Date(now.getTime() + d * day).toISOString().slice(0, 10);
+  const now = new Date(), day = 864e5, iso = d => fechaHoy(now.getTime() + d * day);
   const P = {
     normal: {prob: 9, lvl: 0, base: 70, peak: 95, rain: [2, 0, 4, 11, 6, 1, 0], up: [3, 1, 6, 14, 9, 2, 1], pr: [20, 10, 30, 45, 35, 15, 10],
+      tx: [30, 31, 29, 28, 30, 31, 31], tn: [21, 21, 20, 19, 20, 21, 22],
       msg: 'El río está normal. No se espera lluvia fuerte esta semana.',
       alerts: [{src: 'Servicio Meteorológico Nacional', t: 'No hay huracanes ni tormentas cerca de Veracruz.', lv: 0, h: 2}]},
     vigilancia: {prob: 46, lvl: 1, base: 240, peak: 780, rain: [12, 30, 40, 18, 6, 2, 0], up: [20, 45, 60, 25, 8, 3, 1], pr: [70, 90, 95, 75, 40, 20, 10],
+      tx: [24, 19, 18, 20, 23, 25, 26], tn: [17, 15, 14, 15, 16, 18, 19],
       msg: 'El río va a subir, pero se espera que siga dentro de su cauce. Va a llover fuerte en la sierra, de donde baja el agua. Hay avisos de las autoridades; léalos más abajo. Esté pendiente.',
       alerts: [{src: 'Servicio Meteorológico Nacional', t: 'Frente frío: lluvias muy fuertes en el norte de Veracruz y la sierra de Puebla.', lv: 1, h: 3}, {src: 'Protección Civil Veracruz', t: 'Vigilan los ríos Pantepec, Vinazco y Tuxpan.', lv: 1, h: 5}]},
     alerta: {prob: 84, lvl: 3, base: 600, peak: 2350, rain: [95, 180, 140, 60, 20, 5, 2], up: [140, 260, 210, 90, 30, 8, 3], pr: [100, 100, 100, 90, 60, 30, 20],
+      tx: [27, 25, 24, 25, 27, 28, 29], tn: [23, 22, 22, 22, 23, 23, 23],
       msg: 'El río puede salirse de su cauce y meterse a las calles. Va a llover muchísimo en la sierra, de donde baja el agua. Hay avisos de las autoridades; léalos más abajo. Si vive cerca del río, salga a un lugar alto.',
       alerts: [{src: 'Protección Civil Veracruz', t: 'Alerta roja en Álamo Temapache, Tuxpan y Poza Rica. Refugios temporales abiertos.', lv: 3, h: 1}, {src: 'Servicio Meteorológico Nacional', t: 'Huracán frente a la costa de Veracruz: lluvias extraordinarias en el norte del estado.', lv: 3, h: 1}, {src: 'Centro Nacional de Huracanes', t: 'Aviso de tormenta tropical de Tuxpan a Cabo Rojo.', lv: 2, h: 2}]},
   }[sc];
@@ -1096,11 +1163,11 @@ function ejemplo(sc) {
       {nombre: 'Lluvia en Álamo (72 h)', detalle: `${fmt(sum3(P.rain))} mm`, valor: Math.min(1, sum3(P.rain) / 300)},
       {nombre: 'Avisos oficiales', detalle: `${P.alerts.length} aviso(s) vigente(s)`, valor: Math.max(...P.alerts.map(a => a.lv)) / 3}]},
     rio: {umbrales, serie},
-    lluvia: P.rain.map((mm, i) => ({fecha: iso(i), mm, cuenca_mm: P.up[i], prob: P.pr[i]})),
+    lluvia: P.rain.map((mm, i) => ({fecha: iso(i), mm, cuenca_mm: P.up[i], prob: P.pr[i], tmax: P.tx[i], tmin: P.tn[i]})),
     avisos: P.alerts.map(a => ({fuente: a.src, titulo: a.t, nivel: a.lv, fecha: t(a.h * 60), url: ''})),
     fuentes: [
       {nombre: 'GloFAS v4 (Copernicus) vía Open-Meteo', aporta: 'Caudal simulado y pronóstico', url: 'https://www.globalfloods.eu/', ok: true, fecha: t(40)},
-      {nombre: 'Open-Meteo', aporta: 'Lluvia en Álamo y en la sierra', url: 'https://open-meteo.com/', ok: true, fecha: t(40)},
+      {nombre: 'Open-Meteo', aporta: 'Lluvia en Álamo y en la sierra, y temperatura en Álamo', url: 'https://open-meteo.com/', ok: true, fecha: t(40)},
       {nombre: 'SMN · Conagua', aporta: 'Pronóstico oficial para Temapache', url: 'https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios', ok: true, fecha: t(41)},
       {nombre: 'NHC · NOAA', aporta: 'Huracanes y tormentas cercanos', url: 'https://www.nhc.noaa.gov/', ok: true, fecha: t(41)},
       {nombre: 'Protección Civil Veracruz', aporta: 'Alertas y refugios (captura manual)', url: 'https://www.veracruz.gob.mx/proteccioncivil/', ok: sc !== 'normal', fecha: sc !== 'normal' ? t(300) : null}],
@@ -1178,7 +1245,7 @@ function tick() {
   if (!S.data) return;
   const atrasado = !S.data.ejemplo && horasDesde(S.data.actualizado) > HORAS_ATRASO;
   if (atrasado !== S.atrasado) render();
-  else { if (S.vista !== 'elegir') setText('when', `Revisado ${ago(S.data.actualizado)} · cada 3 horas`); renderEstado(S.data); }
+  else { if (S.vista !== 'elegir') setText('when', `Revisado ${ago(S.data.actualizado)} · cada hora`); renderEstado(S.data); }
 }
 
 document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
@@ -1194,6 +1261,7 @@ addEventListener('beforeprint', armarHoja);  // también si imprimen con el men�
 $('irfuentes').onclick = e => { e.preventDefault(); $('fuentes').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); $('fuentes').focus({preventScroll: true}); };
 $('cambiar').onclick = () => { quitarLiga(); mostrar('elegir'); $('q').focus(); };
 $('general').onclick = () => { quitarLiga(); mostrar('municipio'); irArriba(); };
+$('parte').addEventListener('click', e => { const b = e.target.closest('.pd-fila'); if (b) abrirDia(b); });
 $('municipio').addEventListener('click', e => { if (e.target.closest('[data-elegir]')) { mostrar('elegir'); $('q').focus(); } });
 $('olvidar').onclick = () => {
   store.del('mi_comunidad');
