@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-10-31T00:44:58+00:00",
+ "actualizado": "2026-10-31T06:57:25+00:00",
  "lugar": "Álamo Temapache, Veracruz",
  "riesgo": {
   "nivel": 0,
@@ -9,8 +9,8 @@
   "factores": [
    {
     "nombre": "Caudal pronosticado",
-    "detalle": "Pico de 65 m³/s (máximo del ensamble 65); crecida de 2 años: 1,124 m³/s",
-    "valor": 0.012
+    "detalle": "Pico de 55 m³/s (máximo del ensamble 55); crecida de 2 años: 1,124 m³/s",
+    "valor": 0.01
    },
    {
     "nombre": "Lluvia en la sierra (72 h)",
@@ -19,8 +19,8 @@
    },
    {
     "nombre": "Lluvia en Álamo (72 h)",
-    "detalle": "Hasta 2 mm en 3 días seguidos",
-    "valor": 0.004
+    "detalle": "Hasta 5 mm en 3 días seguidos",
+    "valor": 0.009
    },
    {
     "nombre": "Avisos oficiales",
@@ -130,8 +130,8 @@
    {
     "fecha": "2026-10-30",
     "caudal": 65.2,
-    "min": 65.1,
-    "max": 65.4,
+    "min": null,
+    "max": null,
     "pron": false
    },
    {
@@ -139,7 +139,7 @@
     "caudal": 54.9,
     "min": 54.9,
     "max": 55.0,
-    "pron": true
+    "pron": false
    },
    {
     "fecha": "2026-11-01",
@@ -208,14 +208,6 @@
  },
  "lluvia": [
   {
-   "fecha": "2026-10-30",
-   "mm": 0.4,
-   "cuenca_mm": 0.3,
-   "prob": 49,
-   "tmax": 30,
-   "tmin": 22
-  },
-  {
    "fecha": "2026-10-31",
    "mm": 0.1,
    "cuenca_mm": 2.1,
@@ -227,7 +219,7 @@
    "fecha": "2026-11-01",
    "mm": 0.0,
    "cuenca_mm": 2.8,
-   "prob": 10,
+   "prob": 25,
    "tmax": 30,
    "tmin": 21
   },
@@ -235,7 +227,7 @@
    "fecha": "2026-11-02",
    "mm": 0.0,
    "cuenca_mm": 0.1,
-   "prob": 10,
+   "prob": 8,
    "tmax": 31,
    "tmin": 22
   },
@@ -251,7 +243,7 @@
    "fecha": "2026-11-04",
    "mm": 1.2,
    "cuenca_mm": 0.9,
-   "prob": 30,
+   "prob": 29,
    "tmax": 26,
    "tmin": 20
   },
@@ -259,48 +251,20 @@
    "fecha": "2026-11-05",
    "mm": 0.6,
    "cuenca_mm": 0.0,
-   "prob": 12,
+   "prob": 4,
    "tmax": 30,
    "tmin": 18
+  },
+  {
+   "fecha": "2026-11-06",
+   "mm": 2.9,
+   "cuenca_mm": 2.1,
+   "prob": 36,
+   "tmax": 30,
+   "tmin": 24
   }
  ],
  "horas": [
-  {
-   "hora": "2026-10-30T17:00",
-   "t": 28,
-   "cod": 0,
-   "dia": true
-  },
-  {
-   "hora": "2026-10-30T18:00",
-   "t": 26,
-   "cod": 0,
-   "dia": false
-  },
-  {
-   "hora": "2026-10-30T19:00",
-   "t": 25,
-   "cod": 0,
-   "dia": false
-  },
-  {
-   "hora": "2026-10-30T20:00",
-   "t": 24,
-   "cod": 0,
-   "dia": false
-  },
-  {
-   "hora": "2026-10-30T21:00",
-   "t": 24,
-   "cod": 0,
-   "dia": false
-  },
-  {
-   "hora": "2026-10-30T22:00",
-   "t": 23,
-   "cod": 0,
-   "dia": false
-  },
   {
    "hora": "2026-10-30T23:00",
    "t": 23,
@@ -486,6 +450,42 @@
    "t": 21,
    "cod": 3,
    "dia": false
+  },
+  {
+   "hora": "2026-11-01T06:00",
+   "t": 21,
+   "cod": 3,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-01T07:00",
+   "t": 22,
+   "cod": 3,
+   "dia": true
+  },
+  {
+   "hora": "2026-11-01T08:00",
+   "t": 23,
+   "cod": 3,
+   "dia": true
+  },
+  {
+   "hora": "2026-11-01T09:00",
+   "t": 25,
+   "cod": 1,
+   "dia": true
+  },
+  {
+   "hora": "2026-11-01T10:00",
+   "t": 27,
+   "cod": 1,
+   "dia": true
+  },
+  {
+   "hora": "2026-11-01T11:00",
+   "t": 28,
+   "cod": 1,
+   "dia": true
   }
  ],
  "avisos": [],
@@ -495,35 +495,35 @@
    "aporta": "Caudal simulado del río y pronóstico a 10 días",
    "url": "https://www.globalfloods.eu/",
    "ok": true,
-   "fecha": "2026-10-31T00:44:58+00:00"
+   "fecha": "2026-10-31T06:57:25+00:00"
   },
   {
    "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo hora por hora",
    "url": "https://open-meteo.com/",
    "ok": true,
-   "fecha": "2026-10-31T00:44:58+00:00"
+   "fecha": "2026-10-31T06:57:25+00:00"
   },
   {
    "nombre": "SMN · Conagua",
    "aporta": "Pronóstico oficial para Álamo Temapache",
    "url": "https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios",
    "ok": true,
-   "fecha": "2026-10-31T00:44:58+00:00"
+   "fecha": "2026-10-31T06:57:25+00:00"
   },
   {
    "nombre": "Centro Nacional de Huracanes (NHC · NOAA)",
    "aporta": "Huracanes y tormentas cerca de Veracruz",
    "url": "https://www.nhc.noaa.gov/",
    "ok": true,
-   "fecha": "2026-10-31T00:44:58+00:00"
+   "fecha": "2026-10-31T06:57:25+00:00"
   },
   {
    "nombre": "Protección Civil Veracruz",
    "aporta": "Alertas y refugios (captura manual)",
    "url": "https://www.veracruz.gob.mx/proteccioncivil/",
    "ok": true,
-   "fecha": "2026-10-31T00:44:58+00:00",
+   "fecha": "2026-10-31T06:57:25+00:00",
    "manual": true
   }
  ]
