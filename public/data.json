@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-10-31T13:37:00+00:00",
+ "actualizado": "2026-10-31T18:30:26+00:00",
  "lugar": "Álamo Temapache, Veracruz",
  "riesgo": {
   "nivel": 0,
@@ -211,7 +211,7 @@
    "fecha": "2026-10-31",
    "mm": 0.0,
    "cuenca_mm": 3.7,
-   "prob": 8,
+   "prob": 6,
    "tmax": 31,
    "tmin": 21
   },
@@ -219,7 +219,7 @@
    "fecha": "2026-11-01",
    "mm": 1.9,
    "cuenca_mm": 2.3,
-   "prob": 31,
+   "prob": 25,
    "tmax": 30,
    "tmin": 22
   },
@@ -227,7 +227,7 @@
    "fecha": "2026-11-02",
    "mm": 0.0,
    "cuenca_mm": 0.4,
-   "prob": 10,
+   "prob": 16,
    "tmax": 31,
    "tmin": 22
   },
@@ -235,7 +235,7 @@
    "fecha": "2026-11-03",
    "mm": 0.0,
    "cuenca_mm": 0.2,
-   "prob": 3,
+   "prob": 4,
    "tmax": 31,
    "tmin": 22
   },
@@ -243,7 +243,7 @@
    "fecha": "2026-11-04",
    "mm": 2.1,
    "cuenca_mm": 3.8,
-   "prob": 29,
+   "prob": 31,
    "tmax": 31,
    "tmin": 22
   },
@@ -251,7 +251,7 @@
    "fecha": "2026-11-05",
    "mm": 0.0,
    "cuenca_mm": 0.2,
-   "prob": 2,
+   "prob": 6,
    "tmax": 30,
    "tmin": 22
   },
@@ -265,36 +265,6 @@
   }
  ],
  "horas": [
-  {
-   "hora": "2026-10-31T06:00",
-   "t": 21,
-   "cod": 1,
-   "dia": false
-  },
-  {
-   "hora": "2026-10-31T07:00",
-   "t": 21,
-   "cod": 1,
-   "dia": true
-  },
-  {
-   "hora": "2026-10-31T08:00",
-   "t": 24,
-   "cod": 2,
-   "dia": true
-  },
-  {
-   "hora": "2026-10-31T09:00",
-   "t": 26,
-   "cod": 2,
-   "dia": true
-  },
-  {
-   "hora": "2026-10-31T10:00",
-   "t": 28,
-   "cod": 1,
-   "dia": true
-  },
   {
    "hora": "2026-10-31T11:00",
    "t": 29,
@@ -486,6 +456,36 @@
    "t": 26,
    "cod": 1,
    "dia": false
+  },
+  {
+   "hora": "2026-11-01T19:00",
+   "t": 25,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-01T20:00",
+   "t": 24,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-01T21:00",
+   "t": 24,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-01T22:00",
+   "t": 24,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-01T23:00",
+   "t": 24,
+   "cod": 0,
+   "dia": false
   }
  ],
  "avisos": [],
@@ -495,35 +495,35 @@
    "aporta": "Caudal simulado del río y pronóstico a 10 días",
    "url": "https://www.globalfloods.eu/",
    "ok": true,
-   "fecha": "2026-10-31T13:37:00+00:00"
+   "fecha": "2026-10-31T18:30:26+00:00"
   },
   {
    "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo hora por hora",
    "url": "https://open-meteo.com/",
    "ok": true,
-   "fecha": "2026-10-31T13:37:00+00:00"
+   "fecha": "2026-10-31T18:30:26+00:00"
   },
   {
    "nombre": "SMN · Conagua",
    "aporta": "Pronóstico oficial para Álamo Temapache",
    "url": "https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios",
    "ok": true,
-   "fecha": "2026-10-31T13:37:00+00:00"
+   "fecha": "2026-10-31T18:30:26+00:00"
   },
   {
    "nombre": "Centro Nacional de Huracanes (NHC · NOAA)",
    "aporta": "Huracanes y tormentas cerca de Veracruz",
    "url": "https://www.nhc.noaa.gov/",
    "ok": true,
-   "fecha": "2026-10-31T13:37:00+00:00"
+   "fecha": "2026-10-31T18:30:26+00:00"
   },
   {
    "nombre": "Protección Civil Veracruz",
    "aporta": "Alertas y refugios (captura manual)",
    "url": "https://www.veracruz.gob.mx/proteccioncivil/",
    "ok": true,
-   "fecha": "2026-10-31T13:37:00+00:00",
+   "fecha": "2026-10-31T18:30:26+00:00",
    "manual": true
   }
  ]
