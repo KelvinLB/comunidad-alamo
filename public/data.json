@@ -1,10 +1,10 @@
 {
  "version": 1,
- "actualizado": "2026-11-05T18:41:56+00:00",
+ "actualizado": "2026-11-06T00:11:42+00:00",
  "lugar": "Álamo Temapache, Veracruz",
  "riesgo": {
   "nivel": 0,
-  "probabilidad": 6,
+  "probabilidad": 5,
   "resumen": "El río está normal. No se espera lluvia fuerte esta semana.",
   "factores": [
    {
@@ -15,12 +15,12 @@
    {
     "nombre": "Lluvia en la sierra (72 h)",
     "detalle": "Hasta 29 mm en 3 días seguidos",
-    "valor": 0.072
+    "valor": 0.073
    },
    {
     "nombre": "Lluvia en Álamo (72 h)",
-    "detalle": "Hasta 31 mm en 3 días seguidos",
-    "valor": 0.061
+    "detalle": "Hasta 22 mm en 3 días seguidos",
+    "valor": 0.044
    },
    {
     "nombre": "Avisos oficiales",
@@ -36,13 +36,6 @@
    "rp20": 2205
   },
   "serie": [
-   {
-    "fecha": "2026-10-22",
-    "caudal": 99.7,
-    "min": null,
-    "max": null,
-    "pron": false
-   },
    {
     "fecha": "2026-10-23",
     "caudal": 194.0,
@@ -203,120 +196,91 @@
     "min": 15.5,
     "max": 896.4,
     "pron": true
+   },
+   {
+    "fecha": "2026-11-15",
+    "caudal": 36.9,
+    "min": 14.3,
+    "max": 617.0,
+    "pron": true
    }
   ]
  },
  "lluvia": [
   {
    "fecha": "2026-11-05",
-   "mm": 0.0,
-   "cuenca_mm": 0.5,
+   "mm": 0.3,
+   "cuenca_mm": 0.2,
    "prob": 10,
    "tmax": 31,
-   "tmin": 22
+   "tmin": 23
   },
   {
    "fecha": "2026-11-06",
-   "mm": 10.5,
-   "cuenca_mm": 13.4,
+   "mm": 14.2,
+   "cuenca_mm": 14.1,
    "prob": 100,
-   "tmax": 29,
+   "tmax": 28,
    "tmin": 22
   },
   {
    "fecha": "2026-11-07",
-   "mm": 6.0,
-   "cuenca_mm": 14.9,
-   "prob": 90,
+   "mm": 4.1,
+   "cuenca_mm": 12.4,
+   "prob": 78,
    "tmax": 28,
    "tmin": 21
   },
   {
    "fecha": "2026-11-08",
-   "mm": 2.3,
-   "cuenca_mm": 0.6,
-   "prob": 75,
+   "mm": 3.7,
+   "cuenca_mm": 1.6,
+   "prob": 67,
    "tmax": 29,
    "tmin": 21
   },
   {
    "fecha": "2026-11-09",
-   "mm": 22.3,
-   "cuenca_mm": 11.0,
-   "prob": 55,
-   "tmax": 26,
-   "tmin": 21
-  },
-  {
-   "fecha": "2026-11-10",
-   "mm": 3.6,
-   "cuenca_mm": 2.4,
-   "prob": 51,
-   "tmax": 27,
+   "mm": 7.3,
+   "cuenca_mm": 10.8,
+   "prob": 68,
+   "tmax": 29,
    "tmin": 20
   },
   {
-   "fecha": "2026-11-11",
-   "mm": 1.5,
-   "cuenca_mm": 2.4,
-   "prob": 33,
-   "tmax": 27,
+   "fecha": "2026-11-10",
+   "mm": 4.8,
+   "cuenca_mm": 6.9,
+   "prob": 69,
+   "tmax": 25,
    "tmin": 21
+  },
+  {
+   "fecha": "2026-11-11",
+   "mm": 1.8,
+   "cuenca_mm": 11.7,
+   "prob": 45,
+   "tmax": 29,
+   "tmin": 22
   }
  ],
  "horas": [
   {
-   "hora": "2026-11-05T11:00",
-   "t": 29,
-   "cod": 3,
-   "dia": true
-  },
-  {
-   "hora": "2026-11-05T12:00",
-   "t": 30,
-   "cod": 3,
-   "dia": true
-  },
-  {
-   "hora": "2026-11-05T13:00",
-   "t": 30,
-   "cod": 3,
-   "dia": true
-  },
-  {
-   "hora": "2026-11-05T14:00",
-   "t": 31,
-   "cod": 3,
-   "dia": true
-  },
-  {
-   "hora": "2026-11-05T15:00",
-   "t": 30,
-   "cod": 1,
-   "dia": true
-  },
-  {
-   "hora": "2026-11-05T16:00",
-   "t": 29,
-   "cod": 1,
-   "dia": true
-  },
-  {
    "hora": "2026-11-05T17:00",
-   "t": 28,
-   "cod": 1,
+   "t": 29,
+   "cod": 2,
    "dia": true
   },
   {
    "hora": "2026-11-05T18:00",
    "t": 27,
-   "cod": 2,
+   "cod": 0,
    "dia": false
   },
   {
    "hora": "2026-11-05T19:00",
    "t": 26,
-   "cod": 1,
+   "cod": 0,
    "dia": false
   },
   {
@@ -328,13 +292,13 @@
   {
    "hora": "2026-11-05T21:00",
    "t": 25,
-   "cod": 0,
+   "cod": 1,
    "dia": false
   },
   {
    "hora": "2026-11-05T22:00",
    "t": 25,
-   "cod": 1,
+   "cod": 3,
    "dia": false
   },
   {
@@ -346,19 +310,19 @@
   {
    "hora": "2026-11-06T00:00",
    "t": 25,
-   "cod": 3,
+   "cod": 1,
    "dia": false
   },
   {
    "hora": "2026-11-06T01:00",
    "t": 25,
-   "cod": 3,
+   "cod": 51,
    "dia": false
   },
   {
    "hora": "2026-11-06T02:00",
    "t": 24,
-   "cod": 0,
+   "cod": 51,
    "dia": false
   },
   {
@@ -376,31 +340,31 @@
   {
    "hora": "2026-11-06T05:00",
    "t": 24,
-   "cod": 51,
+   "cod": 3,
    "dia": false
   },
   {
    "hora": "2026-11-06T06:00",
-   "t": 23,
-   "cod": 2,
+   "t": 24,
+   "cod": 53,
    "dia": false
   },
   {
    "hora": "2026-11-06T07:00",
    "t": 23,
-   "cod": 51,
+   "cod": 53,
    "dia": true
   },
   {
    "hora": "2026-11-06T08:00",
    "t": 24,
-   "cod": 53,
+   "cod": 51,
    "dia": true
   },
   {
    "hora": "2026-11-06T09:00",
-   "t": 26,
-   "cod": 51,
+   "t": 25,
+   "cod": 53,
    "dia": true
   },
   {
@@ -417,74 +381,110 @@
   },
   {
    "hora": "2026-11-06T12:00",
-   "t": 27,
-   "cod": 95,
+   "t": 28,
+   "cod": 51,
    "dia": true
   },
   {
    "hora": "2026-11-06T13:00",
-   "t": 27,
-   "cod": 53,
+   "t": 26,
+   "cod": 80,
    "dia": true
   },
   {
    "hora": "2026-11-06T14:00",
-   "t": 28,
-   "cod": 53,
+   "t": 27,
+   "cod": 51,
    "dia": true
   },
   {
    "hora": "2026-11-06T15:00",
-   "t": 29,
-   "cod": 95,
+   "t": 28,
+   "cod": 3,
    "dia": true
   },
   {
    "hora": "2026-11-06T16:00",
-   "t": 25,
-   "cod": 95,
+   "t": 27,
+   "cod": 51,
    "dia": true
   },
   {
    "hora": "2026-11-06T17:00",
    "t": 25,
-   "cod": 80,
+   "cod": 55,
    "dia": true
   },
   {
    "hora": "2026-11-06T18:00",
    "t": 24,
-   "cod": 51,
+   "cod": 55,
    "dia": false
   },
   {
    "hora": "2026-11-06T19:00",
-   "t": 24,
-   "cod": 51,
+   "t": 23,
+   "cod": 80,
    "dia": false
   },
   {
    "hora": "2026-11-06T20:00",
-   "t": 23,
-   "cod": 51,
+   "t": 22,
+   "cod": 95,
    "dia": false
   },
   {
    "hora": "2026-11-06T21:00",
    "t": 23,
-   "cod": 51,
+   "cod": 53,
    "dia": false
   },
   {
    "hora": "2026-11-06T22:00",
-   "t": 22,
-   "cod": 55,
+   "t": 23,
+   "cod": 53,
    "dia": false
   },
   {
    "hora": "2026-11-06T23:00",
+   "t": 23,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-07T00:00",
    "t": 22,
-   "cod": 53,
+   "cod": 3,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-07T01:00",
+   "t": 22,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-07T02:00",
+   "t": 22,
+   "cod": 80,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-07T03:00",
+   "t": 22,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-07T04:00",
+   "t": 22,
+   "cod": 51,
+   "dia": false
+  },
+  {
+   "hora": "2026-11-07T05:00",
+   "t": 21,
+   "cod": 0,
    "dia": false
   }
  ],
@@ -495,35 +495,35 @@
    "aporta": "Caudal simulado del río y pronóstico a 10 días",
    "url": "https://www.globalfloods.eu/",
    "ok": true,
-   "fecha": "2026-11-05T18:41:56+00:00"
+   "fecha": "2026-11-06T00:11:42+00:00"
   },
   {
    "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo hora por hora",
    "url": "https://open-meteo.com/",
    "ok": true,
-   "fecha": "2026-11-05T18:41:56+00:00"
+   "fecha": "2026-11-06T00:11:42+00:00"
   },
   {
    "nombre": "SMN · Conagua",
    "aporta": "Pronóstico oficial para Álamo Temapache",
    "url": "https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios",
    "ok": true,
-   "fecha": "2026-11-05T18:41:56+00:00"
+   "fecha": "2026-11-06T00:11:42+00:00"
   },
   {
    "nombre": "Centro Nacional de Huracanes (NHC · NOAA)",
    "aporta": "Huracanes y tormentas cerca de Veracruz",
    "url": "https://www.nhc.noaa.gov/",
    "ok": true,
-   "fecha": "2026-11-05T18:41:56+00:00"
+   "fecha": "2026-11-06T00:11:42+00:00"
   },
   {
    "nombre": "Protección Civil Veracruz",
    "aporta": "Alertas y refugios (captura manual)",
    "url": "https://www.veracruz.gob.mx/proteccioncivil/",
    "ok": true,
-   "fecha": "2026-11-05T18:41:56+00:00",
+   "fecha": "2026-11-06T00:11:42+00:00",
    "manual": true
   }
  ]
