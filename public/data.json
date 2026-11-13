@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-12T23:38:43+00:00",
+ "actualizado": "2026-11-13T06:36:24+00:00",
  "lugar": "Álamo Temapache, Veracruz",
  "riesgo": {
   "nivel": 1,
@@ -9,8 +9,8 @@
   "factores": [
    {
     "nombre": "Caudal pronosticado",
-    "detalle": "Pico de 41 m³/s (máximo del ensamble 1,020); crecida de 2 años: 1,124 m³/s",
-    "valor": 0.06
+    "detalle": "Pico de 50 m³/s (máximo del ensamble 1,020); crecida de 2 años: 1,124 m³/s",
+    "valor": 0.061
    },
    {
     "nombre": "Lluvia en la sierra (72 h)",
@@ -36,13 +36,6 @@
    "rp20": 2205
   },
   "serie": [
-   {
-    "fecha": "2026-10-29",
-    "caudal": 73.6,
-    "min": null,
-    "max": null,
-    "pron": false
-   },
    {
     "fecha": "2026-10-30",
     "caudal": 65.2,
@@ -136,9 +129,9 @@
    },
    {
     "fecha": "2026-11-12",
-    "caudal": 15.1,
-    "min": 15.0,
-    "max": 15.3,
+    "caudal": 15.2,
+    "min": null,
+    "max": null,
     "pron": false
    },
    {
@@ -146,7 +139,7 @@
     "caudal": 13.7,
     "min": 13.7,
     "max": 57.9,
-    "pron": true
+    "pron": false
    },
    {
     "fecha": "2026-11-14",
@@ -202,6 +195,13 @@
     "caudal": 35.2,
     "min": 12.0,
     "max": 226.5,
+    "pron": true
+   },
+   {
+    "fecha": "2026-11-22",
+    "caudal": 31.4,
+    "min": 11.4,
+    "max": 159.7,
     "pron": true
    }
   ]
@@ -495,13 +495,13 @@
    "aporta": "Caudal simulado del río y pronóstico a 10 días",
    "url": "https://www.globalfloods.eu/",
    "ok": true,
-   "fecha": "2026-11-12T23:38:43+00:00"
+   "fecha": "2026-11-13T06:36:24+00:00"
   },
   {
    "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo hora por hora",
    "url": "https://open-meteo.com/",
-   "ok": true,
+   "ok": false,
    "fecha": "2026-11-12T23:38:43+00:00"
   },
   {
@@ -509,21 +509,21 @@
    "aporta": "Pronóstico oficial para Álamo Temapache",
    "url": "https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios",
    "ok": true,
-   "fecha": "2026-11-12T23:38:43+00:00"
+   "fecha": "2026-11-13T06:36:24+00:00"
   },
   {
    "nombre": "Centro Nacional de Huracanes (NHC · NOAA)",
    "aporta": "Huracanes y tormentas cerca de Veracruz",
    "url": "https://www.nhc.noaa.gov/",
    "ok": true,
-   "fecha": "2026-11-12T23:38:43+00:00"
+   "fecha": "2026-11-13T06:36:24+00:00"
   },
   {
    "nombre": "Protección Civil Veracruz",
    "aporta": "Alertas y refugios (captura manual)",
    "url": "https://www.veracruz.gob.mx/proteccioncivil/",
    "ok": true,
-   "fecha": "2026-11-12T23:38:43+00:00",
+   "fecha": "2026-11-13T06:36:24+00:00",
    "manual": true
   }
  ]
