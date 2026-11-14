@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-14T10:16:59+00:00",
+ "actualizado": "2026-11-14T16:37:55+00:00",
  "lugar": "Álamo Temapache, Veracruz",
  "riesgo": {
   "nivel": 0,
@@ -9,8 +9,8 @@
   "factores": [
    {
     "nombre": "Caudal pronosticado",
-    "detalle": "Pico de 91 m³/s (máximo del ensamble 735); crecida de 2 años: 1,124 m³/s",
-    "valor": 0.051
+    "detalle": "Pico de 126 m³/s (máximo del ensamble 684); crecida de 2 años: 1,124 m³/s",
+    "valor": 0.052
    },
    {
     "nombre": "Lluvia en la sierra (72 h)",
@@ -143,65 +143,65 @@
    },
    {
     "fecha": "2026-11-15",
-    "caudal": 17.3,
-    "min": 16.6,
+    "caudal": 18.3,
+    "min": 18.3,
     "max": 18.3,
     "pron": true
    },
    {
     "fecha": "2026-11-16",
-    "caudal": 19.2,
-    "min": 17.3,
-    "max": 21.4,
+    "caudal": 19.6,
+    "min": 19.5,
+    "max": 19.7,
     "pron": true
    },
    {
     "fecha": "2026-11-17",
-    "caudal": 18.6,
-    "min": 16.2,
-    "max": 286.1,
+    "caudal": 20.7,
+    "min": 17.4,
+    "max": 318.9,
     "pron": true
    },
    {
     "fecha": "2026-11-18",
-    "caudal": 91.3,
-    "min": 16.8,
-    "max": 735.2,
+    "caudal": 125.5,
+    "min": 15.9,
+    "max": 684.5,
     "pron": true
    },
    {
     "fecha": "2026-11-19",
-    "caudal": 82.2,
-    "min": 18.1,
-    "max": 527.5,
+    "caudal": 126.1,
+    "min": 15.9,
+    "max": 522.6,
     "pron": true
    },
    {
     "fecha": "2026-11-20",
-    "caudal": 59.7,
-    "min": 16.5,
-    "max": 284.1,
+    "caudal": 93.2,
+    "min": 15.6,
+    "max": 280.8,
     "pron": true
    },
    {
     "fecha": "2026-11-21",
-    "caudal": 44.5,
-    "min": 15.0,
-    "max": 182.7,
+    "caudal": 66.5,
+    "min": 14.3,
+    "max": 180.1,
     "pron": true
    },
    {
     "fecha": "2026-11-22",
-    "caudal": 43.2,
+    "caudal": 51.0,
     "min": 13.5,
-    "max": 135.8,
+    "max": 138.0,
     "pron": true
    },
    {
     "fecha": "2026-11-23",
-    "caudal": 40.1,
-    "min": 12.8,
-    "max": 282.1,
+    "caudal": 43.0,
+    "min": 12.6,
+    "max": 112.2,
     "pron": true
    }
   ]
@@ -495,7 +495,7 @@
    "aporta": "Caudal simulado del río y pronóstico a 10 días",
    "url": "https://www.globalfloods.eu/",
    "ok": true,
-   "fecha": "2026-11-14T10:16:59+00:00"
+   "fecha": "2026-11-14T16:37:55+00:00"
   },
   {
    "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
@@ -509,21 +509,21 @@
    "aporta": "Pronóstico oficial para Álamo Temapache",
    "url": "https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios",
    "ok": true,
-   "fecha": "2026-11-14T10:16:59+00:00"
+   "fecha": "2026-11-14T16:37:55+00:00"
   },
   {
    "nombre": "Centro Nacional de Huracanes (NHC · NOAA)",
    "aporta": "Huracanes y tormentas cerca de Veracruz",
    "url": "https://www.nhc.noaa.gov/",
    "ok": true,
-   "fecha": "2026-11-14T10:16:59+00:00"
+   "fecha": "2026-11-14T16:37:55+00:00"
   },
   {
    "nombre": "Protección Civil Veracruz",
    "aporta": "Alertas y refugios (captura manual)",
    "url": "https://www.veracruz.gob.mx/proteccioncivil/",
    "ok": true,
-   "fecha": "2026-11-14T10:16:59+00:00",
+   "fecha": "2026-11-14T16:37:55+00:00",
    "manual": true
   }
  ]
