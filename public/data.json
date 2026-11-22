@@ -1,6 +1,6 @@
 {
  "version": 1,
- "actualizado": "2026-11-21T23:09:55+00:00",
+ "actualizado": "2026-11-22T03:06:01+00:00",
  "lugar": "Álamo Temapache, Veracruz",
  "riesgo": {
   "nivel": 0,
@@ -36,13 +36,6 @@
    "rp20": 2205
   },
   "serie": [
-   {
-    "fecha": "2026-11-07",
-    "caudal": 20.7,
-    "min": null,
-    "max": null,
-    "pron": false
-   },
    {
     "fecha": "2026-11-08",
     "caudal": 19.7,
@@ -202,6 +195,13 @@
     "caudal": 38.1,
     "min": 18.2,
     "max": 164.6,
+    "pron": true
+   },
+   {
+    "fecha": "2026-12-01",
+    "caudal": 34.2,
+    "min": 15.9,
+    "max": 125.5,
     "pron": true
    }
   ]
@@ -495,13 +495,13 @@
    "aporta": "Caudal simulado del río y pronóstico a 10 días",
    "url": "https://www.globalfloods.eu/",
    "ok": true,
-   "fecha": "2026-11-21T23:09:55+00:00"
+   "fecha": "2026-11-22T03:06:01+00:00"
   },
   {
    "nombre": "Open-Meteo (modelos ECMWF, GFS, ICON y otros)",
    "aporta": "Lluvia pronosticada en Álamo y en la sierra, y temperatura en Álamo hora por hora",
    "url": "https://open-meteo.com/",
-   "ok": true,
+   "ok": false,
    "fecha": "2026-11-21T23:09:55+00:00"
   },
   {
@@ -509,21 +509,21 @@
    "aporta": "Pronóstico oficial para Álamo Temapache",
    "url": "https://smn.conagua.gob.mx/es/pronostico-del-tiempo-por-municipios",
    "ok": true,
-   "fecha": "2026-11-21T23:09:55+00:00"
+   "fecha": "2026-11-22T03:06:01+00:00"
   },
   {
    "nombre": "Centro Nacional de Huracanes (NHC · NOAA)",
    "aporta": "Huracanes y tormentas cerca de Veracruz",
    "url": "https://www.nhc.noaa.gov/",
    "ok": true,
-   "fecha": "2026-11-21T23:09:55+00:00"
+   "fecha": "2026-11-22T03:06:01+00:00"
   },
   {
    "nombre": "Protección Civil Veracruz",
    "aporta": "Alertas y refugios (captura manual)",
    "url": "https://www.veracruz.gob.mx/proteccioncivil/",
    "ok": true,
-   "fecha": "2026-11-21T23:09:55+00:00",
+   "fecha": "2026-11-22T03:06:01+00:00",
    "manual": true
   }
  ]
